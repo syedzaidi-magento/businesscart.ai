@@ -11,7 +11,7 @@ export const connectDB = async () => {
     }
     console.log('Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGO_URI, {
-      dbName: 'uSetGo-App',
+      dbName: 'UserService',
     });
     console.log('MongoDB connected');
   } catch (error) {

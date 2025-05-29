@@ -2,23 +2,13 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import { config } from 'dotenv';
+config({ path: './user-service-lambda/dist/.env' });
+
 
 export class CdkBackendStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-
-    // Existing Lambdas
-    const helloFn = new lambda.Function(this, 'HelloHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'hello.handler',
-      code: lambda.Code.fromAsset('lambda', { exclude: ['*.ts', '*.d.ts'] }),
-    });
-
-    const helloFn2 = new lambda.Function(this, 'HelloHandler2', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'hello2.handler',
-      code: lambda.Code.fromAsset('lambda', { exclude: ['*.ts', '*.d.ts'] }),
-    });
 
     // UserService Lambda
     const userServiceFn = new lambda.Function(this, 'UserService', {
@@ -34,33 +24,6 @@ export class CdkBackendStack extends cdk.Stack {
         NODE_ENV: 'development',
       },
     });
-
-    // API Gateway for existing Lambdas
-    const helloApi = new apigateway.LambdaRestApi(this, 'Endpoint', {
-      handler: helloFn,
-      restApiName: 'HelloApi',
-      proxy: false,
-      deployOptions: { stageName: 'prod' },
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ['Content-Type', 'Authorization'],
-      },
-    });
-    helloApi.root.addResource('hello').addMethod('ANY', new apigateway.LambdaIntegration(helloFn));
-
-    const hello2Api = new apigateway.LambdaRestApi(this, 'Hello2Endpoint', {
-      handler: helloFn2,
-      restApiName: 'Hello2Api',
-      proxy: false,
-      deployOptions: { stageName: 'prod' },
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ['Content-Type', 'Authorization'],
-      },
-    });
-    hello2Api.root.addResource('hello2').addMethod('ANY', new apigateway.LambdaIntegration(helloFn2));
 
     // API Gateway for UserService
     const userApi = new apigateway.LambdaRestApi(this, 'UserServiceEndpoint', {
@@ -80,9 +43,6 @@ export class CdkBackendStack extends cdk.Stack {
     users.addResource('refresh').addMethod('POST', new apigateway.LambdaIntegration(userServiceFn));
     users.addResource('logout').addMethod('POST', new apigateway.LambdaIntegration(userServiceFn));
 
-    // Outputs
-    new cdk.CfnOutput(this, 'HelloHandlerApiUrl', { value: helloApi.url });
-    new cdk.CfnOutput(this, 'HelloHandler2ApiUrl', { value: hello2Api.url });
     new cdk.CfnOutput(this, 'UserServiceApiUrl', { value: userApi.url });
   }
 }

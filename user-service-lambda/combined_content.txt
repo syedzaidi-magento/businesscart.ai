@@ -1,0 +1,306 @@
+
+================================================================================
+FILE: ./user-service-lambda/src/validation.ts
+================================================================================
+import { z } from 'zod';
+
+export const registerSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Please include a valid email'),
+  password: z.string().min(6, 'Password must be 6 or more characters'),
+  role: z.enum(['customer', 'company'], { errorMap: () => ({ message: 'Role must be customer or company' }) }),
+});
+
+export const loginSchema = z.object({
+  email: z.string().email('Please include a valid email'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+export const refreshSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required'),
+});
+
+export const logoutSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required'),
+  accessToken: z.string().min(1, 'Access token is required'),
+});
+
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
+================================================================================
+FILE: ./user-service-lambda/src/handler.ts
+================================================================================
+import { config } from 'dotenv';
+config({ path: './.env' }); // Load .env from dist/
+
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { z } from 'zod';
+import { AuthService } from './services/auth-service';
+import { connectDB } from './services/db-service';
+import { registerSchema, loginSchema, refreshSchema, logoutSchema } from './validation';
+
+// Initialize services
+const authService = new AuthService();
+
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  try {
+    await connectDB();
+    const { httpMethod, path, body, headers } = event;
+    const parsedBody = body ? JSON.parse(body) : {};
+    const accessToken = headers['Cookie']?.match(/token=([^;]+)/)?.[1] || parsedBody.accessToken;
+
+    if (path === '/users/register' && httpMethod === 'POST') {
+      const data = registerSchema.parse(parsedBody);
+      const { accessToken, refreshToken } = await authService.register(data);
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie': `token=${accessToken}; HttpOnly; Max-Age=${15 * 60}; Secure=${
+            process.env.NODE_ENV === 'production'
+          }; Path=/`,
+        },
+        body: JSON.stringify({ accessToken, refreshToken }),
+      };
+    }
+
+    if (path === '/users/login' && httpMethod === 'POST') {
+      const data = loginSchema.parse(parsedBody);
+      const { accessToken, refreshToken } = await authService.login(data);
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie': `token=${accessToken}; HttpOnly; Max-Age=${15 * 60}; Secure=${
+            process.env.NODE_ENV === 'production'
+          }; Path=/`,
+        },
+        body: JSON.stringify({ accessToken, refreshToken }),
+      };
+    }
+
+    if (path === '/users/refresh' && httpMethod === 'POST') {
+      const data = refreshSchema.parse(parsedBody);
+      const accessToken = await authService.refresh(data.refreshToken);
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie': `token=${accessToken}; HttpOnly; Max-Age=${15 * 60}; Secure=${
+            process.env.NODE_ENV === 'production'
+          }; Path=/`,
+        },
+        body: JSON.stringify({ accessToken }),
+      };
+    }
+
+    if (path === '/users/logout' && httpMethod === 'POST') {
+      const data = logoutSchema.parse({ refreshToken: parsedBody.refreshToken, accessToken });
+      await authService.logout(data.refreshToken, data.accessToken);
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie': 'token=; HttpOnly; Max-Age=0; Path=/',
+        },
+        body: JSON.stringify({ message: 'Logged out successfully' }),
+      };
+    }
+
+    return {
+      statusCode: 404,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Route not found' }),
+    };
+  } catch (err) {
+    console.error('Error:', err);
+    const statusCode = err instanceof z.ZodError ? 400 : 500;
+    const message = err instanceof z.ZodError ? { errors: err.errors } : { message: 'Server error' };
+    return {
+      statusCode,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message),
+    };
+  }
+};
+================================================================================
+FILE: ./user-service-lambda/src/models/blacklisted-token.ts
+================================================================================
+import { Schema, model, Document } from 'mongoose';
+
+export interface IBlacklistedToken extends Document {
+  token: string;
+  expiresAt: Date;
+}
+
+const BlacklistedTokenSchema = new Schema<IBlacklistedToken>({
+  token: { type: String, required: true, unique: true },
+  expiresAt: { type: Date, required: true },
+});
+
+export const BlacklistedToken = model<IBlacklistedToken>('BlacklistedToken', BlacklistedTokenSchema);
+================================================================================
+FILE: ./user-service-lambda/src/models/refresh-token.ts
+================================================================================
+import { Schema, model, Document, Types } from 'mongoose';
+
+export interface IRefreshToken extends Document {
+  userId: Types.ObjectId;
+  token: string;
+  expiresAt: Date;
+}
+
+const RefreshTokenSchema = new Schema<IRefreshToken>({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  token: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  expiresAt: {
+    type: Date,
+    required: true,
+  },
+});
+
+export const RefreshToken = model<IRefreshToken>('RefreshToken', RefreshTokenSchema);
+================================================================================
+FILE: ./user-service-lambda/src/models/user.ts
+================================================================================
+import { Schema, model, Document } from 'mongoose';
+import bcrypt from 'bcryptjs';
+
+export interface IUser extends Document {
+  name: string;
+  email: string;
+  password: string;
+  role: 'customer' | 'company';
+  comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+const UserSchema = new Schema<IUser>(
+  {
+    name: { type: String, required: [true, 'Name is required'], trim: true },
+    email: { type: String, required: [true, 'Email is required'], unique: true, lowercase: true, trim: true },
+    password: { type: String, required: [true, 'Password is required'], minlength: 6 },
+    role: { type: String, enum: ['customer', 'company'], default: 'customer', required: true },
+  },
+  { timestamps: true }
+);
+
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+UserSchema.methods.comparePassword = async function (candidatePassword: string) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+export const User = model<IUser>('User', UserSchema);
+================================================================================
+FILE: ./user-service-lambda/src/services/db-service.ts
+================================================================================
+import mongoose from 'mongoose';
+
+// Set strictQuery to suppress deprecation warning
+mongoose.set('strictQuery', true);
+
+export const connectDB = async () => {
+  try {
+    console.log('MONGO_URI:', process.env.MONGO_URI || 'Not set');
+    if (!process.env.MONGO_URI) {
+      throw new Error('MONGO_URI is not defined in environment variables');
+    }
+    console.log('Connecting to MongoDB...');
+    await mongoose.connect(process.env.MONGO_URI, {
+      dbName: 'uSetGo-App',
+    });
+    console.log('MongoDB connected');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+};
+================================================================================
+FILE: ./user-service-lambda/src/services/auth-service.ts
+================================================================================
+import jwt from 'jsonwebtoken';
+import { User, IUser } from '../models/user';
+import { RefreshToken, IRefreshToken } from '../models/refresh-token';
+import { BlacklistedToken } from '../models/blacklisted-token';
+import { RegisterInput, LoginInput } from '../validation';
+
+export class AuthService {
+  async register(data: RegisterInput): Promise<{ accessToken: string; refreshToken: string }> {
+    const { name, email, password, role } = data;
+
+    let user = await User.findOne({ email });
+    if (user) throw new Error('User already exists');
+
+    user = new User({ name, email, password, role });
+    await user.save();
+
+    const payload = { user: { id: user.id } };
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
+    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
+
+    await RefreshToken.create({
+      userId: user.id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  async login(data: LoginInput): Promise<{ accessToken: string; refreshToken: string }> {
+    const { email, password } = data;
+
+    const user = await User.findOne({ email });
+    if (!user || !(await user.comparePassword(password))) {
+      throw new Error('Invalid credentials');
+    }
+
+    const payload = { user: { id: user.id } };
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
+    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
+
+    await RefreshToken.create({
+      userId: user.id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  async refresh(refreshToken: string): Promise<string> {
+    const storedToken = await RefreshToken.findOne({ token: refreshToken });
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+      throw new Error('Invalid or expired refresh token');
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { user: { id: string } };
+    const payload = { user: { id: decoded.user.id } };
+    return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
+  }
+
+  async logout(refreshToken: string, accessToken: string): Promise<void> {
+    const storedToken = await RefreshToken.findOne({ token: refreshToken });
+    if (!storedToken) throw new Error('Invalid refresh token');
+
+    const decoded = jwt.verify(accessToken, process.env.JWT_SECRET!) as { exp: number };
+    await BlacklistedToken.create({
+      token: accessToken,
+      expiresAt: new Date(decoded.exp * 1000),
+    });
+    await RefreshToken.deleteOne({ token: refreshToken });
+  }
+}
