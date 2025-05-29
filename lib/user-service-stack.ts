@@ -6,7 +6,7 @@ import { config } from 'dotenv';
 config({ path: './user-service-lambda/dist/.env' });
 
 
-export class CdkBackendStack extends cdk.Stack {
+export class UserServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 

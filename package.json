@@ -1,8 +1,8 @@
 {
-  "name": "cdk-backend",
+  "name": "business-cart",
   "version": "0.1.0",
   "bin": {
-    "cdk-backend": "bin/cdk-backend.js"
+    "business-cart": "bin/business-cart.ts"
   },
   "scripts": {
     "build": "tsc",
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "aws-cdk-lib": "^2.194.0",
-    "constructs": "^10.4.2"
+    "constructs": "^10.4.2",
+    "dotenv": "^16.5.0"
   }
 }
