@@ -1,93 +1,219 @@
-# Welcome to your CDK TypeScript project
+# BusinessCart
 
-This is a blank project for CDK development with TypeScript.
+BusinessCart is a serverless e-commerce platform built with AWS CDK, enabling companies to manage products and customers. It uses API Gateway, Lambda, and MongoDB Atlas for data storage, with a custom authorizer for secure access.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Features
+- **User Management**: Register, login, refresh tokens, and logout.
+- **Company Management**: Create, retrieve, update, and delete company profiles.
+- **Product Management**: Add, retrieve, update, and delete products for companies.
+- **Secure Authorization**: Custom Lambda authorizer with JWT-based authentication.
+- **Internal API Calls**: Bypasses user tokens using `X-Internal-Request` header.
 
-## Useful commands
+## Prerequisites
+- **Node.js**: v18.x or later
+- **AWS CLI**: v2.x, configured with credentials
+- **AWS SAM CLI**: v1.123.0 or later
+- **Docker**: v28.1.1 or later, running
+- **MongoDB Atlas**: Connection string for database
+- **Ubuntu**: 24.04.2 LTS (or compatible OS)
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+## Setup
+1. **Clone the Repository**:
+   ```bash
+   git clone <repository-url>
+   cd BusinessCart
+   ```
 
+2. **Install Dependencies**:
+   ```bash
+   cd cdk
+   npm install
+   cd ../authorizer-lambda
+   npm install
+   cd ../company-service-lambda
+   npm install
+   cd ../product-service-lambda
+   npm install
+   cd ../user-service-lambda
+   npm install
+   ```
 
-To create a TypeScript-based User Service as an AWS Lambda function integrated with API Gateway, following serverless best practices, I’ll design a new implementation inspired by your Express.js user service but tailored for a serverless environment. Your Express.js service provides user authentication with endpoints for registration (/register), login (/login), token refresh (/refresh), and logout (/logout), using MongoDB, JWT, and validation. You’re working in your CDK project (/home/syed/Documents/cdk-backend/ with aws-cdk-lib@2.195.0) and want to use API Gateway (as confirmed), with TypeScript and serverless best practices.
+3. **Configure Environment Variables**:
+   Create `.env` files in each Lambda directory (`authorizer-lambda`, `company-service-lambda`, `product-service-lambda`, `user-service-lambda`) with:
+   ```plaintext
+   MONGO_URI=<your-mongodb-atlas-uri>
+   JWT_SECRET=<your-jwt-secret>
+   NODE_ENV=development
+   ```
+   For `authorizer-lambda`, add:
+   ```plaintext
+   COMPANY_SERVICE_URL=http://192.168.12.151:3000
+   ```
 
-I’ll:
+4. **Synthesize CDK Template**:
+   ```bash
+   cd ~/BusinessCart/cdk
+   npm run build
+   cdk synth
+   ```
 
-Design a TypeScript Lambda function for the User Service, handling /users/register, /users/login, /users/refresh, /users/logout.
-Follow serverless best practices:
-Single Lambda per service for simplicity and cost efficiency.
-Environment variable management via AWS SSM Parameter Store or Secrets Manager.
-Connection pooling for MongoDB to optimize cold starts.
-Lightweight validation without heavy dependencies.
-Proper error handling and logging.
-Modular code with dependency injection.
-Type-safe API Gateway event handling.
-Integrate with your CDK stack, alongside HelloHandler, PythonHandler, and HelloHandler2, using API Gateway with distinct paths.
-Provide local testing with sam local start-api and deployment instructions.
-Address stopping sam local start-api, as you’ve asked about stopping processes.
-Ensure TypeScript compatibility with your existing setup (tsconfig.cdk.json, typescript@5.6.3).
-Requirements (Based on Your Express.js)
-Endpoints:
-POST /users/register: Create a user (name, email, password, role: customer/company), return JWT access/refresh tokens.
-POST /users/login: Authenticate user (email, password), return tokens.
-POST /users/refresh: Refresh access token using refresh token.
-POST /users/logout: Blacklist access token, delete refresh token.
-Features:
-MongoDB for user data, refresh tokens, and blacklisted tokens.
-JWT for authentication (access token: 15m, refresh token: 7d).
-Password hashing (bcrypt).
-Input validation.
-Cookie-based access token (via Set-Cookie header).
-Assumptions:
-MongoDB Atlas for database (via MONGO_URI).
-TypeScript for type safety.
-Single Lambda handling all routes for simplicity.
-API Gateway with CORS for client access.
-Serverless Best Practices
-Single Responsibility: One Lambda for the User Service, handling all user-related routes.
-Stateless: No reliance on in-memory state; use MongoDB for persistence.
-Connection Management: Reuse MongoDB connections across invocations.
-Secrets Management: Store MONGO_URI, JWT_SECRET, JWT_REFRESH_SECRET in AWS Secrets Manager.
-Lightweight Dependencies: Use zod for validation instead of express-validator.
-Logging: Structured logging with AWS CloudWatch.
-Timeout and Memory: Set appropriate Lambda timeout (30s) and memory (256MB).
-Type Safety: Use TypeScript for API Gateway events and MongoDB models.
-CDK: Define infrastructure with explicit API Gateway routes.
-Directory Structure
-text
+## API Testing Instructions
+BusinessCart uses AWS SAM CLI for local API testing, simulating API Gateway and Lambda functions. Follow these steps to test the `users`, `companies`, and `products` endpoints.
 
-Copy
-cdk-backend/
-├── lambda/
-│   ├── hello.js
-│   ├── hello2.js
-├── python-lambda/
-│   ├── lambda_function.py
-│   ├── hello2.py
-├── src/
-│   ├── hello.ts
-│   ├── hello2.ts
-├── user-service-lambda/
-│   ├── src/
-│   │   ├── handler.ts
-│   │   ├── models/
-│   │   │   ├── user.ts
-│   │   │   ├── blacklisted-token.ts
-│   │   │   ├── refresh-token.ts
-│   │   ├── services/
-│   │   │   ├── auth-service.ts
-│   │   │   ├── db-service.ts
-│   │   ├── types.ts
-│   │   ├── validation.ts
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── .env
-├── lib/
-│   ├── cdk-backend-stack.ts
-├── tsconfig.json
-├── tsconfig.cdk.json
+### Start Local API
+Run SAM with host networking to avoid `ECONNREFUSED`:
+
+```bash
+cd ~/BusinessCart
+export COMPANY_SERVICE_URL=http://192.168.12.151:3000
+sam local start-api -t cdk.out/CdkBackendStack.template.json --log-file sam.log --host 0.0.0.0 --docker-network host --env-vars <(echo "{\"AuthorizerLambda\": {\"COMPANY_SERVICE_URL\": \"$COMPANY_SERVICE_URL\"}}")
+```
+
+**Verify**: API runs at `http://127.0.0.1:3000`.
+
+### Check SAM Containers
+Ensure SAM containers are running:
+
+```bash
+docker ps
+```
+
+**Expected**: Containers like `public.ecr.aws/lambda/nodejs:18-rapid-x86_64` (Lambda) and API Gateway container. If empty, debug:
+
+```bash
+docker ps -a | grep -E 'amazon/aws-sam|public.ecr.aws/lambda'
+docker logs <container_id>
+sam local start-api -t cdk.out/CdkBackendStack.template.json --log-file sam.log --host 0.0.0.0 --docker-network host --env-vars <(echo "{\"AuthorizerLambda\": {\"COMPANY_SERVICE_URL\": \"$COMPANY_SERVICE_URL\"}}") --debug
+```
+
+### Generate JWT
+Obtain an access token:
+
+```bash
+curl -X POST http://127.0.0.1:3000/users/login \
+-H "Content-Type: application/json" \
+-d '{"username":"testuser","password":"test123"}'
+```
+
+**Response**:
+```json
+{
+  "accessToken": "<jwt-token>",
+  "refreshToken": "<refresh-token>"
+}
+```
+
+### Test Endpoints
+Use the `accessToken` for authenticated requests. Internal calls use `X-Internal-Request` to bypass user token dependency.
+
+#### GET /companies
+Retrieve companies:
+
+```bash
+curl -X GET http://127.0.0.1:3000/companies \
+-H "Authorization: Bearer <accessToken>"
+```
+
+**Expected**:
+```json
+[
+  {
+    "_id": "68313d273cca3b4842508d95",
+    "name": "Test Company",
+    "userId": "68313d273cca3b4842508d94",
+    "companyCode": "987654322",
+    ...
+  }
+]
+```
+
+#### POST /companies
+Create a company:
+
+```bash
+curl -X POST http://127.0.0.1:3000/companies \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <accessToken>" \
+-d '{"name":"Test Company","userId":"68313d273cca3b4842508d94","companyCode":"987654322","paymentMethods":["cash","credit_card"],"address":{"street":"123 Main St","city":"Anytown","state":"CA","zip":"12345","coordinates":{"lat":37.7749,"lng":-122.4194}},"sellingArea":{"radius":10,"center":{"lat":37.7749,"lng":-122.4194}}}'
+```
+
+**Expected**:
+```json
+{
+  "_id": "68313d273cca3b4842508d95",
+  "name": "Test Company",
+  ...
+}
+```
+
+#### POST /products
+Create a product:
+
+```bash
+curl -X POST http://127.0.0.1:3000/products \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <accessToken>" \
+-d '{"name":"Product 1","price":10,"category":"electronics","stock":100}'
+```
+
+**Expected**:
+```json
+{
+  "_id": "68313d273cca3b4842508d96",
+  "name": "Product 1",
+  ...
+}
+```
+
+### Troubleshoot Common Issues
+- **No Containers in `docker ps`**:
+  - Check stopped containers:
+    ```bash
+    docker ps -a | grep -E 'amazon/aws-sam|public.ecr.aws/lambda'
+    ```
+  - Restart Docker:
+    ```bash
+    sudo systemctl restart docker
+    ```
+  - Verify port 3000:
+    ```bash
+    netstat -tuln | grep 3000
+    ```
+
+- **ECONNREFUSED**:
+  - Test from `authorizer-lambda` container:
+    ```bash
+    docker exec -it <authorizer_lambda_container_id> sh
+    apk add curl
+    curl http://192.168.12.151:3000/companies
+    ```
+  - Use bridge network:
+    ```bash
+    docker network create sam-network
+    export COMPANY_SERVICE_URL=http://host-gateway:3000
+    sam local start-api -t cdk.out/CdkBackendStack.template.json --log-file sam.log --host 0.0.0.0 --docker-network sam-network --extra-hosts '{"host-gateway":"192.168.12.151"}' --env-vars <(echo "{\"AuthorizerLambda\": {\"COMPANY_SERVICE_URL\": \"$COMPANY_SERVICE_URL\"}}")
+    ```
+
+- **403 Forbidden**:
+  - Ensure `X-Internal-Request` is configured in `cdk-backend/cdk/lib/cdk-backend-stack.ts` and `authorizer-lambda/src/handler/handler.ts`.
+  - Check SAM logs:
+    ```bash
+    tail -f ~/BusinessCart/sam.log
+    ```
+
+## Project Structure
+- **cdk/**: AWS CDK infrastructure code
+- **authorizer-lambda/**: Custom authorizer Lambda
+- **company-service-lambda/**: Company management Lambda
+- **product-service-lambda/**: Product management Lambda
+- **user-service-lambda/**: User management Lambda
+
+## Contributing
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/your-feature`).
+3. Commit changes (`git commit -am 'Add feature'`).
+4. Push to the branch (`git push origin feature/your-feature`).
+5. Create a pull request.
+
+## License
+MIT License
