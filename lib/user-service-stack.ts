@@ -14,7 +14,7 @@ export class UserServiceStack extends cdk.Stack {
     const userServiceFn = new lambda.Function(this, 'UserService', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'handler.handler',
-      code: lambda.Code.fromAsset('user-service-lambda/dist'),
+      code: lambda.Code.fromAsset('user-service/dist'),
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
       environment: {
