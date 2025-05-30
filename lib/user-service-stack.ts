@@ -3,7 +3,7 @@ import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { config } from 'dotenv';
-config({ path: './user-service-lambda/dist/.env' });
+config({ path: './user-service/dist/.env' });
 
 
 export class UserServiceStack extends cdk.Stack {

@@ -1,0 +1,18 @@
+START RequestId: cae68b21-edba-4eed-ae30-1788cf1e613c Version: $LATEST
+END RequestId: 6becb775-9134-45a9-935f-44f04bc1776e
+REPORT RequestId: 6becb775-9134-45a9-935f-44f04bc1776e	Init Duration: 0.12 ms	Duration: 132.13 ms	Billed Duration: 133 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: 7638cb07-a522-4936-ba59-f227b4dd7517 Version: $LATEST
+2025-05-30T21:35:47.616Z	485800b1-62d5-41d2-b703-b7b810b6251f	INFO	Connected to MongoDB
+END RequestId: 485800b1-62d5-41d2-b703-b7b810b6251f
+REPORT RequestId: 485800b1-62d5-41d2-b703-b7b810b6251f	Init Duration: 0.08 ms	Duration: 2425.75 ms	Billed Duration: 2426 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: 07fc4e4a-9c9f-4ee7-bf20-9ef366d6d113 Version: $LATEST
+END RequestId: 10270357-c5f3-4a8b-92d4-ce89388a43bc
+REPORT RequestId: 10270357-c5f3-4a8b-92d4-ce89388a43bc	Init Duration: 0.07 ms	Duration: 133.68 ms	Billed Duration: 134 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: 3105ecd5-8b2e-48cf-85d3-9741ff62216f Version: $LATEST
+2025-05-30T21:38:46.308Z	1558bb88-c945-40e8-8779-ed523269386d	INFO	Connected to MongoDB
+END RequestId: 1558bb88-c945-40e8-8779-ed523269386d
+REPORT RequestId: 1558bb88-c945-40e8-8779-ed523269386d	Init Duration: 0.04 ms	Duration: 2183.45 ms	Billed Duration: 2184 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+

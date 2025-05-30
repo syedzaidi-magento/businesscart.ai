@@ -1,7 +1,14 @@
-START RequestId: 0fba9eac-9f6b-45d8-b42a-cfac16f76b7f Version: $LATEST
-2025-05-30T17:27:22.181Z	d9dc8911-9616-4fe4-a929-e4d9b2f29d52	INFO	MONGO_URI: mongodb+srv://syedqurat27:g0RZncJO7Emb3qDg@businesscart.u7jfdxv.mongodb.net/BusinessCart?retryWrites=true&w=majority&appName=BusinessCart
-2025-05-30T17:27:22.181Z	d9dc8911-9616-4fe4-a929-e4d9b2f29d52	INFO	Connecting to MongoDB...
-2025-05-30T17:27:23.395Z	d9dc8911-9616-4fe4-a929-e4d9b2f29d52	INFO	MongoDB connected
-END RequestId: d9dc8911-9616-4fe4-a929-e4d9b2f29d52
-REPORT RequestId: d9dc8911-9616-4fe4-a929-e4d9b2f29d52	Init Duration: 0.07 ms	Duration: 2242.27 ms	Billed Duration: 2243 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
+START RequestId: 44b98433-d142-43b8-a83b-bbc25289d05c Version: $LATEST
+2025-05-30T20:59:44.645Z	2730d848-bd6c-4255-b413-4c2f1ed00840	INFO	MONGO_URI: mongodb+srv://syedqurat27:g0RZncJO7Emb3qDg@businesscart.u7jfdxv.mongodb.net/BusinessCart?retryWrites=true&w=majority&appName=BusinessCart
+2025-05-30T20:59:44.646Z	2730d848-bd6c-4255-b413-4c2f1ed00840	INFO	Connecting to MongoDB...
+2025-05-30T20:59:45.862Z	2730d848-bd6c-4255-b413-4c2f1ed00840	INFO	MongoDB connected
+END RequestId: 2730d848-bd6c-4255-b413-4c2f1ed00840
+REPORT RequestId: 2730d848-bd6c-4255-b413-4c2f1ed00840	Init Duration: 0.08 ms	Duration: 2234.31 ms	Billed Duration: 2235 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
+
+START RequestId: abac2dd3-157f-4667-ba36-fe373b4157d7 Version: $LATEST
+2025-05-30T21:32:26.852Z	4286194c-37fb-47f5-904c-fdd9711a2e61	INFO	MONGO_URI: mongodb+srv://syedqurat27:g0RZncJO7Emb3qDg@businesscart.u7jfdxv.mongodb.net/BusinessCart?retryWrites=true&w=majority&appName=BusinessCart
+2025-05-30T21:32:26.853Z	4286194c-37fb-47f5-904c-fdd9711a2e61	INFO	Connecting to MongoDB...
+2025-05-30T21:32:28.032Z	4286194c-37fb-47f5-904c-fdd9711a2e61	INFO	MongoDB connected
+END RequestId: 4286194c-37fb-47f5-904c-fdd9711a2e61
+REPORT RequestId: 4286194c-37fb-47f5-904c-fdd9711a2e61	Init Duration: 0.04 ms	Duration: 2172.95 ms	Billed Duration: 2173 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
 
