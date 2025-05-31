@@ -4,62 +4,87 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
 import { Construct } from 'constructs';
 
-interface ProductServiceStackProps extends cdk.StackProps {
-  api: apigateway.RestApi;
-  authorizer: apigateway.TokenAuthorizer;
-}
-
 export class ProductServiceStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: ProductServiceStackProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Product Service Lambda
-    const productServiceLambda = new lambda.Function(this, 'ProductServiceLambda', {
+    // Authorizer Lambda
+    const authorizerFn = new lambda.Function(this, 'ProductAuthorizer', {
       runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'handler.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../product-service-lambda/dist')),
+      handler: 'authorizer.handler',
+      code: lambda.Code.fromAsset('product-service/dist'),
       environment: {
         MONGO_URI: process.env.MONGO_URI || '',
         JWT_SECRET: process.env.JWT_SECRET || '',
+        JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || '',
         NODE_ENV: 'development',
       },
     });
 
-    // API Gateway Routes
-    const products = props.api.root.addResource('products');
-    const productId = products.addResource('{id}');
-    const customer = products.addResource('customer');
+    // Product Service Lambda
+    const productServiceLambda = new lambda.Function(this, 'ProductService', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'handler.handler',
+      code: lambda.Code.fromAsset('product-service/dist'),
+      environment: {
+        MONGO_URI: process.env.MONGO_URI || '',
+        JWT_SECRET: process.env.JWT_SECRET || '',
+        JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || '',
+        NODE_ENV: 'development',
+      },
+      timeout: cdk.Duration.seconds(30),
+    });
+
+    // API Gateway
+    const api = new apigateway.RestApi(this, 'ProductApi', {
+      restApiName: 'Product Service API',
+      description: 'API for Product Service',
+      deployOptions: {
+        stageName: 'dev',
+      },
+    });
+
+    // Token Authorizer
+    const authorizer = new apigateway.TokenAuthorizer(this, 'ProductJwtAuthorizer', {
+      handler: authorizerFn,
+      identitySource: 'method.request.header.Authorization',
+    });
+
+    // API Routes
+    const products = api.root.addResource('products');
+    const productId = products.addResource('{productId}');
 
     // Integrations
     const productIntegration = new apigateway.LambdaIntegration(productServiceLambda);
-    products.addMethod('GET', productIntegration, {
-      authorizer: props.authorizer,
+    products.addMethod('POST', productIntegration, {
+      authorizer,
       authorizationType: apigateway.AuthorizationType.CUSTOM,
     });
-    products.addMethod('POST', productIntegration, {
-      authorizer: props.authorizer,
+    products.addMethod('GET', productIntegration, {
+      authorizer,
       authorizationType: apigateway.AuthorizationType.CUSTOM,
     });
     productId.addMethod('GET', productIntegration, {
-      authorizer: props.authorizer,
+      authorizer,
       authorizationType: apigateway.AuthorizationType.CUSTOM,
     });
     productId.addMethod('PUT', productIntegration, {
-      authorizer: props.authorizer,
+      authorizer,
       authorizationType: apigateway.AuthorizationType.CUSTOM,
     });
     productId.addMethod('DELETE', productIntegration, {
-      authorizer: props.authorizer,
-      authorizationType: apigateway.AuthorizationType.CUSTOM,
-    });
-    customer.addMethod('GET', productIntegration, {
-      authorizer: props.authorizer,
+      authorizer,
       authorizationType: apigateway.AuthorizationType.CUSTOM,
     });
 
     // CORS
     products.addCorsPreflight({ allowOrigins: ['*'], allowMethods: ['GET', 'POST', 'OPTIONS'] });
     productId.addCorsPreflight({ allowOrigins: ['*'], allowMethods: ['GET', 'PUT', 'DELETE', 'OPTIONS'] });
-    customer.addCorsPreflight({ allowOrigins: ['*'], allowMethods: ['GET', 'OPTIONS'] });
+
+    // Output API Endpoint
+    new cdk.CfnOutput(this, 'ProductApiUrl', {
+      value: api.url,
+      description: 'Product Service API Endpoint',
+    });
   }
 }
