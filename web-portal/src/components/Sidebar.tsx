@@ -1,24 +1,33 @@
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import { HomeIcon, BuildingOffice2Icon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    window.location.href = '/login';
-  };
+  const links = [
+    { name: 'Dashboard', path: '/dashboard', icon: HomeIcon },
+    { name: 'Companies', path: '/companies', icon: BuildingOffice2Icon },
+    { name: 'Products', path: '/products', icon: ShoppingBagIcon },
+  ];
 
   return (
-    <div className="w-64 bg-gray-800 text-white h-screen p-6">
-      <h2 className="text-2xl mb-6">BusinessCart</h2>
-      <nav className="space-y-4">
-        <Link to="/companies" className="block px-4 py-2 rounded hover:bg-gray-700">
-          Companies
-        </Link>
-        <Link to="/products" className="block px-4 py-2 rounded hover:bg-gray-700">
-          Products
-        </Link>
-        <button onClick={handleLogout} className="w-full text-left px-4 py-2 rounded hover:bg-gray-700">
-          Logout
-        </button>
+    <div className="w-64 bg-gray-800 shadow-lg h-screen sticky top-0">
+      <div className="p-6">
+        <h1 className="text-2xl font-semibold text-gray-200">BusinessCart</h1>
+      </div>
+      <nav className="mt-4">
+        {links.map((link) => (
+          <NavLink
+            key={link.name}
+            to={link.path}
+            className={({ isActive }) =>
+              `flex items-center px-6 py-3 text-gray-200 hover:bg-gray-700 transition-colors ${
+                isActive ? 'bg-gray-900 text-white border-l-4 border-blue-500' : ''
+              }`
+            }
+          >
+            <link.icon className="h-5 w-5 mr-3" />
+            <span>{link.name}</span>
+          </NavLink>
+        ))}
       </nav>
     </div>
   );

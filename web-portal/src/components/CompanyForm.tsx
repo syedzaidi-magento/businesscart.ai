@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createCompany, getCompanies, updateCompany, deleteCompany } from '../api';
 import { Company } from '../types';
+import Navbar from './Navbar';
 
 const CompanyForm = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -31,8 +32,8 @@ const CompanyForm = () => {
     try {
       const data = await getCompanies();
       setCompanies(data);
-    } catch (err) {
-      setErrors(['Failed to fetch companies']);
+    } catch (err: any) {
+      setErrors([err.response?.data?.message || 'Error fetching companies']);
     }
   };
 
@@ -40,12 +41,12 @@ const CompanyForm = () => {
     const errors: string[] = [];
     if (!formData.name) errors.push('Company name is required');
     if (!formData.companyCode) errors.push('Company code is required');
-    if (formData.paymentMethods.length === 0) errors.push('At least one payment method is required');
+    if (formData.paymentMethods.length === 0) errors.push('At least one payment method required');
     if (!formData.address.street) errors.push('Street is required');
     if (!formData.address.city) errors.push('City is required');
     if (!formData.address.state) errors.push('State is required');
     if (!formData.address.zip) errors.push('Zip code is required');
-    if (formData.sellingArea.radius <= 0) errors.push('Selling area radius must be positive');
+    if (formData.sellingArea.radius <= 0) errors.push('Error: Selling area radius must be positive');
     return errors;
   };
 
@@ -156,178 +157,194 @@ const CompanyForm = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h2 className="text-2xl mb-4">Manage Companies</h2>
-      {errors.length > 0 && (
-        <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">
-          {errors.map((error, idx) => (
-            <p key={idx}>{error}</p>
-          ))}
-        </div>
-      )}
-      <form onSubmit={handleSubmit} className="space-y-4 mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium">Company Name</label>
-          <input
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Test Company"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Company Code</label>
-          <input
-            name="companyCode"
-            value={formData.companyCode}
-            onChange={handleChange}
-            placeholder="CODE123"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium">Payment Methods (comma-separated)</label>
-          <input
-            name="paymentMethods"
-            value={formData.paymentMethods.join(', ')}
-            onChange={handleChange}
-            placeholder="cash, credit_card"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Street</label>
-          <input
-            name="address.street"
-            value={formData.address.street}
-            onChange={handleChange}
-            placeholder="123 Main St"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">City</label>
-          <input
-            name="address.city"
-            value={formData.address.city}
-            onChange={handleChange}
-            placeholder="Anytown"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">State</label>
-          <input
-            name="address.state"
-            value={formData.address.state}
-            onChange={handleChange}
-            placeholder="CA"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Zip Code</label>
-          <input
-            name="address.zip"
-            value={formData.address.zip}
-            onChange={handleChange}
-            placeholder="12345"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Address Latitude</label>
-          <input
-            name="address.coordinates.lat"
-            type="number"
-            step="any"
-            value={formData.address.coordinates.lat}
-            onChange={handleChange}
-            placeholder="37.7749"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Address Longitude</label>
-          <input
-            name="address.coordinates.lng"
-            type="number"
-            step="any"
-            value={formData.address.coordinates.lng}
-            onChange={handleChange}
-            placeholder="-122.4194"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Selling Area Radius (km)</label>
-          <input
-            name="sellingArea.radius"
-            type="number"
-            step="any"
-            value={formData.sellingArea.radius}
-            onChange={handleChange}
-            placeholder="10"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Selling Area Center Latitude</label>
-          <input
-            name="sellingArea.center.lat"
-            type="number"
-            step="any"
-            value={formData.sellingArea.center.lat}
-            onChange={handleChange}
-            placeholder="37.7749"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Selling Area Center Longitude</label>
-          <input
-            name="sellingArea.center.lng"
-            type="number"
-            step="any"
-            value={formData.sellingArea.center.lng}
-            onChange={handleChange}
-            placeholder="-122.4194"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <button type="submit" className="md:col-span-2 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-          {editingId ? 'Update' : 'Create'} Company
-        </button>
-      </form>
-      <h3 className="text-xl mb-4">Companies</h3>
-      <ul className="space-y-2">
-        {companies.map((company) => (
-          <li key={company._id} className="border p-4 rounded flex justify-between items-center">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Manage Companies</h2>
+          {errors.length > 0 && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-6">
+              {errors.map((error, idx) => (
+                <p key={idx}>{error}</p>
+              ))}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="font-bold">{company.name} ({company.companyCode})</p>
-              <p>
-                {company.address.street}, {company.address.city}, {company.address.state} {company.address.zip}
-              </p>
-              <p>Payment Methods: {company.paymentMethods.join(', ')}</p>
+              <label className="block text-sm font-medium text-gray-700">Company Name</label>
+              <input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Test Company"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
-            <div className="space-x-2">
-              <button
-                onClick={() => handleEdit(company)}
-                className="bg-yellow-500 text-white p-1 rounded hover:bg-yellow-600"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(company._id)}
-                className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
-              >
-                Delete
-              </button>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Company Code</label>
+              <input
+                name="companyCode"
+                value={formData.companyCode}
+                onChange={handleChange}
+                placeholder="CODE123"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
-          </li>
-        ))}
-      </ul>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700">Payment Methods (comma-separated)</label>
+              <input
+                name="paymentMethods"
+                value={formData.paymentMethods.join(', ')}
+                onChange={handleChange}
+                placeholder="cash, credit_card"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Street</label>
+              <input
+                name="address.street"
+                value={formData.address.street}
+                onChange={handleChange}
+                placeholder="123 Main St"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">City</label>
+              <input
+                name="address.city"
+                value={formData.address.city}
+                onChange={handleChange}
+                placeholder="Anytown"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">State</label>
+              <input
+                name="address.state"
+                value={formData.address.state}
+                onChange={handleChange}
+                placeholder="CA"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Zip Code</label>
+              <input
+                name="address.zip"
+                value={formData.address.zip}
+                onChange={handleChange}
+                placeholder="12345"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Address Latitude</label>
+              <input
+                name="address.coordinates.lat"
+                type="number"
+                step="any"
+                value={formData.address.coordinates.lat}
+                onChange={handleChange}
+                placeholder="37.7749"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Address Longitude</label>
+              <input
+                name="address.coordinates.lng"
+                type="number"
+                step="any"
+                value={formData.address.coordinates.lng}
+                onChange={handleChange}
+                placeholder="-122.4194"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Selling Area Radius (km)</label>
+              <input
+                name="sellingArea.radius"
+                type="number"
+                step="any"
+                value={formData.sellingArea.radius}
+                onChange={handleChange}
+                placeholder="10"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Selling Area Center Latitude</label>
+              <input
+                name="sellingArea.center.lat"
+                type="number"
+                step="any"
+                value={formData.sellingArea.center.lat}
+                onChange={handleChange}
+                placeholder="37.7749"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Selling Area Center Longitude</label>
+              <input
+                name="sellingArea.center.lng"
+                type="number"
+                step="any"
+                value={formData.sellingArea.center.lng}
+                onChange={handleChange}
+                placeholder="-122.4194"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <button
+              type="submit"
+              className="md:col-span-2 w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors"
+            >
+              {editingId ? 'Update' : 'Create'} Company
+            </button>
+          </form>
+        </div>
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Companies</h3>
+          {companies.length === 0 ? (
+            <p className="text-gray-600">No companies found.</p>
+          ) : (
+            <ul className="space-y-4">
+              {companies.map((company) => (
+                <li key={company._id} className="border-b pb-4 last:border-b-0">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-800">{company.name} ({company.companyCode})</p>
+                      <p className="text-sm text-gray-600">
+                        {company.address.street}, {company.address.city}, {company.address.state} {company.address.zip}
+                      </p>
+                      <p className="text-sm text-gray-600">Payment Methods: {company.paymentMethods.join(', ')}</p>
+                    </div>
+                    <div className="space-x-2">
+                      <button
+                        onClick={() => handleEdit(company)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(company._id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

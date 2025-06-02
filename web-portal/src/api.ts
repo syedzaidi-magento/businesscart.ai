@@ -10,10 +10,33 @@ const api = axios.create();
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000;
+      if (Date.now() >= expiry) {
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
+        throw new Error('Token expired');
+      }
+      config.headers.Authorization = `Bearer ${token}`;
+    } catch (e) {
+      localStorage.removeItem('accessToken');
+      window.location.href = '/login';
+    }
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('accessToken');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const register = async (data: {
   name: string;
