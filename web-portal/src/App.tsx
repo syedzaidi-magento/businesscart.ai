@@ -5,13 +5,14 @@ import CompanyForm from './components/CompanyForm';
 import ProductForm from './components/ProductForm';
 import Dashboard from './components/Dashboard';
 import Sidebar from './components/Sidebar';
+import { useAuth } from './hooks/useAuth';
 
 const App = () => {
-  const isAuthenticated = !!localStorage.getItem('accessToken');
+  const isAuthenticated = useAuth();
 
   return (
     <Router>
-      <div className="flex min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-100 flex">
         {isAuthenticated && <Sidebar />}
         <div className="flex-1">
           <Routes>

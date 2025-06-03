@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../api';
 import toast, { Toaster } from 'react-hot-toast';
@@ -27,13 +27,20 @@ const Login = () => {
       const response = await login({ email: formData.email, password: formData.password });
       localStorage.setItem('accessToken', response.accessToken);
       toast.success('Login successful');
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (localStorage.getItem('accessToken')) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">

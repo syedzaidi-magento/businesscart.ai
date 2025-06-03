@@ -25,7 +25,7 @@ const Navbar = () => {
           .toUpperCase()
           .slice(0, 2);
         setUserInitials(initials);
-        setCompanyName(payload.user?.companyName || 'Your Company'); // Adjust based on JWT
+        setCompanyName(payload.user?.companyName || 'Your Company');
       } catch (e) {
         console.error('Invalid token');
         toast.error('Failed to load user data');
@@ -37,7 +37,7 @@ const Navbar = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('products_cache');
     toast.success('Logged out successfully');
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -87,9 +87,7 @@ const Navbar = () => {
                         {({ active }) => (
                           <button
                             onClick={handleLogout}
-                            className={`${
-                              active ? 'bg-gray-100' : ''
-                            } flex items-center w-full px-4 py-2 text-sm text-gray-700`}
+                            className={`${active ? 'bg-gray-100' : ''} flex items-center w-full px-4 py-2 text-sm text-gray-700`}
                           >
                             <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
                             Sign out
