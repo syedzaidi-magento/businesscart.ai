@@ -8,8 +8,8 @@ export class CompanyService {
     return company;
   }
 
-  async getCompanies(): Promise<ICompany[]> {
-    return await Company.find();
+  async getCompanies(userId: string): Promise<ICompany[]> {
+    return await Company.find({ userId });
   }
 
   async getCompanyById(id: string, userId: string, userRole: string): Promise<ICompany> {
