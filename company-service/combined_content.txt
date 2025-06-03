@@ -1,0 +1,592 @@
+
+================================================================================
+FILE: ./company-service/src/validation.ts
+================================================================================
+import { z } from 'zod';
+
+export const createCompanySchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+  companyCode: z.string().min(1, 'Company code is required'),
+  address: z
+    .object({
+      street: z.string().min(1, 'Street is required'),
+      city: z.string().min(1, 'City is required'),
+      state: z.string().min(1, 'State is required'),
+      zip: z.string().min(1, 'Zip is required'),
+      coordinates: z
+        .object({
+          lat: z.number({ required_error: 'Latitude is required' }),
+          lng: z.number({ required_error: 'Longitude is required' }),
+        })
+        .optional(),
+    })
+    .optional(),
+  sellingArea: z
+    .object({
+      radius: z.number().min(0, 'Radius must be non-negative'),
+      center: z
+        .object({
+          lat: z.number({ required_error: 'Center latitude is required' }),
+          lng: z.number({ required_error: 'Center longitude is required' }),
+        })
+        .optional(),
+    })
+    .optional(),
+  paymentMethods: z
+    .array(z.enum(['cash', 'credit_card']))
+    .min(1, 'At least one payment method is required')
+    .default(['cash']),
+});
+
+export const updateCompanySchema = z.object({
+  name: z.string().min(1, 'Name is required').optional(),
+  description: z.string().optional(),
+  companyCode: z.string().min(1, 'Company code is required').optional(),
+  address: z
+    .object({
+      street: z.string().min(1, 'Street is required'),
+      city: z.string().min(1, 'City is required'),
+      state: z.string().min(1, 'State is required'),
+      zip: z.string().min(1, 'Zip is required'),
+      coordinates: z
+        .object({
+          lat: z.number({ required_error: 'Latitude is required' }),
+          lng: z.number({ required_error: 'Longitude is required' }),
+        })
+        .optional(),
+    })
+    .optional(),
+  sellingArea: z
+    .object({
+      radius: z.number().min(0, 'Radius must be non-negative'),
+      center: z.object({
+        lat: z.number({ required_error: 'Center latitude is required' }),
+        lng: z.number({ required_error: 'Center longitude is required' }),
+      }),
+    })
+    .optional(),
+  paymentMethods: z
+    .array(z.enum(['cash', 'credit_card']))
+    .min(1, 'At least one payment method is required')
+    .optional(),
+});
+
+export const addCustomerSchema = z.object({
+  customerId: z.string().min(1, 'Customer ID is required'),
+});
+
+export type CreateCompanyInput = z.infer<typeof createCompanySchema>;
+export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>;
+export type AddCustomerInput = z.infer<typeof addCustomerSchema>;
+================================================================================
+FILE: ./company-service/src/authorizer.ts
+================================================================================
+import { APIGatewayTokenAuthorizerEvent, APIGatewayAuthorizerResult } from 'aws-lambda';
+import jwt from 'jsonwebtoken';
+
+interface JwtPayload {
+  user: {
+    id: string;
+    role: string;
+  };
+}
+
+export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<APIGatewayAuthorizerResult> => {
+  try {
+    const token = event.authorizationToken.replace('Bearer ', '');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+
+    if (decoded.user.role !== 'company') {
+      throw new Error('User is not a company');
+    }
+
+    return {
+    principalId: decoded.user.id,
+    policyDocument: {
+        Version: '2012-10-17',
+        Statement: [
+        {
+            Action: 'execute-api:Invoke',
+            Effect: 'Allow',
+            Resource: event.methodArn,
+        },
+        ],
+    },
+    context: {
+        userId: decoded.user.id,
+        userRole: decoded.user.role,
+    },
+    };
+  } catch (err) {
+    return {
+      principalId: 'unauthorized',
+      policyDocument: {
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Action: 'execute-api:Invoke',
+            Effect: 'Deny',
+            Resource: event.methodArn,
+          },
+        ],
+      },
+    };
+  }
+};
+================================================================================
+FILE: ./company-service/src/handler.ts
+================================================================================
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { z } from 'zod';
+import { Company } from './models/company';
+import { connectDB } from './services/db-service';
+import { createCompanySchema, updateCompanySchema, addCustomerSchema } from './validation';
+
+interface AuthorizerContext {
+  userId?: string;
+  userRole?: string;
+}
+
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  try {
+    await connectDB();
+    const { httpMethod, path, body, pathParameters, requestContext } = event;
+
+    // Extract authorizer context
+    const authorizer: AuthorizerContext = requestContext.authorizer || {};
+    const userId = authorizer.userId;
+    const userRole = authorizer.userRole;
+
+    if (!userId || userRole !== 'company') {
+      return {
+        statusCode: 403,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Unauthorized: Company role required' }),
+      };
+    }
+
+    // POST /companies
+    if (path === '/companies' && httpMethod === 'POST') {
+      const existingCompany = await Company.findOne({ userId });
+      if (existingCompany) {
+        return {
+          statusCode: 400,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'User can only create one company' }),
+        };
+      }
+      const data = createCompanySchema.parse(body ? JSON.parse(body) : {});
+      const company = await Company.create({
+        ...data,
+        userId,
+      });
+      return {
+        statusCode: 201,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(company),
+      };
+    }
+
+    // GET /companies
+    if (path === '/companies' && httpMethod === 'GET') {
+      const companies = await Company.find();
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(companies),
+      };
+    }
+
+    // GET /companies/{companyId}
+    if (path.startsWith('/companies/') && httpMethod === 'GET' && pathParameters?.companyId) {
+      const id = pathParameters.companyId;
+      const company = await Company.findById(id);
+      if (!company) {
+        return {
+          statusCode: 404,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Company not found' }),
+        };
+      }
+      if (company.userId !== userId) {
+        return {
+          statusCode: 403,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Unauthorized access to company' }),
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(company),
+      };
+    }
+
+    // PUT /companies/{companyId}
+    if (path.startsWith('/companies/') && httpMethod === 'PUT' && pathParameters?.companyId) {
+      const id = pathParameters.companyId;
+      const company = await Company.findById(id);
+      if (!company) {
+        return {
+          statusCode: 404,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Company not found' }),
+        };
+      }
+      if (company.userId !== userId) {
+        return {
+          statusCode: 403,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Unauthorized access to company' }),
+        };
+      }
+      const data = updateCompanySchema.parse(body ? JSON.parse(body) : {});
+      Object.assign(company, data);
+      await company.save();
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(company),
+      };
+    }
+
+    // DELETE /companies/{companyId}
+    if (path.startsWith('/companies/') && httpMethod === 'DELETE' && pathParameters?.companyId) {
+      const id = pathParameters.companyId;
+      const company = await Company.findById(id);
+      if (!company) {
+        return {
+          statusCode: 404,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Company not found' }),
+        };
+      }
+      if (company.userId !== userId) {
+        return {
+          statusCode: 403,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Unauthorized access to company' }),
+        };
+      }
+      await Company.deleteOne({ _id: id });
+      return {
+        statusCode: 204,
+        headers: { 'Content-Type': 'application/json' },
+        body: '',
+      };
+    }
+
+    // POST /companies/{companyId}/customers
+    if (path.includes('/companies/') && path.includes('/customers') && httpMethod === 'POST' && pathParameters?.companyId) {
+      const companyId = pathParameters.companyId;
+      const company = await Company.findById(companyId);
+      if (!company) {
+        return {
+          statusCode: 404,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Company not found' }),
+        };
+      }
+      if (company.userId !== userId) {
+        return {
+          statusCode: 403,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Unauthorized access to company' }),
+        };
+      }
+      const customerData = addCustomerSchema.parse(body ? JSON.parse(body) : {});
+      company.customers = company.customers || [];
+      if (!company.customers.includes(customerData.customerId)) {
+        company.customers.push(customerData.customerId);
+        await company.save();
+      }
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(company),
+      };
+    }
+
+    // GET /companies/customers/{customerId}
+    if (path.includes('/companies/customers/') && httpMethod === 'GET' && pathParameters?.customerId) {
+      const customerId = pathParameters.customerId;
+      const companies = await Company.find({ customers: customerId });
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(companies),
+      };
+    }
+
+    // POST /companies/code
+    if (path === '/companies/code' && httpMethod === 'POST') {
+      const data = z.object({ code: z.string() }).parse(body ? JSON.parse(body) : {});
+      const company = await Company.findOne({ companyCode: data.code });
+      if (!company) {
+        return {
+          statusCode: 404,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Invalid company code' }),
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(company),
+      };
+    }
+
+    // GET /companies/code/{code}
+    if (path.startsWith('/companies/code/') && httpMethod === 'GET' && pathParameters?.code) {
+      const code = pathParameters.code;
+      const company = await Company.findOne({ companyCode: code });
+      if (!company) {
+        return {
+          statusCode: 404,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Invalid company code' }),
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(company),
+      };
+    }
+
+    // POST /companies/code/{code}/customers
+    if (path.startsWith('/companies/code/') && path.includes('/customers') && httpMethod === 'POST' && pathParameters?.code) {
+      const code = pathParameters.code;
+      const company = await Company.findOne({ companyCode: code });
+      if (!company) {
+        return {
+          statusCode: 404,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Invalid company code' }),
+        };
+      }
+      if (!company.customers.includes(userId)) {
+        company.customers.push(userId);
+        await company.save();
+      }
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(company),
+      };
+    }
+
+    return {
+      statusCode: 404,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Route not found' }),
+    };
+  } catch (err) {
+    console.error('Handler error:', err);
+    if (err instanceof z.ZodError) {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ errors: err.errors }),
+      };
+    }
+    if (err instanceof Error) {
+      return {
+        statusCode: err.message.includes('not found') || err.message.includes('Invalid company code') ? 404 : err.message.includes('Unauthorized') ? 403 : 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: err.message }),
+      };
+    }
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Internal server error' }),
+    };
+  }
+};
+================================================================================
+FILE: ./company-service/src/models/company.ts
+================================================================================
+import { Schema, model, Document } from 'mongoose';
+
+interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
+interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  coordinates?: Coordinates;
+}
+
+interface SellingArea {
+  radius: number;
+  center: Coordinates;
+}
+
+export interface ICompany extends Document {
+  name: string;
+  description?: string;
+  companyCode: string;
+  userId: string;
+  address?: Address;
+  sellingArea?: SellingArea;
+  paymentMethods: ('cash' | 'credit_card')[];
+  customers: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const CompanySchema = new Schema<ICompany>(
+  {
+    name: { type: String, required: [true, 'Name is required'], trim: true },
+    description: { type: String, trim: true },
+    companyCode: { type: String, required: [true, 'Company code is required'], unique: true, trim: true },
+    userId: { type: String, required: [true, 'User ID is required'] },
+    address: {
+      type: {
+        street: { type: String, required: [true, 'Street is required'] },
+        city: { type: String, required: [true, 'City is required'] },
+        state: { type: String, required: [true, 'State is required'] },
+        zip: { type: String, required: [true, 'Zip is required'] },
+        coordinates: {
+          type: {
+            lat: { type: Number, required: [true, 'Latitude is required'] },
+            lng: { type: Number, required: [true, 'Longitude is required'] },
+          },
+          required: false,
+        },
+      },
+      required: false,
+    },
+    sellingArea: {
+      radius: { type: Number, min: [0, 'Radius must be non-negative'] },
+      center: {
+        lat: { type: Number, required: [true, 'Center latitude is required'] },
+        lng: { type: Number, required: [true, 'Center longitude is required'] },
+      },
+    },
+    paymentMethods: {
+      type: [{ type: String, enum: ['cash', 'credit_card'] }],
+      required: [true, 'At least one payment method is required'],
+      default: ['cash'],
+    },
+    customers: [{ type: String }],
+  },
+  { timestamps: true }
+);
+
+export const Company = model<ICompany>('Company', CompanySchema);
+================================================================================
+FILE: ./company-service/src/services/db-service.ts
+================================================================================
+import mongoose from 'mongoose';
+
+export async function connectDB(): Promise<void> {
+  if (mongoose.connection.readyState >= 1) return;
+
+  try {
+    await mongoose.connect(process.env.MONGO_URI!, {
+      dbName: process.env.DB_NAME || 'company-service',
+    });
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw new Error('Failed to connect to MongoDB');
+  }
+}
+================================================================================
+FILE: ./company-service/src/services/company-service.ts
+================================================================================
+import { Company, ICompany } from '../models/company';
+import { CreateCompanyInput, UpdateCompanyInput, AddCustomerInput } from '../validation';
+
+export class CompanyService {
+  async createCompany(data: CreateCompanyInput, userId: string): Promise<ICompany> {
+    const company = new Company({ ...data, userId, customers: [] });
+    await company.save();
+    return company;
+  }
+
+  async getCompanies(): Promise<ICompany[]> {
+    return await Company.find();
+  }
+
+  async getCompanyById(id: string, userId: string, userRole: string): Promise<ICompany> {
+    const company = await Company.findById(id);
+    if (!company) {
+      throw new Error('Company not found');
+    }
+    if (userRole === 'company' && company.userId !== userId) {
+      throw new Error('You can only access your own company');
+    }
+    if (userRole === 'customer' && !company.customers.includes(userId)) {
+      throw new Error('You are not associated with this company');
+    }
+    return company;
+  }
+
+  async getCompanyByCode(code: string): Promise<ICompany | null> {
+    return await Company.findOne({ companyCode: code });
+  }
+
+  async updateCompany(id: string, data: UpdateCompanyInput, userId: string): Promise<ICompany> {
+    const company = await Company.findById(id);
+    if (!company) {
+      throw new Error('Company not found');
+    }
+    if (company.userId !== userId) {
+      throw new Error('You can only update your own companies');
+    }
+    Object.assign(company, data);
+    await company.save();
+    return company;
+  }
+
+  async deleteCompany(id: string, userId: string): Promise<void> {
+    const company = await Company.findById(id);
+    if (!company) {
+      throw new Error('Company not found');
+    }
+    if (company.userId !== userId) {
+      throw new Error('You can only delete your own companies');
+    }
+    await company.deleteOne();
+  }
+
+  async addCustomer(companyId: string, customerId: string, userId: string): Promise<ICompany> {
+    const company = await Company.findById(companyId);
+    if (!company) {
+      throw new Error('Company not found');
+    }
+    if (company.userId !== userId) {
+      throw new Error('You can only manage your own companies');
+    }
+    if (!company.customers.includes(customerId)) {
+      company.customers.push(customerId);
+      await company.save();
+    }
+    return company;
+  }
+
+  async addCustomerByCode(code: string, customerId: string): Promise<ICompany> {
+    const company = await Company.findOne({ companyCode: code });
+    if (!company) {
+      throw new Error('Company not found');
+    }
+    if (!company.customers.includes(customerId)) {
+      company.customers.push(customerId);
+      await company.save();
+    }
+    return company;
+  }
+
+  async getCustomerCompanyIds(customerId: string): Promise<string[]> {
+    const companies = await Company.find({ customers: customerId }).exec();
+    return companies.map((company) => company._id.toString());
+  }
+}
