@@ -14,7 +14,7 @@ export class AuthService {
     user = new User({ name, email, password, role });
     await user.save();
 
-    const payload = { user: { id: user.id } };
+    const payload = { user: { id: user.id, role: user.role } };
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
 
@@ -35,7 +35,7 @@ export class AuthService {
       throw new Error('Invalid credentials');
     }
 
-    const payload = { user: { id: user.id } };
+    const payload = { user: { id: user.id, role: user.role } };
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
 
@@ -54,8 +54,8 @@ export class AuthService {
       throw new Error('Invalid or expired refresh token');
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { user: { id: string } };
-    const payload = { user: { id: decoded.user.id } };
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { user: { id: string, role: string } };
+    const payload = { user: { id: decoded.user.id, role: decoded.user.role } };
     return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
   }
 

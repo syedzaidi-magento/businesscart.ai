@@ -1,6 +1,6 @@
 
 ================================================================================
-FILE: ./user-service-lambda/src/validation.ts
+FILE: ./user-service/src/validation.ts
 ================================================================================
 import { z } from 'zod';
 
@@ -28,7 +28,7 @@ export const logoutSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 ================================================================================
-FILE: ./user-service-lambda/src/handler.ts
+FILE: ./user-service/src/handler.ts
 ================================================================================
 import { config } from 'dotenv';
 config({ path: './.env' }); // Load .env from dist/
@@ -124,7 +124,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   }
 };
 ================================================================================
-FILE: ./user-service-lambda/src/models/blacklisted-token.ts
+FILE: ./user-service/src/models/blacklisted-token.ts
 ================================================================================
 import { Schema, model, Document } from 'mongoose';
 
@@ -140,7 +140,7 @@ const BlacklistedTokenSchema = new Schema<IBlacklistedToken>({
 
 export const BlacklistedToken = model<IBlacklistedToken>('BlacklistedToken', BlacklistedTokenSchema);
 ================================================================================
-FILE: ./user-service-lambda/src/models/refresh-token.ts
+FILE: ./user-service/src/models/refresh-token.ts
 ================================================================================
 import { Schema, model, Document, Types } from 'mongoose';
 
@@ -169,7 +169,7 @@ const RefreshTokenSchema = new Schema<IRefreshToken>({
 
 export const RefreshToken = model<IRefreshToken>('RefreshToken', RefreshTokenSchema);
 ================================================================================
-FILE: ./user-service-lambda/src/models/user.ts
+FILE: ./user-service/src/models/user.ts
 ================================================================================
 import { Schema, model, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
@@ -205,7 +205,7 @@ UserSchema.methods.comparePassword = async function (candidatePassword: string) 
 
 export const User = model<IUser>('User', UserSchema);
 ================================================================================
-FILE: ./user-service-lambda/src/services/db-service.ts
+FILE: ./user-service/src/services/db-service.ts
 ================================================================================
 import mongoose from 'mongoose';
 
@@ -220,7 +220,7 @@ export const connectDB = async () => {
     }
     console.log('Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGO_URI, {
-      dbName: 'uSetGo-App',
+      dbName: 'UserService',
     });
     console.log('MongoDB connected');
   } catch (error) {
@@ -229,7 +229,7 @@ export const connectDB = async () => {
   }
 };
 ================================================================================
-FILE: ./user-service-lambda/src/services/auth-service.ts
+FILE: ./user-service/src/services/auth-service.ts
 ================================================================================
 import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/user';
