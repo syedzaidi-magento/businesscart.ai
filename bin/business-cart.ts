@@ -3,6 +3,7 @@ import * as cdk from 'aws-cdk-lib';
 import { UserServiceStack } from '../lib/user-service-stack';
 import { CompanyServiceStack } from '../lib/company-service-stack';
 import { ProductServiceStack } from '../lib/product-service-stack';
+import { OrderServiceStack } from '../lib/order-service-stack';
 import { WebPortalStack } from '../lib/web-portal-stack';
 
 const app = new cdk.App();
@@ -21,6 +22,12 @@ new CompanyServiceStack(app, 'CompanyServiceStack', {
 new ProductServiceStack(app, 'ProductServiceStack', {
   env: { region: 'us-east-1' },
 });
+
+// Order Service Stack
+new OrderServiceStack(app, 'OrderServiceStack', {
+  env: { region: 'us-east-1' },
+});
+
 
 new WebPortalStack(app, 'WebPortalStack', {
   env: { region: 'us-east-1' },
