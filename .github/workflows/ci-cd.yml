@@ -1,0 +1,65 @@
+name: CI/CD for CDK + Microservices
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-cdk:
+    name: Build CDK Root
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install CDK root dependencies
+        run: npm install
+
+      - name: Build CDK root
+        run: npm run build
+
+  build-services:
+    name: Build Microservices
+    needs: build-cdk
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - company-service
+          - order-service
+          - product-service
+          - user-service
+          - web-portal
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies for ${{ matrix.service }}
+        working-directory: ${{ matrix.service }}
+        run: npm install
+
+      - name: Copy .env for ${{ matrix.service }}
+        working-directory: ${{ matrix.service }}
+        run: |
+          if [ -f ".env.example" ]; then
+            cp .env.example .env
+          fi
+
+      - name: Build ${{ matrix.service }}
+        working-directory: ${{ matrix.service }}
+        run: npm run build
