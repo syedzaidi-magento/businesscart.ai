@@ -4,10 +4,31 @@ on:
   pull_request:
     branches:
       - main
-      - develop  # add other branches if needed
+      - develop
 
 jobs:
-  build:
+  build-cdk:
+    name: Build CDK Root
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install CDK root dependencies
+        run: npm install
+
+      - name: Build CDK root
+        run: npm run build
+
+  build-services:
+    name: Build Microservices
+    needs: build-cdk
     runs-on: ubuntu-latest
 
     strategy:
@@ -20,7 +41,7 @@ jobs:
           - web-portal
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -28,14 +49,6 @@ jobs:
         with:
           node-version: '18'
 
-      # Install and build CDK project at root
-      - name: Install dependencies (CDK Root)
-        run: npm install
-
-      - name: Build CDK project
-        run: npm run build
-
-      # Per-service: install, copy env, build
       - name: Install dependencies for ${{ matrix.service }}
         working-directory: ${{ matrix.service }}
         run: npm install
