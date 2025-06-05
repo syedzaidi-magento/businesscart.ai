@@ -1,0 +1,67 @@
+name: PR Pipeline - CDK + Microservices
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-cdk:
+    name: Build CDK Root
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Clean install CDK root dependencies
+        run: |
+          rm -rf node_modules package-lock.json dist
+          npm install
+
+      - name: Build CDK
+        run: npm run build
+
+      - name: CDK Synth
+        run: npx cdk synth
+
+      - name: CDK Diff
+        run: npx cdk diff
+
+
+  build-services:
+    name: Build Microservices
+    needs: build-cdk
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - company-service
+          - order-service
+          - product-service
+          - user-service
+          - web-portal
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Clean install & build ${{ matrix.service }}
+        working-directory: ${{ matrix.service }}
+        run: |
+          rm -rf node_modules package-lock.json dist
+          npm install
+          if [ -f .env.example ]; then cp .env.example .env; fi
+          npm run build
