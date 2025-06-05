@@ -1,9 +1,10 @@
 import axios from 'axios';
-import { User, Company, Product } from './types';
+import { User, Company, Product, Order } from './types';
 
 const USER_API_URL = import.meta.env.VITE_USER_API_URL || 'http://127.0.0.1:3000';
 const COMPANY_API_URL = import.meta.env.VITE_COMPANY_API_URL || 'http://127.0.0.1:3001';
 const PRODUCT_API_URL = import.meta.env.VITE_PRODUCT_API_URL || 'http://127.0.0.1:3002';
+const ORDER_API_URL = import.meta.env.VITE_ORDER_API_URL || 'http://127.0.0.1:3003';
 
 const api = axios.create();
 
@@ -90,4 +91,23 @@ export const updateProduct = async (id: string, data: Omit<Product, '_id'>): Pro
 
 export const deleteProduct = async (id: string): Promise<void> => {
   await api.delete(`${PRODUCT_API_URL}/products/${id}`);
+};
+
+export const createOrder = async (data: { entity: Omit<Order, '_id'> }): Promise<Order> => {
+  const response = await api.post(`${ORDER_API_URL}/orders`, data);
+  return response.data;
+};
+
+export const getOrders = async (): Promise<Order[]> => {
+  const response = await api.get(`${ORDER_API_URL}/orders`);
+  return response.data;
+};
+
+export const updateOrder = async (id: string, data: { entity: Omit<Order, '_id'> }): Promise<Order> => {
+  const response = await api.put(`${ORDER_API_URL}/orders/${id}`, data);
+  return response.data;
+};
+
+export const deleteOrder = async (id: string): Promise<void> => {
+  await api.delete(`${ORDER_API_URL}/orders/${id}`);
 };

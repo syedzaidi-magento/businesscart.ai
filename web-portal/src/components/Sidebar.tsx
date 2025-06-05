@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { HomeIcon, BuildingOffice2Icon, ShoppingBagIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, BuildingOffice2Icon, ShoppingBagIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
   const links = [
     { name: 'Dashboard', path: '/dashboard', icon: HomeIcon },
     { name: 'Companies', path: '/companies', icon: BuildingOffice2Icon },
     { name: 'Products', path: '/products', icon: ShoppingBagIcon },
+    { name: 'Orders', path: '/orders', icon: ClipboardDocumentListIcon },
   ];
 
   return (

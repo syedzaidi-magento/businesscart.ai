@@ -59,15 +59,88 @@ START RequestId: 58af72f2-fafa-4dd5-9f58-aaf59be2603b Version: $LATEST
 END RequestId: bd96e941-dc76-4862-99f4-dc0abdee40d6
 REPORT RequestId: bd96e941-dc76-4862-99f4-dc0abdee40d6	Init Duration: 0.07 ms	Duration: 2317.33 ms	Billed Duration: 2318 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
 
-nnecting to MongoDB...
-2025-06-04T19:47:32.959Z	341c5a66-1b48-4882-8a69-336483f9e0e3	INFO	MongoDB connected
-END RequestId: 341c5a66-1b48-4882-8a69-336483f9e0e3
-REPORT RequestId: 341c5a66-1b48-4882-8a69-336483f9e0e3	Init Duration: 0.07 ms	Duration: 2050.91 ms	Billed Duration: 2051 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
+START RequestId: 4a1db20f-88c9-4b2a-8820-cd0c7ab8c678 Version: $LATEST
+END RequestId: 756ea887-6014-45ac-a41f-933c5c416b73
+REPORT RequestId: 756ea887-6014-45ac-a41f-933c5c416b73	Init Duration: 0.06 ms	Duration: 152.87 ms	Billed Duration: 153 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
 
-START RequestId: dc80bb04-85a3-4a3a-9625-aa59ad5e26fa Version: $LATEST
-2025-06-04T20:08:24.217Z	bd0f8e06-4a2c-4f0e-b33d-4bc972df2fdc	INFO	MONGO_URI: mongodb+srv://syedqurat27:g0RZncJO7Emb3qDg@businesscart.u7jfdxv.mongodb.net/BusinessCart?retryWrites=true&w=majority&appName=BusinessCart
-2025-06-04T20:08:24.219Z	bd0f8e06-4a2c-4f0e-b33d-4bc972df2fdc	INFO	Connecting to MongoDB...
-2025-06-04T20:08:25.474Z	bd0f8e06-4a2c-4f0e-b33d-4bc972df2fdc	INFO	MongoDB connected
-END RequestId: bd0f8e06-4a2c-4f0e-b33d-4bc972df2fdc
-REPORT RequestId: bd0f8e06-4a2c-4f0e-b33d-4bc972df2fdc	Init Duration: 0.09 ms	Duration: 2152.46 ms	Billed Duration: 2153 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
+START RequestId: 4caf0f2b-de6d-4c70-b4b2-52374c869d83 Version: $LATEST
+2025-06-05T18:58:36.711Z	7c6d1a69-768a-40ae-bd03-5fecec6df69d	INFO	Connected to MongoDB
+END RequestId: 7c6d1a69-768a-40ae-bd03-5fecec6df69d
+REPORT RequestId: 7c6d1a69-768a-40ae-bd03-5fecec6df69d	Init Duration: 0.05 ms	Duration: 2430.41 ms	Billed Duration: 2431 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: fe5541dd-d068-4983-a011-1f746813a47f Version: $LATEST
+END RequestId: eef1e0f9-368d-4ab9-ace2-54b834f53d14
+REPORT RequestId: eef1e0f9-368d-4ab9-ace2-54b834f53d14	Init Duration: 0.06 ms	Duration: 142.05 ms	Billed Duration: 143 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: aeb1e891-cddc-44b6-94d4-5354dfe89707 Version: $LATEST
+2025-06-05T18:58:39.977Z	1d7e6402-fe8e-41df-bd4d-ba278b2e1d6e	INFO	Connected to MongoDB
+END RequestId: 1d7e6402-fe8e-41df-bd4d-ba278b2e1d6e
+REPORT RequestId: 1d7e6402-fe8e-41df-bd4d-ba278b2e1d6e	Init Duration: 0.08 ms	Duration: 2474.10 ms	Billed Duration: 2475 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: 80af115a-4569-43d0-a7aa-7d8e2db1fdfa Version: $LATEST
+END RequestId: 52f3c343-5fb4-4d45-885d-0cf988c2dc1f
+REPORT RequestId: 52f3c343-5fb4-4d45-885d-0cf988c2dc1f	Init Duration: 0.14 ms	Duration: 147.47 ms	Billed Duration: 148 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: faa61ec4-5e49-4492-8cde-f817dbc34dd2 Version: $LATEST
+2025-06-05T19:12:07.987Z	d338a51e-8c24-4b23-9c87-aed5edd46d6b	INFO	Connected to MongoDB
+2025-06-05T19:12:08.015Z	d338a51e-8c24-4b23-9c87-aed5edd46d6b	ERROR	Handler error: Error: Order validation failed: payment.additional_information.0: Path `payment.additional_information.0` is required.
+    at ValidationError.inspect (/var/task/node_modules/mongoose/lib/error/validation.js:52:26)
+    at formatValue (node:internal/util/inspect:805:19)
+    at inspect (node:internal/util/inspect:364:10)
+    at formatWithOptionsInternal (node:internal/util/inspect:2279:40)
+    at Object.format (node:internal/util/inspect:2136:10)
+    at logTextToStdout (file:///var/runtime/index.mjs:589:61)
+    at console.error (file:///var/runtime/index.mjs:674:11)
+    at Runtime.handler (/var/task/handler.js:166:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  errors: {
+    'payment.additional_information.0': ValidatorError: Path `payment.additional_information.0` is required.
+        at validate (/var/task/node_modules/mongoose/lib/schemaType.js:1404:13)
+        at SchemaType.doValidate (/var/task/node_modules/mongoose/lib/schemaType.js:1388:7)
+        at /var/task/node_modules/mongoose/lib/document.js:3096:18
+        at process.processTicksAndRejections (node:internal/process/task_queues:77:11) {
+      properties: [Object],
+      kind: 'required',
+      path: 'payment.additional_information.0',
+      value: '',
+      reason: undefined,
+      [Symbol(mongoose#validatorError)]: true
+    }
+  },
+  _message: 'Order validation failed'
+}
+END RequestId: d338a51e-8c24-4b23-9c87-aed5edd46d6b
+REPORT RequestId: d338a51e-8c24-4b23-9c87-aed5edd46d6b	Init Duration: 0.05 ms	Duration: 1641.98 ms	Billed Duration: 1642 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: b317bea4-6dc1-4ef0-979a-efb6918f5050 Version: $LATEST
+END RequestId: 36dfa8bd-42a7-4d54-9d1d-e1446e95fb30
+REPORT RequestId: 36dfa8bd-42a7-4d54-9d1d-e1446e95fb30	Init Duration: 0.06 ms	Duration: 142.27 ms	Billed Duration: 143 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: dff35a0e-12c9-42bf-826a-ae253fbe219e Version: $LATEST
+2025-06-05T19:17:56.433Z	9087a8fa-bf34-451c-a8b9-d60357c6da62	INFO	Connected to MongoDB
+END RequestId: 9087a8fa-bf34-451c-a8b9-d60357c6da62
+REPORT RequestId: 9087a8fa-bf34-451c-a8b9-d60357c6da62	Init Duration: 0.08 ms	Duration: 2283.10 ms	Billed Duration: 2284 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: b235aa5f-76df-421f-8612-51884b55caf7 Version: $LATEST
+END RequestId: af2ce7fa-50a2-470b-b741-3543eb0d56fc
+REPORT RequestId: af2ce7fa-50a2-470b-b741-3543eb0d56fc	Init Duration: 0.09 ms	Duration: 131.42 ms	Billed Duration: 132 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: 66b0daae-51de-4888-bacb-fb87fd0c3b66 Version: $LATEST
+START RequestId: 66b0daae-51de-4888-bacb-fb87fd0c3b66 Version: $LATEST
+2025-06-05T19:18:00.063Z	219899ee-5e82-4c65-9c0b-b1b0816104e1	INFO	Connected to MongoDB
+END RequestId: 219899ee-5e82-4c65-9c0b-b1b0816104e1
+REPORT RequestId: 219899ee-5e82-4c65-9c0b-b1b0816104e1	Init Duration: 0.08 ms	Duration: 2530.83 ms	Billed Duration: 2531 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: f963c133-9c79-43c6-8e05-b52fad559a80 Version: $LATEST
+END RequestId: 8e286054-71c6-4281-8515-e5ce3196d94e
+REPORT RequestId: 8e286054-71c6-4281-8515-e5ce3196d94e	Init Duration: 0.06 ms	Duration: 128.47 ms	Billed Duration: 129 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: 4dd296d6-6a41-4e7a-a3b0-988f0fd3b4de Version: $LATEST
+2025-06-05T19:18:03.243Z	f4f846e2-cc26-43eb-a8bc-9d51645801f9	INFO	Connected to MongoDB
+END RequestISTART RequestId: 001a7e07-fa4e-4c1b-a664-2f3bdcd50ebf Version: $LATEST
+2025-06-05T19:18:18.372Z	1ee64839-3c23-4864-84cf-9f54e6acaf4b	INFO	MONGO_URI: mongodb+srv://syedqurat27:g0RZncJO7Emb3qDg@businesscart.u7jfdxv.mongodb.net/BusinessCart?retryWrites=true&w=majority&appName=BusinessCart
+2025-06-05T19:18:18.373Z	1ee64839-3c23-4864-84cf-9f54e6acaf4b	INFO	Connecting to MongoDB...
+2025-06-05T19:18:19.668Z	1ee64839-3c23-4864-84cf-9f54e6acaf4b	INFO	MongoDB connected
+END RequestId: 1ee64839-3c23-4864-84cf-9f54e6acaf4b
+REPORT RequestId: 1ee64839-3c23-4864-84cf-9f54e6acaf4b	Init Duration: 0.08 ms	Duration: 2169.56 ms	Billed Duration: 2170 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
 
