@@ -4,6 +4,7 @@
 USER_API="http://127.0.0.1:3000"
 COMPANY_API="http://127.0.0.1:3001"
 PRODUCT_API="http://127.0.0.1:3002"
+ORDER_API="http://127.0.0.1:3003" # Added for order service
 EMAIL="company$(date +%s)@example.com" # Unique email
 PASSWORD="securepassword"
 ROLE="company"
@@ -143,5 +144,58 @@ if [ -z "$PRODUCT_ID" ]; then
   exit 1
 fi
 echo -e "${GREEN}Product added successfully. Product ID: $PRODUCT_ID${NC}"
+
+# Step 5: Add Order
+echo "5. Adding order..."
+ORDER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$ORDER_API/orders" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $JWT" \
+  -d "{
+    \"entity\": {
+      \"base_grand_total\": 49.99,
+      \"grand_total\": 49.99,
+      \"customer_email\": \"customer@example.com\",
+      \"billing_address\": {
+        \"address_type\": \"billing\",
+        \"city\": \"Anytown\",
+        \"country_id\": \"US\",
+        \"firstname\": \"John\",
+        \"lastname\": \"Doe\",
+        \"postcode\": \"12345\",
+        \"telephone\": \"9876543210\",
+        \"street\": [\"456 Elm St\"]
+      },
+      \"payment\": {
+        \"account_status\": \"active\",
+        \"additional_information\": [\"Payment processed\"],
+        \"cc_last4\": \"1234\",
+        \"method\": \"credit_card\"
+      },
+      \"items\": [
+        {
+          \"sku\": \"WIDGET-001\",
+          \"name\": \"Widget\",
+          \"qty_ordered\": 1,
+          \"price\": 49.99,
+          \"row_total\": 49.99,
+          \"product_id\": \"$PRODUCT_ID\"
+        }
+      ],
+      \"company_id\": \"$COMPANY_ID\",
+      \"user_id\": \"$USER_ID\"
+    }
+  }")
+
+ORDER_STATUS=$(echo "$ORDER_RESPONSE" | tail -n1)
+ORDER_BODY=$(echo "$ORDER_RESPONSE" | sed -e '$d')
+
+echo "$ORDER_BODY" | jq .
+handle_error "$ORDER_BODY" "Add Order" "$ORDER_STATUS"
+ORDER_ID=$(echo "$ORDER_BODY" | jq -r '._id // .id // empty')
+if [ -z "$ORDER_ID" ]; then
+  echo -e "${RED}Error: Failed to extract order ID from response${NC}"
+  exit 1
+fi
+echo -e "${GREEN}Order added successfully. Order ID: $ORDER_ID${NC}"
 
 echo -e "${GREEN}All API tests completed successfully!${NC}"

@@ -3,6 +3,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import CompanyForm from './components/CompanyForm';
 import ProductForm from './components/ProductForm';
+import OrderForm from './components/OrderForm';
 import Dashboard from './components/Dashboard';
 import Sidebar from './components/Sidebar';
 import { useAuth } from './hooks/useAuth';
@@ -29,6 +30,10 @@ const App = () => {
             <Route
               path="/products"
               element={isAuthenticated ? <ProductForm /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/orders"
+              element={isAuthenticated ? <OrderForm /> : <Navigate to="/login" />}
             />
             <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
             <Route path="*" element={<div className="p-4 text-center text-gray-600">404 Not Found</div>} />

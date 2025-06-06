@@ -51,11 +51,11 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // GET /companies
     if (path === '/companies' && httpMethod === 'GET') {
-      const companies = await Company.find();
+      const company = await Company.findOne({ userId });
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(companies),
+        body: JSON.stringify(company ? [company] : []),
       };
     }
 

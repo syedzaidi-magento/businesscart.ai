@@ -215,3 +215,32 @@ START RequestId: e201cc9e-4477-48d0-898a-81fd2e561de6 Version: $LATEST
 END RequestId: 8f9ed420-a2b2-487f-bddf-32aca76ecdee
 REPORT RequestId: 8f9ed420-a2b2-487f-bddf-32aca76ecdee	Init Duration: 0.15 ms	Duration: 2201.69 ms	Billed Duration: 2202 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
 
+START RequestId: 0134944f-7d5a-4586-bcd7-3401df9efbac Version: $LATEST
+2025-06-03T20:16:10.060Z	aab9d4e7-3144-4d16-959f-017fe0c7a500	INFO	MONGO_URI: mongodb+srv://syedqurat27:g0RZncJO7Emb3qDg@businesscart.u7jfdxv.mongodb.net/BusinessCart?retryWrites=true&w=majority&appName=BusinessCart
+2025-06-03T20:16:10.061Z	aab9d4e7-3144-4d16-959f-017fe0c7a500	INFO	Connecting to MongoDB...
+2025-06-03T20:16:11.201Z	aab9d4e7-3144-4d16-959f-017fe0c7a500	INFO	MongoDB connected
+END RequestId: aab9d4e7-3144-4d16-959f-017fe0c7a500
+REPORT RequestId: aab9d4e7-3144-4d16-959f-017fe0c7a500	Init Duration: 0.06 ms	Duration: 2036.59 ms	Billed Duration: 2037 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
+
+START RequestId: ef9664f9-7683-45a4-8abc-605253d66d61 Version: $LATEST
+2025-06-03T20:29:00.506Z	cbdc6098-4797-4542-ae9a-6e7a1043770f	INFO	MONGO_URI: mongodb+srv://syedqurat27:g0RZncJO7Emb3qDg@businesscart.u7jfdxv.mongodb.net/BusinessCart?retryWrites=true&w=majority&appName=BusinessCart
+2025-06-03T20:29:00.507Z	cbdc6098-4797-4542-ae9a-6e7a1043770f	INFO	Connecting to MongoDB...
+2025-06-03T20:29:01.629Z	cbdc6098-4797-4542-ae9a-6e7a1043770f	INFO	MongoDB connected
+END RequestId: cbdc6098-4797-4542-ae9a-6e7a1043770f
+REPORT RequestId: cbdc6098-4797-4542-ae9a-6e7a1043770f	Init Duration: 0.04 ms	Duration: 1942.69 ms	Billed Duration: 1943 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
+
+START RequestId: 17abb28f-66bb-480b-9893-df50e0b17c55 Version: $LATEST
+START RequestId: 17abb28f-66bb-480b-9893-df50e0b17c55 Version: $LATEST
+2025-06-03T20:31:39.396Z	bcf2ae61-7828-4509-b618-987ccd867e13	INFO	MONGO_URI: mongodb+srv://syedqurat27:g0RZncJO7Emb3qDg@businesscart.u7jfdxv.mongodb.net/BusinessCart?retryWrites=true&w=majority&appName=BusinessCart
+2025-06-03T20:31:39.397Z	bcf2ae61-7828-4509-b618-987ccd867e13	INFO	Connecting to MongoDB...
+2025-06-03T20:31:40.598Z	bcf2ae61-7828-4509-b618-987ccd867e13	INFO	MongoDB connected
+END RequestId: bcf2ae61-7828-4509-b618-987ccd867e13
+REPORT RequestId: bcf2ae61-7828-4509-b618-987ccd867e13	Init Duration: 0.08 ms	Duration: 2121.33 ms	Billed Duration: 2122 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
+
+START RequestId: f14d372b-5946-4647-86c8-b2d1c8357388 Version: $LATEST
+2025-06-03T20:33:29.762Z	f88d11cf-b552-44da-9954-7236a8d01e50	INFO	MONGO_URI: mongodb+srv://syedqurat27:g0RZncJO7Emb3qDg@businesscart.u7jfdxv.mongodb.net/BusinessCart?retryWrites=true&w=majority&appName=BusinessCart
+2025-06-03T20:33:29.762Z	f88d11cf-b552-44da-9954-7236a8d01e50	INFO	Connecting to MongoDB...
+2025-06-03T20:33:31.032Z	f88d11cf-b552-44da-9954-7236a8d01e50	INFO	MongoDB connected
+END RequestId: f88d11cf-b552-44da-9954-7236a8d01e50
+REPORT RequestId: f88d11cf-b552-44da-9954-7236a8d01e50	Init Duration: 0.08 ms	Duration: 2167.81 ms	Billed Duration: 2168 ms	Memory Size: 256 MB	Max Memory Used: 256 MB	
+
