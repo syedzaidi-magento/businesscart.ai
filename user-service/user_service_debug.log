@@ -1,0 +1,330 @@
+
+> user-service-lambda@1.0.0 test
+> jest --detectOpenHandles --forceExit --verbose
+
+  console.info
+    DEBUG: console.error: Error: {
+      message: 'User already exists',
+      stack: 'Error: User already exists\n' +
+        '    at AuthService.register (/home/syed/Documents/BusinessCart/user-service/src/services/auth-service.ts:12:21)\n' +
+        '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+        '    at handler (/home/syed/Documents/BusinessCart/user-service/src/handler.ts:39:45)',
+      path: '/users/register',
+      method: 'POST'
+    }
+
+      at console.<anonymous> (tests/handler.test.ts:41:13)
+
+  console.info
+    DEBUG: console.error: Error: {
+      message: '[\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 1,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Name is required",\n' +
+        '    "path": [\n' +
+        '      "name"\n' +
+        '    ]\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "validation": "email",\n' +
+        '    "code": "invalid_string",\n' +
+        '    "message": "Please include a valid email",\n' +
+        '    "path": [\n' +
+        '      "email"\n' +
+        '    ]\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 6,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Password must be 6 or more characters",\n' +
+        '    "path": [\n' +
+        '      "password"\n' +
+        '    ]\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "received": "invalid",\n' +
+        '    "code": "invalid_enum_value",\n' +
+        '    "options": [\n' +
+        '      "customer",\n' +
+        '      "company"\n' +
+        '    ],\n' +
+        '    "path": [\n' +
+        '      "role"\n' +
+        '    ],\n' +
+        '    "message": "Role must be customer or company"\n' +
+        '  }\n' +
+        ']',
+      stack: 'ZodError: [\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 1,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Name is required",\n' +
+        '    "path": [\n' +
+        '      "name"\n' +
+        '    ]\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "validation": "email",\n' +
+        '    "code": "invalid_string",\n' +
+        '    "message": "Please include a valid email",\n' +
+        '    "path": [\n' +
+        '      "email"\n' +
+        '    ]\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 6,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Password must be 6 or more characters",\n' +
+        '    "path": [\n' +
+        '      "password"\n' +
+        '    ]\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "received": "invalid",\n' +
+        '    "code": "invalid_enum_value",\n' +
+        '    "options": [\n' +
+        '      "customer",\n' +
+        '      "company"\n' +
+        '    ],\n' +
+        '    "path": [\n' +
+        '      "role"\n' +
+        '    ],\n' +
+        '    "message": "Role must be customer or company"\n' +
+        '  }\n' +
+        ']\n' +
+        '    at Object.get error [as error] (/home/syed/Documents/BusinessCart/user-service/node_modules/zod/dist/cjs/v3/types.js:45:31)\n' +
+        '    at ZodObject.parse (/home/syed/Documents/BusinessCart/user-service/node_modules/zod/dist/cjs/v3/types.js:120:22)\n' +
+        '    at handler (/home/syed/Documents/BusinessCart/user-service/src/handler.ts:38:35)\n' +
+        '    at processTicksAndRejections (node:internal/process/task_queues:105:5)',
+      path: '/users/register',
+      method: 'POST'
+    }
+
+      at console.<anonymous> (tests/handler.test.ts:41:13)
+
+  console.info
+    DEBUG: console.error: Error: {
+      message: 'Invalid credentials',
+      stack: 'Error: Invalid credentials\n' +
+        '    at AuthService.login (/home/syed/Documents/BusinessCart/user-service/src/services/auth-service.ts:35:13)\n' +
+        '    at handler (/home/syed/Documents/BusinessCart/user-service/src/handler.ts:54:45)',
+      path: '/users/login',
+      method: 'POST'
+    }
+
+      at console.<anonymous> (tests/handler.test.ts:41:13)
+
+  console.info
+    DEBUG: console.error: Error: {
+      message: '[\n' +
+        '  {\n' +
+        '    "validation": "email",\n' +
+        '    "code": "invalid_string",\n' +
+        '    "message": "Please include a valid email",\n' +
+        '    "path": [\n' +
+        '      "email"\n' +
+        '    ]\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 1,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Password is required",\n' +
+        '    "path": [\n' +
+        '      "password"\n' +
+        '    ]\n' +
+        '  }\n' +
+        ']',
+      stack: 'ZodError: [\n' +
+        '  {\n' +
+        '    "validation": "email",\n' +
+        '    "code": "invalid_string",\n' +
+        '    "message": "Please include a valid email",\n' +
+        '    "path": [\n' +
+        '      "email"\n' +
+        '    ]\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 1,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Password is required",\n' +
+        '    "path": [\n' +
+        '      "password"\n' +
+        '    ]\n' +
+        '  }\n' +
+        ']\n' +
+        '    at Object.get error [as error] (/home/syed/Documents/BusinessCart/user-service/node_modules/zod/dist/cjs/v3/types.js:45:31)\n' +
+        '    at ZodObject.parse (/home/syed/Documents/BusinessCart/user-service/node_modules/zod/dist/cjs/v3/types.js:120:22)\n' +
+        '    at handler (/home/syed/Documents/BusinessCart/user-service/src/handler.ts:53:32)\n' +
+        '    at processTicksAndRejections (node:internal/process/task_queues:105:5)',
+      path: '/users/login',
+      method: 'POST'
+    }
+
+      at console.<anonymous> (tests/handler.test.ts:41:13)
+
+  console.info
+    DEBUG: console.error: Error: {
+      message: 'Invalid or expired refresh token',
+      stack: 'Error: Invalid or expired refresh token\n' +
+        '    at AuthService.refresh (/home/syed/Documents/BusinessCart/user-service/src/services/auth-service.ts:54:13)\n' +
+        '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+        '    at handler (/home/syed/Documents/BusinessCart/user-service/src/handler.ts:69:27)',
+      path: '/users/refresh',
+      method: 'POST'
+    }
+
+      at console.<anonymous> (tests/handler.test.ts:41:13)
+
+  console.info
+    DEBUG: console.error: Error: {
+      message: '[\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 1,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Refresh token is required",\n' +
+        '    "path": [\n' +
+        '      "refreshToken"\n' +
+        '    ]\n' +
+        '  }\n' +
+        ']',
+      stack: 'ZodError: [\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 1,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Refresh token is required",\n' +
+        '    "path": [\n' +
+        '      "refreshToken"\n' +
+        '    ]\n' +
+        '  }\n' +
+        ']\n' +
+        '    at Object.get error [as error] (/home/syed/Documents/BusinessCart/user-service/node_modules/zod/dist/cjs/v3/types.js:45:31)\n' +
+        '    at ZodObject.parse (/home/syed/Documents/BusinessCart/user-service/node_modules/zod/dist/cjs/v3/types.js:120:22)\n' +
+        '    at handler (/home/syed/Documents/BusinessCart/user-service/src/handler.ts:68:34)\n' +
+        '    at processTicksAndRejections (node:internal/process/task_queues:105:5)',
+      path: '/users/refresh',
+      method: 'POST'
+    }
+
+      at console.<anonymous> (tests/handler.test.ts:41:13)
+
+  console.info
+    DEBUG: console.error: Error: {
+      message: 'Invalid refresh token',
+      stack: 'Error: Invalid refresh token\n' +
+        '    at AuthService.logout (/home/syed/Documents/BusinessCart/user-service/src/services/auth-service.ts:64:29)\n' +
+        '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+        '    at handler (/home/syed/Documents/BusinessCart/user-service/src/handler.ts:84:7)',
+      path: '/users/logout',
+      method: 'POST'
+    }
+
+      at console.<anonymous> (tests/handler.test.ts:41:13)
+
+  console.info
+    DEBUG: console.error: Error: {
+      message: '[\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 1,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Refresh token is required",\n' +
+        '    "path": [\n' +
+        '      "refreshToken"\n' +
+        '    ]\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 1,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Access token is required",\n' +
+        '    "path": [\n' +
+        '      "accessToken"\n' +
+        '    ]\n' +
+        '  }\n' +
+        ']',
+      stack: 'ZodError: [\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 1,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Refresh token is required",\n' +
+        '    "path": [\n' +
+        '      "refreshToken"\n' +
+        '    ]\n' +
+        '  },\n' +
+        '  {\n' +
+        '    "code": "too_small",\n' +
+        '    "minimum": 1,\n' +
+        '    "type": "string",\n' +
+        '    "inclusive": true,\n' +
+        '    "exact": false,\n' +
+        '    "message": "Access token is required",\n' +
+        '    "path": [\n' +
+        '      "accessToken"\n' +
+        '    ]\n' +
+        '  }\n' +
+        ']\n' +
+        '    at Object.get error [as error] (/home/syed/Documents/BusinessCart/user-service/node_modules/zod/dist/cjs/v3/types.js:45:31)\n' +
+        '    at ZodObject.parse (/home/syed/Documents/BusinessCart/user-service/node_modules/zod/dist/cjs/v3/types.js:120:22)\n' +
+        '    at handler (/home/syed/Documents/BusinessCart/user-service/src/handler.ts:83:33)\n' +
+        '    at processTicksAndRejections (node:internal/process/task_queues:105:5)',
+      path: '/users/logout',
+      method: 'POST'
+    }
+
+      at console.<anonymous> (tests/handler.test.ts:41:13)
+
+PASS tests/handler.test.ts
+  User Service API
+    ✓ should register a new user with customer role (281 ms)
+    ✓ should prevent registering a user with existing email (185 ms)
+    ✓ should validate register input (28 ms)
+    ✓ should login a user with valid credentials (181 ms)
+    ✓ should reject login with invalid credentials (230 ms)
+    ✓ should validate login input (20 ms)
+    ✓ should refresh access token with valid refresh token (169 ms)
+    ✓ should reject refresh with invalid refresh token (20 ms)
+    ✓ should validate refresh input (19 ms)
+    ✓ should logout a user with cookie token (182 ms)
+    ✓ should logout a user with authorization header (181 ms)
+    ✓ should reject logout with invalid refresh token (162 ms)
+    ✓ should validate logout input (16 ms)
+    ✓ should return 404 for unknown route (15 ms)
+    ✓ should handle invalid JSON body (14 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       15 passed, 15 total
+Snapshots:   0 total
+Time:        4.698 s, estimated 6 s
+Ran all test suites.
