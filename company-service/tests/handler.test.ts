@@ -17,6 +17,10 @@ process.env.JWT_SECRET = 'test-secret';
 process.env.MONGO_URI = ''; // Will be set by MongoMemoryServer
 process.env.NODE_ENV = 'test';
 
+// Mock console.log and console.error to suppress logs
+const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
 // Generate JWT
 const generateToken = (userId: string, role: string) =>
   jwt.sign({ user: { id: userId, role } }, process.env.JWT_SECRET!, { expiresIn: '1h' });
@@ -75,6 +79,8 @@ afterAll(async () => {
   await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
   await mongoServer.stop();
+  consoleLogSpy.mockRestore();
+  consoleErrorSpy.mockRestore();
 });
 
 afterEach(async () => {
@@ -123,8 +129,7 @@ describe('Company Service API', () => {
   });
 
   test('should prevent creating a second company for the same user', async () => {
-    // Create first company
-    const company = await Company.create({
+    await Company.create({
       name: 'FirstCompany',
       companyCode: 'FIRST123',
       userId: userId1,
@@ -134,7 +139,6 @@ describe('Company Service API', () => {
         center: { lat: 37.7749, lng: -122.4194 },
       },
     });
-    console.log('Created company:', company);
 
     const response = await request
       .post('/companies')
@@ -166,9 +170,7 @@ describe('Company Service API', () => {
         center: { lat: 37.7749, lng: -122.4194 },
       },
     });
-    console.log('Created company ID:', company._id.toString());
 
-    // Verify company exists
     const savedCompany = await Company.findById(company._id);
     expect(savedCompany).toBeTruthy();
 
@@ -197,9 +199,7 @@ describe('Company Service API', () => {
         center: { lat: 37.7749, lng: -122.4194 },
       },
     });
-    console.log('Created company ID:', company._id.toString());
 
-    // Verify company exists
     const savedCompany = await Company.findById(company._id);
     expect(savedCompany).toBeTruthy();
 
@@ -250,8 +250,18 @@ describe('Company Service API', () => {
       });
 
     expect(response.status).toBe(400);
-    expect(response.body.errors).toContainEqual(
-      expect.objectContaining({ message: 'Name is required' })
-    );
+    expect(response.body).toEqual({
+      errors: [
+        {
+          code: 'too_small',
+          minimum: 1,
+          type: 'string',
+          inclusive: true,
+          exact: false,
+          message: 'Name is required',
+          path: ['name'],
+        },
+      ],
+    });
   });
 });

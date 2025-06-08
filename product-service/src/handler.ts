@@ -38,7 +38,15 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // POST /products
     if (method === 'POST' && path === '/products') {
-      const body: ProductInput = JSON.parse(event.body || '{}');
+      let body: ProductInput;
+      try {
+        body = JSON.parse(event.body || '{}');
+      } catch (err) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ message: 'Invalid JSON body' }),
+        };
+      }
       const { name, price, companyId, description } = body;
 
       if (!name || !price || !companyId) {
@@ -82,69 +90,99 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // GET /products/{productId}
     if (method === 'GET' && path === `/products/${productId}` && productId) {
-      const product = await Product.findById(productId);
-      if (!product) {
+      try {
+        const product = await Product.findById(productId);
+        if (!product) {
+          return {
+            statusCode: 404,
+            body: JSON.stringify({ message: 'Product not found' }),
+          };
+        }
+        if (product.userId !== userId) {
+          return {
+            statusCode: 403,
+            body: JSON.stringify({ message: 'Unauthorized access to product' }),
+          };
+        }
         return {
-          statusCode: 404,
-          body: JSON.stringify({ message: 'Product not found' }),
+          statusCode: 200,
+          body: JSON.stringify(product),
         };
+        } catch (error) {  // Add these lines
+        if (error instanceof mongoose.Error.CastError) {
+          return {
+            statusCode: 404,
+            body: JSON.stringify({ message: 'Product not found' }),
+          };
+        }
+        throw error;
       }
-      if (product.userId !== userId) {
-        return {
-          statusCode: 403,
-          body: JSON.stringify({ message: 'Unauthorized access to product' }),
-        };
-      }
-      return {
-        statusCode: 200,
-        body: JSON.stringify(product),
-      };
     }
 
     // PUT /products/{productId}
     if (method === 'PUT' && path === `/products/${productId}` && productId) {
-      const body: Partial<ProductInput> = JSON.parse(event.body || '{}');
-      const product = await Product.findById(productId);
-      if (!product) {
+      try {
+        const body: Partial<ProductInput> = JSON.parse(event.body || '{}');
+        const product = await Product.findById(productId);
+        if (!product) {
+          return {
+            statusCode: 404,
+            body: JSON.stringify({ message: 'Product not found' }),
+          };
+        }
+        if (product.userId !== userId) {
+          return {
+            statusCode: 403,
+            body: JSON.stringify({ message: 'Unauthorized access to product' }),
+          };
+        }
+        Object.assign(product, body);
+        await product.save();
         return {
-          statusCode: 404,
-          body: JSON.stringify({ message: 'Product not found' }),
+          statusCode: 200,
+          body: JSON.stringify(product),
         };
+        } catch (error) {
+        if (error instanceof mongoose.Error.CastError) {
+          return {
+            statusCode: 404,
+            body: JSON.stringify({ message: 'Product not found' }),
+          };
+        }
+        throw error;
       }
-      if (product.userId !== userId) {
-        return {
-          statusCode: 403,
-          body: JSON.stringify({ message: 'Unauthorized access to product' }),
-        };
-      }
-      Object.assign(product, body);
-      await product.save();
-      return {
-        statusCode: 200,
-        body: JSON.stringify(product),
-      };
     }
 
     // DELETE /products/{productId}
     if (method === 'DELETE' && path === `/products/${productId}` && productId) {
-      const product = await Product.findById(productId);
-      if (!product) {
+      try {
+        const product = await Product.findById(productId);
+        if (!product) {
+          return {
+            statusCode: 404,
+            body: JSON.stringify({ message: 'Product not found' }),
+          };
+        }
+        if (product.userId !== userId) {
+          return {
+            statusCode: 403,
+            body: JSON.stringify({ message: 'Unauthorized access to product' }),
+          };
+        }
+        await product.deleteOne();
         return {
-          statusCode: 404,
-          body: JSON.stringify({ message: 'Product not found' }),
+          statusCode: 204,
+          body: '',
         };
+        } catch (error) {  
+        if (error instanceof mongoose.Error.CastError) {
+          return {
+            statusCode: 404,
+            body: JSON.stringify({ message: 'Product not found' }),
+          };
+        }
+        throw error;
       }
-      if (product.userId !== userId) {
-        return {
-          statusCode: 403,
-          body: JSON.stringify({ message: 'Unauthorized access to product' }),
-        };
-      }
-      await product.deleteOne();
-      return {
-        statusCode: 204,
-        body: '',
-      };
     }
 
     return {

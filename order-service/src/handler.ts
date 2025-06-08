@@ -1,5 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { z } from 'zod';
+import mongoose from 'mongoose';
 import { Order } from './models/order';
 import { connectDB } from './services/db-service';
 import { createOrderSchema, updateOrderSchema } from './validation';
@@ -35,7 +36,17 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           body: JSON.stringify({ message: 'Unauthorized: Company role required' }),
         };
       }
-      const data = createOrderSchema.parse(body ? JSON.parse(body) : {});
+      let parsedBody;
+      try {
+        parsedBody = body ? JSON.parse(body) : {};
+      } catch (err) {
+        return {
+          statusCode: 400,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Invalid JSON body' }),
+        };
+      }
+      const data = createOrderSchema.parse(parsedBody);
       if (data.entity.user_id !== userId) {
         return {
           statusCode: 403,
@@ -71,33 +82,44 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     // GET /orders/{orderId}
     if (path.startsWith('/orders/') && httpMethod === 'GET' && pathParameters?.orderId) {
       const orderId = pathParameters.orderId;
-      const order = await Order.findById(orderId);
-      if (!order) {
+      try {
+        const order = await Order.findById(orderId);
+        if (!order) {
+          return {
+            statusCode: 404,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Order not found' }),
+          };
+        }
+        if (userRole === 'company' && order.user_id !== userId) {
+          return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Unauthorized access to order' }),
+          };
+        }
+        if (userRole === 'customer' && order.customer_id !== userId) {
+          return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Unauthorized access to order' }),
+          };
+        }
         return {
-          statusCode: 404,
+          statusCode: 200,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Order not found' }),
+          body: JSON.stringify(order),
         };
+      } catch (err) {
+        if (err instanceof mongoose.Error.CastError) {
+          return {
+            statusCode: 404,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Order not found' }),
+          };
+        }
+        throw err;
       }
-      if (userRole === 'company' && order.user_id !== userId) {
-        return {
-          statusCode: 403,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Unauthorized access to order' }),
-        };
-      }
-      if (userRole === 'customer' && order.customer_id !== userId) {
-        return {
-          statusCode: 403,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Unauthorized access to order' }),
-        };
-      }
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(order),
-      };
     }
 
     // PUT /orders/{orderId}
@@ -110,29 +132,50 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         };
       }
       const orderId = pathParameters.orderId;
-      const order = await Order.findById(orderId);
-      if (!order) {
+      try {
+        const order = await Order.findById(orderId);
+        if (!order) {
+          return {
+            statusCode: 404,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Order not found' }),
+          };
+        }
+        if (order.user_id !== userId) {
+          return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Unauthorized access to order' }),
+          };
+        }
+        let parsedBody;
+        try {
+          parsedBody = body ? JSON.parse(body) : {};
+        } catch (err) {
+          return {
+            statusCode: 400,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Invalid JSON body' }),
+          };
+        }
+        const data = updateOrderSchema.parse(parsedBody);
+        Object.assign(order, data.entity);
+        await order.save();
         return {
-          statusCode: 404,
+          statusCode: 200,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Order not found' }),
+          body: JSON.stringify(order),
         };
+      } catch (err) {
+        if (err instanceof mongoose.Error.CastError) {
+          return {
+            statusCode: 404,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Order not found' }),
+          };
+        }
+        throw err;
       }
-      if (order.user_id !== userId) {
-        return {
-          statusCode: 403,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Unauthorized access to order' }),
-        };
-      }
-      const data = updateOrderSchema.parse(body ? JSON.parse(body) : {});
-      Object.assign(order, data.entity);
-      await order.save();
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(order),
-      };
     }
 
     // DELETE /orders/{orderId}
@@ -145,27 +188,38 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         };
       }
       const orderId = pathParameters.orderId;
-      const order = await Order.findById(orderId);
-      if (!order) {
+      try {
+        const order = await Order.findById(orderId);
+        if (!order) {
+          return {
+            statusCode: 404,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Order not found' }),
+          };
+        }
+        if (order.user_id !== userId) {
+          return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Unauthorized access to order' }),
+          };
+        }
+        await Order.deleteOne({ _id: orderId });
         return {
-          statusCode: 404,
+          statusCode: 204,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Order not found' }),
+          body: '',
         };
+      } catch (err) {
+        if (err instanceof mongoose.Error.CastError) {
+          return {
+            statusCode: 404,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Order not found' }),
+          };
+        }
+        throw err;
       }
-      if (order.user_id !== userId) {
-        return {
-          statusCode: 403,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Unauthorized access to order' }),
-        };
-      }
-      await Order.deleteOne({ _id: orderId });
-      return {
-        statusCode: 204,
-        headers: { 'Content-Type': 'application/json' },
-        body: '',
-      };
     }
 
     return {

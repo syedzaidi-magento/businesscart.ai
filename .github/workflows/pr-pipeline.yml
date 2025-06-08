@@ -1,4 +1,4 @@
-name: PR Pipeline - CDK + Microservices
+name: PR Pipeline
 
 on:
   pull_request:
@@ -54,6 +54,15 @@ jobs:
             npm install
             if [ -f .env.example ]; then cp .env.example .env; fi
             npm run build
+            cd ..
+          done
+
+      - name: Run Tests (Microservices except web-portal)
+        run: |
+          for service in company-service order-service product-service user-service; do
+            echo "Running tests for $service"
+            cd $service
+            npm run test || exit 1
             cd ..
           done
 

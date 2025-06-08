@@ -14,7 +14,7 @@ def concatenate_files(base_directory, output_file, separator='='*80):
                     print(f"Failed to read {file_path}: {e}")
 
 if __name__ == "__main__":
-    base_folder = "./company-service/src"  # Replace with your folder path
-    output_file_path = "./company-service/combined_content.txt"
+    base_folder = "./web-portal/src"  # Replace with your folder path
+    output_file_path = "./web-portal/combined_content.txt"
     concatenate_files(base_folder, output_file_path)
     print(f"All files concatenated into {output_file_path}")
