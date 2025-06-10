@@ -65,8 +65,15 @@ Run SAM with host networking to avoid `ECONNREFUSED`:
 
 ```bash
 cd ~/BusinessCart
-export COMPANY_SERVICE_URL=http://192.168.12.151:3000
-sam local start-api -t cdk.out/CdkBackendStack.template.json --log-file sam.log --host 0.0.0.0 --docker-network host --env-vars <(echo "{\"AuthorizerLambda\": {\"COMPANY_SERVICE_URL\": \"$COMPANY_SERVICE_URL\"}}")
+sam local start-api -t cdk.out/UserServiceStack.template.json --docker-network host --debug --port 3000
+```
+Run each of following command in seperate terminal tabs.
+
+```bash
+sam local start-api -t cdk.out/UserServiceStack.template.json --docker-network host --debug --port 3000
+sam local start-api -t cdk.out/CompanyServiceStack.template.json --docker-network host --debug --port 3001
+sam local start-api -t cdk.out/ProductServiceStack.template.json --docker-network host --debug --port 3002
+sam local start-api -t cdk.out/OrderServiceStack.template.json --docker-network host --debug --port 3003
 ```
 
 **Verify**: API runs at `http://127.0.0.1:3000`.
