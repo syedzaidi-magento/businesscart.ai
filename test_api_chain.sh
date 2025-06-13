@@ -126,6 +126,21 @@ if [ -z "$COMPANY_ID" ]; then
 fi
 echo -e "${GREEN}Company added successfully. Company ID: $COMPANY_ID${NC}"
 
+# Step 3.1: Update User with Company ID
+echo "6. Updating user with company ID..."
+UPDATE_USER_RESPONSE=$(curl -s -w "\n%{http_code}" -X PATCH "$USER_API/users/$USER_ID" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $JWT" \
+  -d "{\"company_id\":\"$COMPANY_ID\"}")
+
+UPDATE_USER_STATUS=$(echo "$UPDATE_USER_RESPONSE" | tail -n1)
+UPDATE_USER_BODY=$(echo "$UPDATE_USER_RESPONSE" | sed -e '$d')
+echo "$UPDATE_USER_BODY" | jq .
+handle_error "$UPDATE_USER_BODY" "Update User" "$UPDATE_USER_STATUS"
+
+echo -e "${GREEN}User updated successfully with company ID: $COMPANY_ID${NC}"
+
+
 # Step 4: Add Product
 echo "4. Adding product..."
 PRODUCT_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$PRODUCT_API/products" \

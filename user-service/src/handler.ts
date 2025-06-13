@@ -3,9 +3,16 @@ config({ path: './.env' }); // Load .env from dist/
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { z } from 'zod';
+import jwt from 'jsonwebtoken';
 import { AuthService } from './services/auth-service';
 import { connectDB } from './services/db-service';
+import { User } from './models/user';
 import { registerSchema, loginSchema, refreshSchema, logoutSchema } from './validation';
+
+// Validation schema for updating user company_id
+export const updateUserSchema = z.object({
+  company_id: z.string().min(1, 'Company ID is required'),
+});
 
 // Initialize services
 const authService = new AuthService();
@@ -92,6 +99,48 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         },
         body: JSON.stringify({ message: 'Logged out successfully' }),
       };
+    }
+
+if (httpMethod === 'PATCH' && path.match(/\/users\/[^/]+$/)) {
+      const id = path.split('/').pop();
+      const data = updateUserSchema.parse(parsedBody);
+      if (!accessToken) {
+        return { statusCode: 401, body: JSON.stringify({ message: 'No token provided' }) };
+      }
+try {
+  const decoded = jwt.verify(accessToken, process.env.JWT_SECRET!) as { user: { id: string; role: string } };
+  if (decoded.user.id !== id || decoded.user.role !== 'company') {
+    return { statusCode: 403, body: JSON.stringify({ error: 'Unauthorized' }) };
+  }
+
+  const user = await User.findByIdAndUpdate(
+    id,
+    { company_id: data.company_id },
+    { new: true, select: '-password' },
+  );
+
+  console.log('Updated user:', user); // Add this line for debugging
+
+  if (!user) {
+    return { statusCode: 404, body: JSON.stringify({ error: 'User not found' }) };
+  }
+
+  const payload = { user: { id: user.id, role: user.role, company_id: user.company_id } };
+  const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Set-Cookie': `token=${newAccessToken}; HttpOnly; Max-Age=${15 * 60}; Secure=${
+        process.env.NODE_ENV === 'production'
+      }; Path=/`,
+    },
+    body: JSON.stringify({ user, accessToken: newAccessToken }),
+  };
+} catch (error) {
+  console.error('Update error:', error); // Log the error for debugging
+  return { statusCode: 500, body: JSON.stringify({ error: 'Failed to update user' }) };
+}
     }
 
     return {
