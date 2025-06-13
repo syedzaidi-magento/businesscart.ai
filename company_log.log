@@ -1,0 +1,27 @@
+START RequestId: cb0b1e26-0c4b-4ab6-a400-dd713e3204e2 Version: $LATEST
+END RequestId: 316ba75a-60f6-48f6-bed9-f4076bc1a60e
+REPORT RequestId: 316ba75a-60f6-48f6-bed9-f4076bc1a60e	Init Duration: 0.05 ms	Duration: 126.36 ms	Billed Duration: 127 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: e84d73c3-58b1-47ed-ad98-701ed75d4777 Version: $LATEST
+2025-06-12T22:46:45.582Z	40d3e3c7-b17a-47ac-845a-95cbe98a70bc	INFO	Connected to MongoDB
+END RequestId: 40d3e3c7-b17a-47ac-845a-95cbe98a70bc
+REPORT RequestId: 40d3e3c7-b17a-47ac-845a-95cbe98a70bc	Init Duration: 0.06 ms	Duration: 2205.74 ms	Billed Duration: 2206 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: c0038e6e-1914-4b30-9500-ff9bf54a45e7 Version: $LATEST
+END RequestId: 8d4be4fe-4780-4ca1-8a7b-55b878d94068
+REPORT RequestId: 8d4be4fe-4780-4ca1-8a7b-55b878d94068	Init Duration: 0.08 ms	Duration: 127.48 ms	Billed Duration: 128 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: d94435ea-57f6-4de3-a603-96f27ad909c9 Version: $LATEST
+2025-06-12T22:46:48.529Z	4652ebf5-f4fa-4c07-95f9-1d64338703e1	INFO	Connected to MongoDB
+END RequestId: 4652ebf5-f4fa-4c07-95f9-1d64338703e1
+REPORT RequestId: 4652ebf5-f4fa-4c07-95f9-1d64338703e1	Init Duration: 0.05 ms	Duration: 2168.82 ms	Billed Duration: 2169 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: ad659897-41c2-4f54-b27e-907a083c85f4 Version: $LATEST
+END RequestId: e2083654-dd64-4db6-ab55-9d0ea57b615f
+REPORT RequestId: e2083654-dd64-4db6-ab55-9d0ea57b615f	Init Duration: 0.08 ms	Duration: 129.83 ms	Billed Duration: 130 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+
+START RequestId: 03227631-7a02-4133-914c-eacec3badd1d Version: $LATEST
+2025-06-13T18:17:29.394Z	b311b714-e3a3-46ca-baa9-5023d662cf23	INFO	Connected to MongoDB
+END RequestId: b311b714-e3a3-46ca-baa9-5023d662cf23
+REPORT RequestId: b311b714-e3a3-46ca-baa9-5023d662cf23	Init Duration: 0.04 ms	Duration: 2283.98 ms	Billed Duration: 2284 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+

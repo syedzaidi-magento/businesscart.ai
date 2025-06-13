@@ -50,7 +50,6 @@ echo "1. Attempting to login user ($EMAIL)..."
 LOGIN_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$USER_API/users/login" \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
-
 LOGIN_STATUS=$(echo "$LOGIN_RESPONSE" | tail -n1)
 LOGIN_BODY=$(echo "$LOGIN_RESPONSE" | sed -e '$d')
 
@@ -67,10 +66,8 @@ else
   REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$USER_API/users/register" \
     -H "Content-Type: application/json" \
     -d "{\"name\":\"$NAME\",\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\",\"role\":\"$ROLE\",\"phoneNumber\":\"$PHONE_NUMBER\"}")
-
   REGISTER_STATUS=$(echo "$REGISTER_RESPONSE" | tail -n1)
   REGISTER_BODY=$(echo "$REGISTER_RESPONSE" | sed -e '$d')
-
   echo "$REGISTER_BODY" | jq .
   handle_error "$REGISTER_BODY" "User Registration" "$REGISTER_STATUS"
   JWT=$(echo "$REGISTER_BODY" | jq -r '.accessToken // empty')
@@ -93,7 +90,6 @@ echo "User ID: $USER_ID"
 echo "2. Finding company for user ($USER_ID)..."
 COMPANY_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$COMPANY_API/companies" \
   -H "Authorization: Bearer $JWT")
-
 COMPANY_STATUS=$(echo "$COMPANY_RESPONSE" | tail -n1)
 COMPANY_BODY=$(echo "$COMPANY_RESPONSE" | sed -e '$d')
 
@@ -132,10 +128,8 @@ else
         }
       }
     }")
-
   CREATE_COMPANY_STATUS=$(echo "$CREATE_COMPANY_RESPONSE" | tail -n1)
   CREATE_COMPANY_BODY=$(echo "$CREATE_COMPANY_RESPONSE" | sed -e '$d')
-
   echo "$CREATE_COMPANY_BODY" | jq .
   handle_error "$CREATE_COMPANY_BODY" "Create Company" "$CREATE_COMPANY_STATUS"
   COMPANY_ID=$(echo "$CREATE_COMPANY_BODY" | jq -r '._id // .id // empty')
@@ -143,14 +137,31 @@ else
     echo -e "${RED}Error: Failed to extract company ID from response${NC}"
     exit 1
   fi
-  echo -e "${GREEN}Company created successfully. Company ID: $COMPANY_ID, JWT: $JWT${NC}"
+  echo -e "${GREEN}Company created successfully. Company ID: $COMPANY_ID${NC}"
+
+  # Step 2.1: Update User with Company ID
+  echo "2.1 Updating user ($USER_ID) with company ID ($COMPANY_ID)..."
+  UPDATE_USER_RESPONSE=$(curl -s -w "\n%{http_code}" -X PATCH "$USER_API/users/$USER_ID" \
+    -H "Content-Type: application/json" \
+    -H "Cookie: token=$JWT" \
+    -d "{\"company_id\":\"$COMPANY_ID\"}")
+  UPDATE_USER_STATUS=$(echo "$UPDATE_USER_RESPONSE" | tail -n1)
+  UPDATE_USER_BODY=$(echo "$UPDATE_USER_RESPONSE" | sed -e '$d')
+  echo "$UPDATE_USER_BODY" | jq .
+  handle_error "$UPDATE_USER_BODY" "Update User Company ID" "$UPDATE_USER_STATUS"
+  NEW_JWT=$(echo "$UPDATE_USER_BODY" | jq -r '.accessToken // empty')
+  if [ -z "$NEW_JWT" ]; then
+    echo -e "${RED}Error: Failed to extract new JWT from update user response${NC}"
+    exit 1
+  fi
+  JWT="$NEW_JWT"
+  echo -e "${GREEN}User updated with company ID. New JWT: $JWT${NC}"
 fi
 
 # Step 3: Find or Create Product and List All Products
 echo "3. Finding product for company ($COMPANY_ID)..."
 PRODUCT_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$PRODUCT_API/products" \
   -H "Authorization: Bearer $JWT")
-
 PRODUCT_STATUS=$(echo "$PRODUCT_RESPONSE" | tail -n1)
 PRODUCT_BODY=$(echo "$PRODUCT_RESPONSE" | sed -e '$d')
 
@@ -168,10 +179,8 @@ else
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $JWT" \
     -d "{\"name\":\"Widget\",\"price\":49.99,\"companyId\":\"$COMPANY_ID\",\"description\":\"A cool widget\"}")
-
   CREATE_PRODUCT_STATUS=$(echo "$CREATE_PRODUCT_RESPONSE" | tail -n1)
   CREATE_PRODUCT_BODY=$(echo "$CREATE_PRODUCT_RESPONSE" | sed -e '$d')
-
   echo "$CREATE_PRODUCT_BODY" | jq .
   handle_error "$CREATE_PRODUCT_BODY" "Create Product" "$CREATE_PRODUCT_STATUS"
   PRODUCT_ID=$(echo "$CREATE_PRODUCT_BODY" | jq -r '._id // .id // empty')
@@ -186,10 +195,8 @@ fi
 echo "Listing all products for company ($COMPANY_ID)..."
 ALL_PRODUCTS_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$PRODUCT_API/products" \
   -H "Authorization: Bearer $JWT")
-
 ALL_PRODUCTS_STATUS=$(echo "$ALL_PRODUCTS_RESPONSE" | tail -n1)
 ALL_PRODUCTS_BODY=$(echo "$ALL_PRODUCTS_RESPONSE" | sed -e '$d')
-
 if [ "$ALL_PRODUCTS_STATUS" -eq 200 ]; then
   echo "All products:"
   echo "$ALL_PRODUCTS_BODY" | jq .
@@ -202,7 +209,6 @@ fi
 echo "4. Finding order for company ($COMPANY_ID)..."
 ORDER_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$ORDER_API/orders" \
   -H "Authorization: Bearer $JWT")
-
 ORDER_STATUS=$(echo "$ORDER_RESPONSE" | tail -n1)
 ORDER_BODY=$(echo "$ORDER_RESPONSE" | sed -e '$d')
 
@@ -254,10 +260,8 @@ else
         \"user_id\": \"$USER_ID\"
       }
     }")
-
   CREATE_ORDER_STATUS=$(echo "$CREATE_ORDER_RESPONSE" | tail -n1)
   CREATE_ORDER_BODY=$(echo "$CREATE_ORDER_RESPONSE" | sed -e '$d')
-
   echo "$CREATE_ORDER_BODY" | jq .
   handle_error "$CREATE_ORDER_BODY" "Create Order" "$CREATE_ORDER_STATUS"
   ORDER_ID=$(echo "$CREATE_ORDER_BODY" | jq -r '._id // .id // empty')
@@ -272,10 +276,8 @@ fi
 echo "Listing all orders for company ($COMPANY_ID)..."
 ALL_ORDERS_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$ORDER_API/orders" \
   -H "Authorization: Bearer $JWT")
-
 ALL_ORDERS_STATUS=$(echo "$ALL_ORDERS_RESPONSE" | tail -n1)
 ALL_ORDERS_BODY=$(echo "$ALL_ORDERS_RESPONSE" | sed -e '$d')
-
 if [ "$ALL_ORDERS_STATUS" -eq 200 ]; then
   echo "All orders:"
   echo "$ALL_ORDERS_BODY" | jq .
