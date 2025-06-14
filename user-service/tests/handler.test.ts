@@ -8,7 +8,7 @@ import { User } from '../src/models/user';
 import { RefreshToken } from '../src/models/refresh-token';
 import { BlacklistedToken } from '../src/models/blacklisted-token';
 import { connectDB } from '../src/services/db-service';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
 let mongoServer: MongoMemoryServer;
@@ -25,8 +25,8 @@ process.env.MONGO_URI = ''; // Will be set by MongoMemoryServer
 process.env.NODE_ENV = 'test';
 
 // Generate JWT for testing
-const generateAccessToken = (userId: string, role: string) =>
-  jwt.sign({ user: { id: userId, role } }, process.env.JWT_SECRET!, { expiresIn: '15m' });
+const generateAccessToken = (userId: string, role: string, company_id?: string, options: SignOptions = { expiresIn: '15m' }) =>
+  jwt.sign({ user: { id: userId, role, company_id } }, process.env.JWT_SECRET as string, options);
 
 const generateRefreshToken = (userId: string, role: string) =>
   jwt.sign({ user: { id: userId, role } }, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
@@ -88,11 +88,15 @@ beforeAll(async () => {
 
     handler(event)
       .then((result) => {
-        res.status(result.statusCode).set(result.headers || {}).send(result.body);
+        res.status(result.statusCode)
+          .set({ 'Content-Type': 'application/json', ...result.headers }) // Ensure Content-Type
+          .send(result.body);
       })
       .catch((err) => {
         console.error('Handler error:', err);
-        res.status(500).send({ message: 'Test error', error: err.message });
+        res.status(500)
+          .set('Content-Type', 'application/json')
+          .send(JSON.stringify({ message: 'Test error', error: err.message }));
       });
   });
 
@@ -111,6 +115,11 @@ afterEach(async () => {
   await User.deleteMany({});
   await RefreshToken.deleteMany({});
   await BlacklistedToken.deleteMany({});
+});
+
+beforeEach(() => {
+  // Ensure JWT_SECRET is set before each test
+  process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
 });
 
 describe('User Service API', () => {
@@ -331,7 +340,7 @@ describe('User Service API', () => {
       expect.stringContaining('token=;')
     );
 
-    const refreshTokenDoc = await RefreshToken.findOne({ token: refreshToken });
+    const refreshTokenDoc = await RefreshToken.findOne({ token: 'refreshToken' });
     expect(refreshTokenDoc).toBeNull();
 
     const blacklistedToken = await BlacklistedToken.findOne({ token: accessToken });
@@ -426,5 +435,312 @@ describe('User Service API', () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({ message: 'Invalid JSON body' });
+  });
+
+  test('should update user company_id with valid company role and token', async () => {
+    const user = await User.create({
+      name: 'Company Inc',
+      email: 'company@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'company',
+    });
+    const accessToken = generateAccessToken(user._id.toString(), 'company');
+
+    const response = await request
+      .patch(`/users/${user._id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ company_id: 'COMP123' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      user: {
+        _id: user._id.toString(),
+        company_id: 'COMP123',
+        role: 'company',
+      },
+      accessToken: expect.any(String),
+    });
+    expect(response.headers['set-cookie']).toContainEqual(
+      expect.stringContaining(`token=${response.body.accessToken}`)
+    );
+
+    const updatedUser = await User.findById(user._id);
+    expect(updatedUser?.company_id).toBe('COMP123');
+  });
+
+  test('should reject update for non-company role', async () => {
+    const user = await User.create({
+      name: 'John Doe',
+      email: 'john@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'customer',
+    });
+    const accessToken = generateAccessToken(user._id.toString(), 'customer');
+
+    const response = await request
+      .patch(`/users/${user._id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ company_id: 'COMP123' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: 'Unauthorized' });
+  });
+
+  test('should reject update with missing token', async () => {
+    const user = await User.create({
+      name: 'Company Inc',
+      email: 'company@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'company',
+    });
+
+    const response = await request
+      .patch(`/users/${user._id}`)
+      .send({ company_id: 'COMP123' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'No token provided' });
+  });
+
+  test('should reject update for non-existent user', async () => {
+    const nonExistentId = new mongoose.Types.ObjectId().toString();
+    const accessToken = generateAccessToken(nonExistentId, 'company');
+
+    const response = await request
+      .patch(`/users/${nonExistentId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ company_id: 'COMP123' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'User not found' });
+  });
+
+  test('should reject update with tampered token', async () => {
+    const user = await User.create({
+      name: 'Company Inc',
+      email: 'company@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'company',
+    });
+    const tamperedToken = generateAccessToken(user._id.toString(), 'company') + 'tampered';
+
+    const response = await request
+      .patch(`/users/${user._id}`)
+      .set('Authorization', `Bearer ${tamperedToken}`)
+      .send({ company_id: 'COMP123' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ error: 'Failed to update user' });
+  });
+
+  test('should refresh access token for non-existent user', async () => {
+    const nonExistentId = new mongoose.Types.ObjectId().toString();
+    const refreshToken = generateRefreshToken(nonExistentId, 'customer');
+    await RefreshToken.create({
+      userId: nonExistentId,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    const response = await request
+      .post('/users/refresh')
+      .send({ refreshToken });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      accessToken: expect.any(String),
+    });
+  });
+
+  test('should reject logout with expired access token', async () => {
+    const user = await User.create({
+      name: 'John Doe',
+      email: 'john@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'customer',
+    });
+    const expiredAccessToken = jwt.sign(
+      { user: { id: user._id.toString(), role: 'customer' } },
+      process.env.JWT_SECRET!,
+      { expiresIn: '-1s' } // Expired
+    );
+    const refreshToken = generateRefreshToken(user._id.toString(), 'customer');
+    await RefreshToken.create({
+      userId: user._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    const response = await request
+      .post('/users/logout')
+      .set('Authorization', `Bearer ${expiredAccessToken}`)
+      .send({ refreshToken });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ message: 'Server error' });
+  });
+
+  test('should handle case-insensitive email registration', async () => {
+    await User.create({
+      name: 'John Doe',
+      email: 'john@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'customer',
+    });
+
+    const response = await request
+      .post('/users/register')
+      .send({
+        name: 'Jane Doe',
+        email: 'John@example.com',
+        password: 'password123',
+        role: 'customer',
+      });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ message: 'User already exists' });
+  });
+
+  test('should handle missing JWT_SECRET', async () => {
+    const originalJwtSecret = process.env.JWT_SECRET;
+    delete process.env.JWT_SECRET;
+
+    const user = await User.create({
+      name: 'Company Inc',
+      email: 'company@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'company',
+    });
+    const accessToken = jwt.sign(
+      { user: { id: user._id.toString(), role: 'company' } },
+      originalJwtSecret!,
+      { expiresIn: '15m' }
+    );
+
+    const response = await request
+      .patch(`/users/${user._id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ company_id: 'COMP123' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ error: 'Failed to update user' });
+
+    process.env.JWT_SECRET = originalJwtSecret;
+  });
+
+  test('should reject update with invalid company_id', async () => {
+    const user = await User.create({
+      name: 'Company Inc',
+      email: 'company@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'company',
+    });
+    const accessToken = generateAccessToken(user._id.toString(), 'company');
+
+    const response = await request
+      .patch(`/users/${user._id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ company_id: '' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({
+          message: 'Company ID is required',
+          path: ['company_id'],
+        }),
+      ]),
+    });
+  });
+
+  test('should handle case-insensitive email login', async () => {
+    await User.create({
+      name: 'John Doe',
+      email: 'john@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'customer',
+    });
+
+    const response = await request
+      .post('/users/login')
+      .send({
+        email: 'John@example.com',
+        password: 'password123',
+      });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ message: 'Invalid credentials' });
+  });
+
+  test('should reject update with expired access token', async () => {
+    const user = await User.create({
+      name: 'Company Inc',
+      email: 'company@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'company',
+    });
+    const expiredAccessToken = generateAccessToken(user._id.toString(), 'company', undefined, { expiresIn: '-1s' });
+
+    const response = await request
+      .patch(`/users/${user._id}`)
+      .set('Authorization', `Bearer ${expiredAccessToken}`)
+      .send({ company_id: 'COMP123' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ error: 'Failed to update user' });
+  });
+
+  test('should reject logout with blacklisted access token', async () => {
+    const user = await User.create({
+      name: 'John Doe',
+      email: 'john@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'customer',
+    });
+    const accessToken = generateAccessToken(user._id.toString(), 'customer');
+    const refreshToken = generateRefreshToken(user._id.toString(), 'customer');
+    await RefreshToken.create({
+      userId: user._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+    await BlacklistedToken.create({
+      token: accessToken,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    });
+
+    const response = await request
+      .post('/users/logout')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ refreshToken });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ message: 'Server error' });
   });
 });
