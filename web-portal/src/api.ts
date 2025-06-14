@@ -74,6 +74,26 @@ export const deleteCompany = async (id: string): Promise<void> => {
   await api.delete(`${COMPANY_API_URL}/companies/${id}`);
 };
 
+export const updateUserWithCompany = async (companyId: string) => {
+  const jwt = localStorage.getItem('accessToken');
+  if (!jwt) {
+    throw new Error('No JWT found');
+  }
+  const payload = JSON.parse(atob(jwt.split('.')[1]));
+  const userId = payload.user?.id || payload.sub || '';
+  if (!userId) {
+    throw new Error('User ID not found in JWT');
+  }
+  const response = await axios.patch(`${USER_API_URL}/users/${userId}`, { company_id: companyId }, {
+    headers: { Authorization: `Bearer ${jwt}` },
+  });
+  const newJwt = response.data.accessToken;
+  if (newJwt) {
+    localStorage.setItem('accessToken', newJwt);
+  }
+  return response.data;
+};
+
 export const createProduct = async (data: Omit<Product, '_id'>): Promise<Product> => {
   const response = await api.post(`${PRODUCT_API_URL}/products`, data);
   return response.data;

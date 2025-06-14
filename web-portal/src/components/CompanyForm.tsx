@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCompanies, createCompany, updateCompany, deleteCompany } from '../api';
+import { getCompanies, createCompany, updateCompany, deleteCompany, updateUserWithCompany } from '../api';
 import { Company } from '../types';
 import Navbar from './Navbar';
 import { Dialog, Transition } from '@headlessui/react';
@@ -13,13 +13,13 @@ const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const CompanyForm = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const companiesPerPage = 10;
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState<boolean>(false);
   const [companyToDelete, setCompanyToDelete] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Company, '_id'>>({
     name: '',
     companyCode: '',
     paymentMethods: ['cash'],
@@ -37,7 +37,7 @@ const CompanyForm = () => {
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const loadCompanies = async () => {
@@ -96,7 +96,7 @@ const CompanyForm = () => {
     return errors;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const newErrors = validateForm();
     setErrors(newErrors);
@@ -108,8 +108,15 @@ const CompanyForm = () => {
         await updateCompany(editingId, formData);
         toast.success('Company updated successfully');
       } else {
-        await createCompany(formData);
+        const response = await createCompany(formData);
         toast.success('Company created successfully');
+        try {
+          await updateUserWithCompany(response._id);
+          toast.success('User associated with company successfully');
+        } catch (updateError: any) {
+          console.error('Failed to associate user with company:', updateError);
+          toast.error(updateError.response?.data?.message || 'Failed to associate user with company');
+        }
       }
       setFormData({
         name: '',
@@ -142,7 +149,7 @@ const CompanyForm = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name.startsWith('address.coordinates.')) {
-      const field = name.split('.')[2];
+      const field = name.split('.')[2] as 'lat' | 'lng';
       setFormData({
         ...formData,
         address: {
@@ -154,7 +161,7 @@ const CompanyForm = () => {
         },
       });
     } else if (name.startsWith('sellingArea.center.')) {
-      const field = name.split('.')[2];
+      const field = name.split('.')[2] as 'lat' | 'lng';
       setFormData({
         ...formData,
         sellingArea: {
@@ -166,7 +173,7 @@ const CompanyForm = () => {
         },
       });
     } else if (name.startsWith('address.')) {
-      const field = name.split('.')[1];
+      const field = name.split('.')[1] as keyof Omit<Company['address'], 'coordinates'>;
       setFormData({
         ...formData,
         address: { ...formData.address, [field]: value },
