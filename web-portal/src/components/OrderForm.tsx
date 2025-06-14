@@ -20,6 +20,7 @@ const OrderForm = () => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [userId, setUserId] = useState<string>('');
+  const [companyId, setCompanyId] = useState<string>('');
 
   const [formData, setFormData] = useState({
     base_grand_total: 0,
@@ -57,20 +58,23 @@ const OrderForm = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Decode JWT to get userId
+    // Decode JWT to get userId and companyId
     const token = localStorage.getItem('accessToken');
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         const id = payload.user?.id || payload.sub || '';
+        const company = payload.user?.company_id || '';
         setUserId(id);
+        setCompanyId(company);
         setFormData((prev) => ({
           ...prev,
           user_id: id,
+          company_id: company,
         }));
       } catch (e) {
         console.error('Failed to decode token:', e);
-        toast.error('Unable to fetch user data. Please enter User ID manually.');
+        toast.error('Unable to fetch user data. Please enter User ID and Company ID manually.');
       }
     } else {
       toast.error('Please log in to access orders.');
@@ -184,7 +188,7 @@ const OrderForm = () => {
           row_total: 0,
           product_id: '',
         }],
-        company_id: '',
+        company_id: companyId,
         user_id: userId,
       });
       setEditingId(null);
@@ -333,7 +337,7 @@ const OrderForm = () => {
         row_total: 0,
         product_id: '',
       }],
-      company_id: '',
+      company_id: companyId,
       user_id: userId,
     });
     setEditingId(null);
