@@ -19,6 +19,7 @@ const ProductForm = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string>(''); // New state variable
   const [formData, setFormData] = useState({
     name: '',
     price: 0,
@@ -31,7 +32,6 @@ const ProductForm = () => {
 
   useEffect(() => {
     const loadProducts = async () => {
-      // Check cache
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
@@ -41,9 +41,28 @@ const ProductForm = () => {
           return;
         }
       }
-      // Fetch from API if cache is stale or missing
       await fetchProducts();
     };
+    
+    // Decode JWT to get companyId
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const company = payload.user?.company_id || '';
+        setCompanyId(company);
+        setFormData((prev) => ({
+          ...prev,
+          companyId: company,
+        }));
+      } catch (e) {
+        console.error('Failed to decode token:', e);
+        toast.error('Unable to fetch company data. Please enter Company ID manually.');
+      }
+    } else {
+      toast.error('Please log in to access products.');
+    }
+
     loadProducts();
   }, []);
 
@@ -61,7 +80,6 @@ const ProductForm = () => {
       const data = await getProducts();
       setProducts(data);
       setFilteredProducts(data);
-      // Cache the data
       localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Error fetching products');
@@ -98,7 +116,7 @@ const ProductForm = () => {
         await createProduct(formData);
         toast.success('Product created successfully');
       }
-      setFormData({ name: '', price: 0, companyId: '', description: '' });
+      setFormData({ name: '', price: 0, companyId: companyId, description: '' });
       setEditingId(null);
       setIsModalOpen(false);
       invalidateCache();
@@ -153,7 +171,7 @@ const ProductForm = () => {
   };
 
   const openModal = () => {
-    setFormData({ name: '', price: 0, companyId: '', description: '' });
+    setFormData({ name: '', price: 0, companyId: companyId, description: '' });
     setEditingId(null);
     setErrors([]);
     setIsModalOpen(true);
