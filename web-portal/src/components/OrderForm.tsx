@@ -38,7 +38,7 @@ const OrderForm = () => {
     },
     payment: {
       account_status: 'active',
-      additional_information: [''],
+      additional_information: ['Payment processed'], // Changed to match cURL
       cc_last4: '',
       method: 'credit_card',
     },
@@ -134,6 +134,7 @@ const OrderForm = () => {
     if (!formData.billing_address.telephone) errors.push('Billing telephone is required');
     if (!formData.billing_address.street[0]) errors.push('Billing street is required');
     if (!formData.payment.cc_last4) errors.push('Credit card last 4 digits are required');
+    if (!formData.payment.additional_information[0]) errors.push('Payment additional information is required'); // Added validation
     if (!formData.items[0].sku) errors.push('Item SKU is required');
     if (!formData.items[0].name) errors.push('Item name is required');
     if (formData.items[0].qty_ordered <= 0) errors.push('Item quantity must be positive');
@@ -176,7 +177,7 @@ const OrderForm = () => {
         },
         payment: {
           account_status: 'active',
-          additional_information: [''],
+          additional_information: ['Payment processed'], // Changed to match cURL
           cc_last4: '',
           method: 'credit_card',
         },
@@ -277,7 +278,10 @@ const OrderForm = () => {
       grand_total: order.grand_total,
       customer_email: order.customer_email,
       billing_address: { ...order.billing_address, street: [...order.billing_address.street] },
-      payment: { ...order.payment, additional_information: [...order.payment.additional_information] },
+      payment: { 
+        ...order.payment, 
+        additional_information: order.payment.additional_information.length ? [...order.payment.additional_information] : ['Payment processed'] // Ensure non-empty
+      },
       items: order.items.map((item) => ({ ...item })),
       company_id: order.company_id,
       user_id: order.user_id,
@@ -325,7 +329,7 @@ const OrderForm = () => {
       },
       payment: {
         account_status: 'active',
-        additional_information: [''],
+        additional_information: ['Payment processed'], // Changed to match cURL
         cc_last4: '',
         method: 'credit_card',
       },
@@ -390,7 +394,7 @@ const OrderForm = () => {
             <div className="p-6 flex justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
             </div>
-          ) : filteredOrders.length === 0 ? (
+          ) : filteredOrders.length == 0 ? (
             <div className="p-6 text-center text-gray-600">No orders found.</div>
           ) : (
             <div className="overflow-x-auto">
