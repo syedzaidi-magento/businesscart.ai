@@ -85,6 +85,26 @@ export const deleteCompany = async (id: string): Promise<void> => {
   await api.delete(`${COMPANY_API_URL}/companies/${id}`);
 };
 
+export const updateUserWithCompany = async (companyId: string) => {
+  const jwt = localStorage.getItem('accessToken');
+  if (!jwt) {
+    throw new Error('No JWT found');
+  }
+  const payload = JSON.parse(atob(jwt.split('.')[1]));
+  const userId = payload.user?.id || payload.sub || '';
+  if (!userId) {
+    throw new Error('User ID not found in JWT');
+  }
+  const response = await axios.patch(`${USER_API_URL}/users/${userId}`, { company_id: companyId }, {
+    headers: { Authorization: `Bearer ${jwt}` },
+  });
+  const newJwt = response.data.accessToken;
+  if (newJwt) {
+    localStorage.setItem('accessToken', newJwt);
+  }
+  return response.data;
+};
+
 export const createProduct = async (data: Omit<Product, '_id'>): Promise<Product> => {
   const response = await api.post(`${PRODUCT_API_URL}/products`, data);
   return response.data;
@@ -282,6 +302,7 @@ const OrderForm = () => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [userId, setUserId] = useState<string>('');
+  const [companyId, setCompanyId] = useState<string>('');
 
   const [formData, setFormData] = useState({
     base_grand_total: 0,
@@ -299,7 +320,7 @@ const OrderForm = () => {
     },
     payment: {
       account_status: 'active',
-      additional_information: [''],
+      additional_information: ['Payment processed'], // Changed to match cURL
       cc_last4: '',
       method: 'credit_card',
     },
@@ -319,20 +340,23 @@ const OrderForm = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Decode JWT to get userId
+    // Decode JWT to get userId and companyId
     const token = localStorage.getItem('accessToken');
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         const id = payload.user?.id || payload.sub || '';
+        const company = payload.user?.company_id || '';
         setUserId(id);
+        setCompanyId(company);
         setFormData((prev) => ({
           ...prev,
           user_id: id,
+          company_id: company,
         }));
       } catch (e) {
         console.error('Failed to decode token:', e);
-        toast.error('Unable to fetch user data. Please enter User ID manually.');
+        toast.error('Unable to fetch user data. Please enter User ID and Company ID manually.');
       }
     } else {
       toast.error('Please log in to access orders.');
@@ -392,6 +416,7 @@ const OrderForm = () => {
     if (!formData.billing_address.telephone) errors.push('Billing telephone is required');
     if (!formData.billing_address.street[0]) errors.push('Billing street is required');
     if (!formData.payment.cc_last4) errors.push('Credit card last 4 digits are required');
+    if (!formData.payment.additional_information[0]) errors.push('Payment additional information is required'); // Added validation
     if (!formData.items[0].sku) errors.push('Item SKU is required');
     if (!formData.items[0].name) errors.push('Item name is required');
     if (formData.items[0].qty_ordered <= 0) errors.push('Item quantity must be positive');
@@ -434,7 +459,7 @@ const OrderForm = () => {
         },
         payment: {
           account_status: 'active',
-          additional_information: [''],
+          additional_information: ['Payment processed'], // Changed to match cURL
           cc_last4: '',
           method: 'credit_card',
         },
@@ -446,7 +471,7 @@ const OrderForm = () => {
           row_total: 0,
           product_id: '',
         }],
-        company_id: '',
+        company_id: companyId,
         user_id: userId,
       });
       setEditingId(null);
@@ -535,7 +560,10 @@ const OrderForm = () => {
       grand_total: order.grand_total,
       customer_email: order.customer_email,
       billing_address: { ...order.billing_address, street: [...order.billing_address.street] },
-      payment: { ...order.payment, additional_information: [...order.payment.additional_information] },
+      payment: { 
+        ...order.payment, 
+        additional_information: order.payment.additional_information.length ? [...order.payment.additional_information] : ['Payment processed'] // Ensure non-empty
+      },
       items: order.items.map((item) => ({ ...item })),
       company_id: order.company_id,
       user_id: order.user_id,
@@ -583,7 +611,7 @@ const OrderForm = () => {
       },
       payment: {
         account_status: 'active',
-        additional_information: [''],
+        additional_information: ['Payment processed'], // Changed to match cURL
         cc_last4: '',
         method: 'credit_card',
       },
@@ -595,7 +623,7 @@ const OrderForm = () => {
         row_total: 0,
         product_id: '',
       }],
-      company_id: '',
+      company_id: companyId,
       user_id: userId,
     });
     setEditingId(null);
@@ -648,7 +676,7 @@ const OrderForm = () => {
             <div className="p-6 flex justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
             </div>
-          ) : filteredOrders.length === 0 ? (
+          ) : filteredOrders.length == 0 ? (
             <div className="p-6 text-center text-gray-600">No orders found.</div>
           ) : (
             <div className="overflow-x-auto">
@@ -1225,6 +1253,7 @@ const ProductForm = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string>(''); // New state variable
   const [formData, setFormData] = useState({
     name: '',
     price: 0,
@@ -1237,7 +1266,6 @@ const ProductForm = () => {
 
   useEffect(() => {
     const loadProducts = async () => {
-      // Check cache
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
@@ -1247,9 +1275,28 @@ const ProductForm = () => {
           return;
         }
       }
-      // Fetch from API if cache is stale or missing
       await fetchProducts();
     };
+    
+    // Decode JWT to get companyId
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const company = payload.user?.company_id || '';
+        setCompanyId(company);
+        setFormData((prev) => ({
+          ...prev,
+          companyId: company,
+        }));
+      } catch (e) {
+        console.error('Failed to decode token:', e);
+        toast.error('Unable to fetch company data. Please enter Company ID manually.');
+      }
+    } else {
+      toast.error('Please log in to access products.');
+    }
+
     loadProducts();
   }, []);
 
@@ -1267,7 +1314,6 @@ const ProductForm = () => {
       const data = await getProducts();
       setProducts(data);
       setFilteredProducts(data);
-      // Cache the data
       localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Error fetching products');
@@ -1304,7 +1350,7 @@ const ProductForm = () => {
         await createProduct(formData);
         toast.success('Product created successfully');
       }
-      setFormData({ name: '', price: 0, companyId: '', description: '' });
+      setFormData({ name: '', price: 0, companyId: companyId, description: '' });
       setEditingId(null);
       setIsModalOpen(false);
       invalidateCache();
@@ -1359,7 +1405,7 @@ const ProductForm = () => {
   };
 
   const openModal = () => {
-    setFormData({ name: '', price: 0, companyId: '', description: '' });
+    setFormData({ name: '', price: 0, companyId: companyId, description: '' });
     setEditingId(null);
     setErrors([]);
     setIsModalOpen(true);
@@ -1661,7 +1707,7 @@ export default ProductForm;
 FILE: ./web-portal/src/components/CompanyForm.tsx
 ================================================================================
 import React, { useState, useEffect } from 'react';
-import { getCompanies, createCompany, updateCompany, deleteCompany } from '../api';
+import { getCompanies, createCompany, updateCompany, deleteCompany, updateUserWithCompany } from '../api';
 import { Company } from '../types';
 import Navbar from './Navbar';
 import { Dialog, Transition } from '@headlessui/react';
@@ -1675,13 +1721,13 @@ const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const CompanyForm = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const companiesPerPage = 10;
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState<boolean>(false);
   const [companyToDelete, setCompanyToDelete] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Company, '_id'>>({
     name: '',
     companyCode: '',
     paymentMethods: ['cash'],
@@ -1699,7 +1745,7 @@ const CompanyForm = () => {
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const loadCompanies = async () => {
@@ -1758,7 +1804,7 @@ const CompanyForm = () => {
     return errors;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const newErrors = validateForm();
     setErrors(newErrors);
@@ -1770,8 +1816,15 @@ const CompanyForm = () => {
         await updateCompany(editingId, formData);
         toast.success('Company updated successfully');
       } else {
-        await createCompany(formData);
+        const response = await createCompany(formData);
         toast.success('Company created successfully');
+        try {
+          await updateUserWithCompany(response._id);
+          toast.success('User associated with company successfully');
+        } catch (updateError: any) {
+          console.error('Failed to associate user with company:', updateError);
+          toast.error(updateError.response?.data?.message || 'Failed to associate user with company');
+        }
       }
       setFormData({
         name: '',
@@ -1804,7 +1857,7 @@ const CompanyForm = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name.startsWith('address.coordinates.')) {
-      const field = name.split('.')[2];
+      const field = name.split('.')[2] as 'lat' | 'lng';
       setFormData({
         ...formData,
         address: {
@@ -1816,7 +1869,7 @@ const CompanyForm = () => {
         },
       });
     } else if (name.startsWith('sellingArea.center.')) {
-      const field = name.split('.')[2];
+      const field = name.split('.')[2] as 'lat' | 'lng';
       setFormData({
         ...formData,
         sellingArea: {
@@ -1828,7 +1881,7 @@ const CompanyForm = () => {
         },
       });
     } else if (name.startsWith('address.')) {
-      const field = name.split('.')[1];
+      const field = name.split('.')[1] as keyof Omit<Company['address'], 'coordinates'>;
       setFormData({
         ...formData,
         address: { ...formData.address, [field]: value },
