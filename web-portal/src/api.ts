@@ -55,6 +55,20 @@ export const login = async (data: { email: string; password: string }): Promise<
   return response.data;
 };
 
+export const getUsers = async (): Promise<User[]> => {
+  const response = await api.get(`${USER_API_URL}/users`);
+  return response.data;
+};
+
+export const updateUser = async (id: string, data: Partial<Omit<User, '_id'>>): Promise<User> => {
+  const response = await api.patch(`${USER_API_URL}/users/${id}`, data);
+  return response.data.user;
+};
+
+export const deleteUser = async (id: string): Promise<void> => {
+  await api.delete(`${USER_API_URL}/users/${id}`);
+};
+
 export const createCompany = async (data: Omit<Company, '_id'>): Promise<Company> => {
   const response = await api.post(`${COMPANY_API_URL}/companies`, data);
   return response.data;

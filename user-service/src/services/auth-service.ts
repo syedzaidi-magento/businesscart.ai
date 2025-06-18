@@ -3,6 +3,7 @@ import { User, IUser } from '../models/user';
 import { RefreshToken, IRefreshToken } from '../models/refresh-token';
 import { BlacklistedToken } from '../models/blacklisted-token';
 import { RegisterInput, LoginInput } from '../validation';
+import bcrypt from 'bcryptjs';
 
 export class AuthService {
   async register(data: RegisterInput): Promise<{ accessToken: string; refreshToken: string }> {
@@ -94,5 +95,9 @@ export class AuthService {
       expiresAt: new Date(decoded.exp * 1000),
     });
     await RefreshToken.deleteOne({ token: refreshToken });
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 10);
   }
 }

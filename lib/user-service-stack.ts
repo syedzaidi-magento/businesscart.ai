@@ -43,8 +43,12 @@ export class UserServiceStack extends cdk.Stack {
     users.addResource('refresh').addMethod('POST', new apigateway.LambdaIntegration(userServiceFn));
     users.addResource('logout').addMethod('POST', new apigateway.LambdaIntegration(userServiceFn));
     users.addResource('associate-company').addMethod('POST', new apigateway.LambdaIntegration(userServiceFn));
+    users.addMethod('GET', new apigateway.LambdaIntegration(userServiceFn));
     const userId = users.addResource('{id}');
     userId.addMethod('PATCH', new apigateway.LambdaIntegration(userServiceFn));
+    userId.addMethod('GET', new apigateway.LambdaIntegration(userServiceFn));
+    userId.addMethod('DELETE', new apigateway.LambdaIntegration(userServiceFn));
+    userId.addMethod('PUT', new apigateway.LambdaIntegration(userServiceFn));
 
     new cdk.CfnOutput(this, 'UserServiceApiUrl', { value: userApi.url });
   }

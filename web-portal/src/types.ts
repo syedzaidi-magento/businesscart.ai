@@ -2,7 +2,10 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: string;
+  password?: string;
+  role: 'admin' | 'company' | 'customer';
+  company_id?: string;
+  associate_company_ids?: string[];
   phoneNumber: string;
 }
 
