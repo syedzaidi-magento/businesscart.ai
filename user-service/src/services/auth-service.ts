@@ -14,7 +14,14 @@ export class AuthService {
     user = new User({ name, email, password, role });
     await user.save();
 
-    const payload = { user: { id: user.id, role: user.role, company_id: user.company_id || undefined } };
+    const payload = { 
+      user: { 
+        id: user.id, 
+        role: user.role, 
+        company_id: user.company_id || undefined,
+        ...(user.role === 'customer' && { associate_company_ids: user.associate_company_ids || [] })
+      } 
+    };
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
 
@@ -35,7 +42,14 @@ export class AuthService {
       throw new Error('Invalid credentials');
     }
 
-    const payload = { user: { id: user.id, role: user.role, company_id: user.company_id || undefined } };
+    const payload = { 
+      user: { 
+        id: user.id, 
+        role: user.role, 
+        company_id: user.company_id || undefined,
+        ...(user.role === 'customer' && { associate_company_ids: user.associate_company_ids || [] })
+      } 
+    };
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
 
@@ -54,8 +68,19 @@ export class AuthService {
       throw new Error('Invalid or expired refresh token');
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { user: { id: string, role: string, company_id: string | undefined } };
-    const payload = { user: { id: decoded.user.id, role: decoded.user.role, company_id: decoded.user.company_id } };
+    const user = await User.findById(storedToken.userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const payload = { 
+      user: { 
+        id: user.id, 
+        role: user.role, 
+        company_id: user.company_id || undefined,
+        ...(user.role === 'customer' && { associate_company_ids: user.associate_company_ids || [] })
+      } 
+    };
     return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
   }
 

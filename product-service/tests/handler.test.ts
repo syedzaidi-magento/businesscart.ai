@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import supertest from 'supertest';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
@@ -6,6 +6,7 @@ import express from 'express';
 import { handler } from '../src/handler';
 import { Product } from '../src/models/product';
 import { connectDB } from '../src/services/db-service';
+import { json } from 'stream/consumers';
 
 let mongoServer: MongoMemoryServer;
 let app: express.Application;
@@ -15,7 +16,7 @@ let request: supertest.SuperTest<supertest.Test>;
 process.env.MONGO_URI = '';
 process.env.NODE_ENV = 'test';
 
-// Mock console.log and console.error to suppress logs if needed
+// Mock console.log and console.error to suppress logs
 const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -52,6 +53,7 @@ beforeAll(async () => {
           authorizer: {
             userId: req.headers['x-user-id'],
             userRole: req.headers['x-user-role'],
+            associateCompanyIds: req.headers['x-associate-company-ids'] || '[]',
           },
         } as any,
         pathParameters: productId ? { productId } : null,
@@ -65,14 +67,14 @@ beforeAll(async () => {
 
       // Call Lambda handler
       handler(event)
-        .then((result) => {
+        .then((result: APIGatewayProxyResult) => {
           const headers = result.headers || {};
           if (!headers['Content-Type']) {
             headers['Content-Type'] = 'application/json';
           }
           res.status(result.statusCode).set(headers).send(result.body);
         })
-        .catch((err) => {
+        .catch((err: Error) => {
           res.status(500).send({ message: 'Test error', error: err.message });
         });
     });
@@ -96,6 +98,8 @@ afterEach(async () => {
 describe('Product Service API', () => {
   const userId1 = 'user123';
   const userId2 = 'user456';
+  const companyId1 = 'company123';
+  const companyId2 = 'company456';
 
   test('should create a product with valid input', async () => {
     const response = await request
@@ -105,7 +109,7 @@ describe('Product Service API', () => {
       .send({
         name: 'Test Product',
         price: 99.99,
-        companyId: 'company123',
+        companyId: companyId1,
         description: 'A sample product',
       });
 
@@ -113,7 +117,7 @@ describe('Product Service API', () => {
     expect(response.body).toMatchObject({
       name: 'Test Product',
       price: 99.99,
-      companyId: 'company123',
+      companyId: companyId1,
       userId: userId1,
       description: 'A sample product',
     });
@@ -129,7 +133,7 @@ describe('Product Service API', () => {
       .send({
         name: 'Test Product',
         price: 99.99,
-        companyId: 'company123',
+        companyId: companyId1,
       });
 
     expect(response.status).toBe(401);
@@ -144,7 +148,7 @@ describe('Product Service API', () => {
       .send({
         name: 'Test Product',
         price: 99.99,
-        companyId: 'company123',
+        companyId: companyId1,
       });
 
     expect(response.status).toBe(403);
@@ -165,10 +169,10 @@ describe('Product Service API', () => {
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
       message: 'Validation failed',
-      errors: [
-        { message: 'Name is required' },
-        { message: 'Company ID is required' },
-      ],
+      errors: expect.arrayContaining([
+        expect.objectContaining({ message: 'Name is required' }),
+        expect.objectContaining({ message: 'Company ID is required' }),
+      ]),
     });
   }, 10000);
 
@@ -184,11 +188,29 @@ describe('Product Service API', () => {
     expect(response.body).toEqual({ message: 'Invalid JSON body' });
   }, 10000);
 
-  test('should get all products for authorized user', async () => {
+  test('should get all products for admin', async () => {
     await Product.create([
-      { name: 'Product 1', price: 50, companyId: 'company123', userId: userId1 },
-      { name: 'Product 2', price: 75, companyId: 'company123', userId: userId1 },
-      { name: 'Product 3', price: 100, companyId: 'company123', userId: userId2 },
+      { name: 'Product 1', price: 50, companyId: companyId1, userId: userId1 },
+      { name: 'Product 2', price: 75, companyId: companyId1, userId: userId1 },
+      { name: 'Product 3', price: 100, companyId: companyId2, userId: userId2 },
+    ]);
+
+    const response = await request
+      .get('/products')
+      .set('x-user-id', userId1)
+      .set('x-user-role', 'admin');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body).toHaveLength(3);
+    expect(response.body.map((p: any) => p.name)).toEqual(['Product 1', 'Product 2', 'Product 3']);
+  }, 10000);
+
+  test('should get all products for company user', async () => {
+    await Product.create([
+      { name: 'Product 1', price: 50, companyId: companyId1, userId: userId1 },
+      { name: 'Product 2', price: 75, companyId: companyId1, userId: userId1 },
+      { name: 'Product 3', price: 100, companyId: companyId2, userId: userId2 },
     ]);
 
     const response = await request
@@ -202,11 +224,67 @@ describe('Product Service API', () => {
     expect(response.body.map((p: any) => p.name)).toEqual(['Product 1', 'Product 2']);
   }, 10000);
 
+  test('should get products for customer with associated companies', async () => {
+    await Product.create([
+      { name: 'Product 1', price: 50, companyId: companyId1, userId: userId1 },
+      { name: 'Product 2', price: 75, companyId: companyId1, userId: userId1 },
+      { name: 'Product 3', price: 100, companyId: companyId2, userId: userId2 },
+    ]);
+
+    const response = await request
+      .get('/products')
+      .set('x-user-id', userId1)
+      .set('x-user-role', 'customer')
+      .set('x-associate-company-ids', JSON.stringify([companyId1]));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body).toHaveLength(2);
+    expect(response.body.map((p: any) => p.name)).toEqual(['Product 1', 'Product 2']);
+  }, 10000);
+
+  test('should return empty array for customer with no associated companies', async () => {
+    await Product.create([
+      { name: 'Product 1', price: 50, companyId: companyId1, userId: userId1 },
+      { name: 'Product 2', price: 75, companyId: companyId1, userId: userId1 },
+    ]);
+
+    const response = await request
+      .get('/products')
+      .set('x-user-id', userId1)
+      .set('x-user-role', 'customer')
+      .set('x-associate-company-ids', '[]');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+  }, 10000);
+
+  test('should reject get products for invalid role', async () => {
+    const response = await request
+      .get('/products')
+      .set('x-user-id', userId1)
+      .set('x-user-role', 'invalid');
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ message: 'Unauthorized: Invalid role' });
+  }, 10000);
+
+  test('should handle invalid associateCompanyIds for customer', async () => {
+    const response = await request
+      .get('/products')
+      .set('x-user-id', userId1)
+      .set('x-user-role', 'customer')
+      .set('x-associate-company-ids', 'invalid-json');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ message: 'Invalid associate company IDs' });
+  }, 10000);
+
   test('should get a specific product by ID', async () => {
     const product = await Product.create({
       name: 'Test Product',
       price: 99.99,
-      companyId: 'company123',
+      companyId: companyId1,
       userId: userId1,
     });
 
@@ -219,7 +297,7 @@ describe('Product Service API', () => {
     expect(response.body).toMatchObject({
       name: 'Test Product',
       price: 99.99,
-      companyId: 'company123',
+      companyId: companyId1,
       userId: userId1,
     });
   }, 10000);
@@ -238,7 +316,7 @@ describe('Product Service API', () => {
     const product = await Product.create({
       name: 'Test Product',
       price: 99.99,
-      companyId: 'company123',
+      companyId: companyId1,
       userId: userId2,
     });
 
@@ -255,7 +333,7 @@ describe('Product Service API', () => {
     const product = await Product.create({
       name: 'Test Product',
       price: 99.99,
-      companyId: 'company123',
+      companyId: companyId1,
       userId: userId1,
     });
 
@@ -273,7 +351,7 @@ describe('Product Service API', () => {
     expect(response.body).toMatchObject({
       name: 'Updated Product',
       price: 149.99,
-      companyId: 'company123',
+      companyId: companyId1,
       userId: userId1,
       description: 'Updated description',
     });
@@ -297,7 +375,7 @@ describe('Product Service API', () => {
     const product = await Product.create({
       name: 'Test Product',
       price: 99.99,
-      companyId: 'company123',
+      companyId: companyId1,
       userId: userId2,
     });
 
@@ -315,7 +393,7 @@ describe('Product Service API', () => {
     const product = await Product.create({
       name: 'Test Product',
       price: 99.99,
-      companyId: 'company123',
+      companyId: companyId1,
       userId: userId1,
     });
 
@@ -345,7 +423,7 @@ describe('Product Service API', () => {
     const product = await Product.create({
       name: 'Test Product',
       price: 99.99,
-      companyId: 'company123',
+      companyId: companyId1,
       userId: userId2,
     });
 

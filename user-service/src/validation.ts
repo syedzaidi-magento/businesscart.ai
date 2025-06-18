@@ -4,7 +4,7 @@ export const registerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Please include a valid email'),
   password: z.string().min(6, 'Password must be 6 or more characters'),
-  role: z.enum(['customer', 'company'], { errorMap: () => ({ message: 'Role must be customer or company' }) }),
+  role: z.enum(['customer', 'company', 'admin'], { errorMap: () => ({ message: 'Role must be customer, company, or admin' }) }),
 });
 
 export const loginSchema = z.object({

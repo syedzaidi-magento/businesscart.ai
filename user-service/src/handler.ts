@@ -7,11 +7,17 @@ import jwt from 'jsonwebtoken';
 import { AuthService } from './services/auth-service';
 import { connectDB } from './services/db-service';
 import { User } from './models/user';
+import { RefreshToken } from './models/refresh-token';
 import { registerSchema, loginSchema, refreshSchema, logoutSchema } from './validation';
 
 // Validation schema for updating user company_id
 export const updateUserSchema = z.object({
   company_id: z.string().min(1, 'Company ID is required'),
+});
+
+// Validation schema for associating a company
+const associateCompanySchema = z.object({
+  companyId: z.string().min(1, 'Company ID is required'),
 });
 
 // Initialize services
@@ -72,7 +78,33 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     if (path === '/users/refresh' && httpMethod === 'POST') {
+      let parsedBody;
+      try {
+        parsedBody = body ? JSON.parse(body) : {};
+      } catch (err) {
+        return {
+          statusCode: 400,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Invalid JSON body' }),
+        };
+      }
       const data = refreshSchema.parse(parsedBody);
+      const refreshTokenDoc = await RefreshToken.findOne({ token: data.refreshToken });
+      if (!refreshTokenDoc || refreshTokenDoc.expiresAt < new Date()) {
+        return {
+          statusCode: 400,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Invalid or expired refresh token' }),
+        };
+      }
+      const user = await User.findById(refreshTokenDoc.userId);
+      if (!user) {
+        return {
+          statusCode: 404,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'User not found' }),
+        };
+      }
       const accessToken = await authService.refresh(data.refreshToken);
       return {
         statusCode: 200,
@@ -100,6 +132,55 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         body: JSON.stringify({ message: 'Logged out successfully' }),
       };
     }
+
+    if (path === '/users/associate-company' && httpMethod === 'POST') {
+  const data = associateCompanySchema.parse(parsedBody);
+  if (!accessToken) {
+    return { statusCode: 401, body: JSON.stringify({ message: 'No token provided' }) };
+  }
+  try {
+    const decoded = jwt.verify(accessToken, process.env.JWT_SECRET!) as { user: { id: string; role: string } };
+    if (decoded.user.role !== 'customer') {
+      return { statusCode: 403, body: JSON.stringify({ error: 'Unauthorized: Customer role required' }) };
+    }
+
+    const user = await User.findById(decoded.user.id);
+    if (!user) {
+      return { statusCode: 404, body: JSON.stringify({ error: 'User not found' }) };
+    }
+
+    if (!user.associate_company_ids) {
+      user.associate_company_ids = [];
+    }
+    if (!user.associate_company_ids.includes(data.companyId)) {
+      user.associate_company_ids.push(data.companyId);
+      await user.save();
+    }
+
+    const payload = {
+      user: {
+        id: user.id,
+        role: user.role,
+        company_id: user.company_id || undefined,
+        associate_company_ids: user.associate_company_ids || [],
+      },
+    };
+    const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Set-Cookie': `token=${newAccessToken}; HttpOnly; Max-Age=${15 * 60}; Secure=${
+          process.env.NODE_ENV === 'production'
+        }; Path=/`,
+      },
+      body: JSON.stringify({ accessToken: newAccessToken }),
+    };
+  } catch (error) {
+    console.error('Associate company error:', error);
+    return { statusCode: 500, body: JSON.stringify({ error: 'Failed to associate company' }) };
+  }
+}
 
 if (httpMethod === 'PATCH' && path.match(/\/users\/[^/]+$/)) {
       const id = path.split('/').pop();

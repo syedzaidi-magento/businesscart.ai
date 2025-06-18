@@ -6,6 +6,18 @@ import express from 'express';
 import { handler } from '../src/handler';
 import { Order } from '../src/models/order';
 
+// Interface for type safety
+interface OrderResponse {
+  _id: string;
+  base_grand_total: number;
+  grand_total: number;
+  customer_email: string;
+  customer_id?: string;
+  user_id: string;
+  company_id: string;
+  [key: string]: any; // For additional fields
+}
+
 let mongoServer: MongoMemoryServer;
 let app: express.Application;
 let request: supertest.SuperTest<supertest.Test>;
@@ -101,6 +113,7 @@ describe('Order Service API', () => {
   const userId2 = 'user456';
   const customerId = 'customer789';
   const companyId = 'company123';
+  const adminId = 'admin123';
 
   const validOrderData = {
     entity: {
@@ -167,6 +180,34 @@ describe('Order Service API', () => {
     expect(order?.grand_total).toBe(199.97);
   }, 10000);
 
+  test('should create an order as customer with valid input', async () => {
+    const customerOrderData = {
+      entity: {
+        ...validOrderData.entity,
+        user_id: customerId,
+      },
+    };
+
+    const response = await request
+      .post('/orders')
+      .set('x-user-id', customerId)
+      .set('x-user-role', 'customer')
+      .send(customerOrderData);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      base_grand_total: 199.97,
+      grand_total: 199.97,
+      customer_email: 'test@example.com',
+      user_id: customerId,
+      customer_id: customerId,
+    });
+
+    const order = await Order.findOne({ user_id: customerId });
+    expect(order).toBeTruthy();
+    expect(order?.customer_id).toBe(customerId);
+  }, 10000);
+
   test('should reject create order without user ID', async () => {
     const response = await request
       .post('/orders')
@@ -176,15 +217,15 @@ describe('Order Service API', () => {
     expect(response.body).toEqual({ message: 'Unauthorized: User ID required' });
   }, 10000);
 
-  test('should reject create order with non-company role', async () => {
+  test('should reject create order with invalid role', async () => {
     const response = await request
       .post('/orders')
       .set('x-user-id', userId1)
-      .set('x-user-role', 'customer')
+      .set('x-user-role', 'admin')
       .send(validOrderData);
 
     expect(response.status).toBe(403);
-    expect(response.body).toEqual({ message: 'Unauthorized: Company role required' });
+    expect(response.body).toEqual({ message: 'Unauthorized: Company or Customer role required' });
   }, 10000);
 
   test('should reject create order with user ID mismatch', async () => {
@@ -247,18 +288,51 @@ describe('Order Service API', () => {
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
     expect(response.body).toHaveLength(2);
-    // expect(response.body.map((o: any) => o.grand_total)).toEqual([199.97, 299.99]);
-    expect(response.body.map((o: any) => o.grand_total).sort()).toEqual([199.97, 299.99]);
+    expect(response.body.map((o: OrderResponse) => o.grand_total).sort()).toEqual([199.97, 299.99]);
   }, 10000);
 
-  test('should reject get orders with non-company role', async () => {
+  test('should get all orders for authorized customer user', async () => {
+    await Order.create([
+      { ...validOrderData.entity, customer_id: customerId, user_id: userId1, customer_email: 'test1@example.com' },
+      { ...validOrderData.entity, customer_id: customerId, user_id: userId1, grand_total: 299.99, customer_email: 'test2@example.com' },
+      { ...validOrderData.entity, customer_id: userId2, user_id: userId1, customer_email: 'test3@example.com' },
+    ]);
+
+    const response = await request
+      .get('/orders')
+      .set('x-user-id', customerId)
+      .set('x-user-role', 'customer');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body).toHaveLength(2);
+    expect(response.body.map((o: OrderResponse) => o.grand_total).sort()).toEqual([199.97, 299.99]);
+  }, 10000);
+
+  test('should get all orders for admin user', async () => {
+    await Order.create([
+      { ...validOrderData.entity, user_id: userId1, customer_email: 'test1@example.com' },
+      { ...validOrderData.entity, user_id: userId2, customer_email: 'test2@example.com' },
+    ]);
+
+    const response = await request
+      .get('/orders')
+      .set('x-user-id', adminId)
+      .set('x-user-role', 'admin');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body).toHaveLength(2);
+  }, 10000);
+
+  test('should reject get orders with invalid role', async () => {
     const response = await request
       .get('/orders')
       .set('x-user-id', userId1)
-      .set('x-user-role', 'customer');
+      .set('x-user-role', 'invalid');
 
     expect(response.status).toBe(403);
-    expect(response.body).toEqual({ message: 'Unauthorized: Company role required' });
+    expect(response.body).toEqual({ message: 'Unauthorized: Invalid role' });
   }, 10000);
 
   test('should get a specific order by ID for company user', async () => {
@@ -325,6 +399,8 @@ describe('Order Service API', () => {
     expect(response.status).toBe(403);
     expect(response.body).toEqual({ message: 'Unauthorized access to order' });
   }, 10000);
+
+
 
   test('should update an order with valid input', async () => {
     const order = await Order.create(validOrderData.entity);
@@ -443,6 +519,23 @@ describe('Order Service API', () => {
 
     expect(response.status).toBe(403);
     expect(response.body).toEqual({ message: 'Unauthorized access to order' });
+  }, 10000);
+
+  test('should handle unexpected server error', async () => {
+    jest.spyOn(Order, 'create').mockImplementationOnce(() => {
+      throw new Error('Database failure');
+    });
+
+    const response = await request
+      .post('/orders')
+      .set('x-user-id', userId1)
+      .set('x-user-role', 'company')
+      .send(validOrderData);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ message: 'Database failure' });
+
+    jest.restoreAllMocks();
   }, 10000);
 
   test('should return 404 for unknown route', async () => {

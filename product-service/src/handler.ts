@@ -14,21 +14,16 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   try {
     await connectDB();
 
-    // Extract userId and userRole from authorizer context
+    // Extract userId, userRole, and additional context from authorizer
     const userId = event.requestContext.authorizer?.userId;
     const userRole = event.requestContext.authorizer?.userRole;
+    const company_id = event.requestContext.authorizer?.company_id; // Align with JWT's company_id
+    const associateCompanyIds = event.requestContext.authorizer?.associateCompanyIds;
 
     if (!userId || !userRole) {
       return {
         statusCode: 401,
         body: JSON.stringify({ message: 'Unauthorized: Missing user context' }),
-      };
-    }
-
-    if (userRole !== 'company') {
-      return {
-        statusCode: 403,
-        body: JSON.stringify({ message: 'Unauthorized: Company role required' }),
       };
     }
 
@@ -38,6 +33,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // POST /products
     if (method === 'POST' && path === '/products') {
+      if (userRole !== 'company') {
+        return {
+          statusCode: 403,
+          body: JSON.stringify({ message: 'Unauthorized: Company role required' }),
+        };
+      }
       let body: ProductInput;
       try {
         body = JSON.parse(event.body || '{}');
@@ -81,7 +82,28 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // GET /products
     if (method === 'GET' && path === '/products') {
-      const products = await Product.find({ userId });
+      let products;
+      if (userRole === 'admin') {
+        products = await Product.find({});
+      } else if (userRole === 'company') {
+        products = await Product.find({ userId });
+      } else if (userRole === 'customer') {
+        let companyIds: string[] = [];
+        try {
+          companyIds = JSON.parse(associateCompanyIds || '[]');
+        } catch (err) {
+          return {
+            statusCode: 400,
+            body: JSON.stringify({ message: 'Invalid associate company IDs' }),
+          };
+        }
+        products = await Product.find({ companyId: { $in: companyIds } });
+      } else {
+        return {
+          statusCode: 403,
+          body: JSON.stringify({ message: 'Unauthorized: Invalid role' }),
+        };
+      }
       return {
         statusCode: 200,
         body: JSON.stringify(products),
@@ -108,7 +130,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           statusCode: 200,
           body: JSON.stringify(product),
         };
-        } catch (error) {  // Add these lines
+      } catch (error) {
         if (error instanceof mongoose.Error.CastError) {
           return {
             statusCode: 404,
@@ -142,7 +164,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           statusCode: 200,
           body: JSON.stringify(product),
         };
-        } catch (error) {
+      } catch (error) {
         if (error instanceof mongoose.Error.CastError) {
           return {
             statusCode: 404,
@@ -170,11 +192,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           };
         }
         await product.deleteOne();
+        console.log('Product deleted successfully'); // Add this log
         return {
           statusCode: 204,
-          body: '',
+          body: JSON.stringify({}), // Return an empty JSON object
         };
-        } catch (error) {  
+      } catch (error) {
         if (error instanceof mongoose.Error.CastError) {
           return {
             statusCode: 404,
