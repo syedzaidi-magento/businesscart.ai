@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Home from './pages/Home';
 import Login from './components/Login';
 import Register from './components/Register';
+import UserForm from './components/UserForm';
 import CompanyForm from './components/CompanyForm';
 import ProductForm from './components/ProductForm';
 import OrderForm from './components/OrderForm';
@@ -36,6 +37,10 @@ const App = () => {
             <Route
               path="/orders"
               element={isAuthenticated ? <OrderForm /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/users"
+              element={isAuthenticated ? <UserForm /> : <Navigate to="/login" />}
             />
             <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
             <Route path="*" element={<div className="p-4 text-center text-gray-600">404 Not Found</div>} />
