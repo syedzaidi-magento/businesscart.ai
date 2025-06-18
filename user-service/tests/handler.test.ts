@@ -25,8 +25,18 @@ process.env.MONGO_URI = ''; // Will be set by MongoMemoryServer
 process.env.NODE_ENV = 'test';
 
 // Generate JWT for testing
-const generateAccessToken = (userId: string, role: string, company_id?: string, options: SignOptions = { expiresIn: '15m' }) =>
-  jwt.sign({ user: { id: userId, role, company_id } }, process.env.JWT_SECRET as string, options);
+const generateAccessToken = (
+  userId: string,
+  role: string,
+  company_id?: string,
+  associate_company_ids: string[] = [],
+  options: SignOptions = { expiresIn: '15m' }
+) =>
+  jwt.sign(
+    { user: { id: userId, role, company_id, associate_company_ids } },
+    process.env.JWT_SECRET as string,
+    options
+  );
 
 const generateRefreshToken = (userId: string, role: string) =>
   jwt.sign({ user: { id: userId, role } }, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
@@ -189,7 +199,7 @@ describe('User Service API', () => {
         expect.objectContaining({ message: 'Name is required', path: ['name'] }),
         expect.objectContaining({ message: 'Please include a valid email', path: ['email'] }),
         expect.objectContaining({ message: 'Password must be 6 or more characters', path: ['password'] }),
-        expect.objectContaining({ message: 'Role must be customer or company', path: ['role'] }),
+        expect.objectContaining({ message: 'Role must be customer, company, or admin', path: ['role'] }),
       ],
     });
   });
@@ -340,7 +350,7 @@ describe('User Service API', () => {
       expect.stringContaining('token=;')
     );
 
-    const refreshTokenDoc = await RefreshToken.findOne({ token: 'refreshToken' });
+    const refreshTokenDoc = await RefreshToken.findOne({ token: refreshToken });
     expect(refreshTokenDoc).toBeNull();
 
     const blacklistedToken = await BlacklistedToken.findOne({ token: accessToken });
@@ -543,7 +553,111 @@ describe('User Service API', () => {
     expect(response.body).toEqual({ error: 'Failed to update user' });
   });
 
-  test('should refresh access token for non-existent user', async () => {
+  test('should associate customer with company using valid token', async () => {
+    const user = await User.create({
+      name: 'John Doe',
+      email: 'john@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'customer',
+    });
+    const accessToken = generateAccessToken(user._id.toString(), 'customer');
+
+    const response = await request
+      .post('/users/associate-company')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ companyId: '68508d3792d2eaab46947af4' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      accessToken: expect.any(String),
+    });
+    expect(response.headers['set-cookie']).toContainEqual(
+      expect.stringContaining(`token=${response.body.accessToken}`)
+    );
+
+    const updatedUser = await User.findById(user._id);
+    expect(updatedUser?.associate_company_ids).toContain('68508d3792d2eaab46947af4');
+
+    const decoded = jwt.verify(response.body.accessToken, process.env.JWT_SECRET!) as any;
+    expect(decoded.user.associate_company_ids).toContain('68508d3792d2eaab46947af4');
+  });
+
+  test('should reject associate company for non-customer role', async () => {
+    const user = await User.create({
+      name: 'Company Inc',
+      email: 'company@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'company',
+    });
+    const accessToken = generateAccessToken(user._id.toString(), 'company');
+
+    const response = await request
+      .post('/users/associate-company')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ companyId: '68508d3792d2eaab46947af4' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: 'Unauthorized: Customer role required' });
+  });
+
+  test('should reject associate company with missing token', async () => {
+    const response = await request
+      .post('/users/associate-company')
+      .send({ companyId: '68508d3792d2eaab46947af4' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'No token provided' });
+  });
+
+  test('should reject associate company for non-existent user', async () => {
+    const nonExistentId = new mongoose.Types.ObjectId().toString();
+    const accessToken = generateAccessToken(nonExistentId, 'customer');
+
+    const response = await request
+      .post('/users/associate-company')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ companyId: '68508d3792d2eaab46947af4' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'User not found' });
+  });
+
+  test('should reject associate company with invalid companyId', async () => {
+    const user = await User.create({
+      name: 'John Doe',
+      email: 'john@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'customer',
+    });
+    const accessToken = generateAccessToken(user._id.toString(), 'customer');
+
+    const response = await request
+      .post('/users/associate-company')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ companyId: '' });
+
+    console.log('Raw response text:', response.text); // Debug
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({
+          message: 'Company ID is required',
+          path: ['companyId'],
+        }),
+      ]),
+    });
+  });
+
+  test('should reject refresh access token for non-existent user', async () => {
     const nonExistentId = new mongoose.Types.ObjectId().toString();
     const refreshToken = generateRefreshToken(nonExistentId, 'customer');
     await RefreshToken.create({
@@ -558,10 +672,8 @@ describe('User Service API', () => {
 
     console.log('Raw response text:', response.text); // Debug
 
-    expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({
-      accessToken: expect.any(String),
-    });
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ message: 'User not found' });
   });
 
   test('should reject logout with expired access token', async () => {
@@ -701,7 +813,7 @@ describe('User Service API', () => {
       password: await bcrypt.hash('password123', 10),
       role: 'company',
     });
-    const expiredAccessToken = generateAccessToken(user._id.toString(), 'company', undefined, { expiresIn: '-1s' });
+    const expiredAccessToken = generateAccessToken(user._id.toString(), 'company', undefined, [], { expiresIn: '-1s' });
 
     const response = await request
       .patch(`/users/${user._id}`)

@@ -5,8 +5,9 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  role: 'customer' | 'company';
+  role: 'customer' | 'company' | 'admin';
   company_id?: string;
+  associate_company_ids: string[];
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -15,8 +16,9 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: [true, 'Name is required'], trim: true },
     email: { type: String, required: [true, 'Email is required'], unique: true, lowercase: true, trim: true },
     password: { type: String, required: [true, 'Password is required'], minlength: 6 },
-    role: { type: String, enum: ['customer', 'company'], default: 'customer', required: true },
+    role: { type: String, enum: ['customer', 'company', 'admin'], default: 'customer', required: true },
     company_id: { type: String, required: false },
+    associate_company_ids: [{ type: String, required: false }],
   },
   { timestamps: true }
 );

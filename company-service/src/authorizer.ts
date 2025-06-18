@@ -5,6 +5,8 @@ interface JwtPayload {
   user: {
     id: string;
     role: string;
+    company_id?: string;
+    associate_company_ids?: string[];
   };
 }
 
@@ -13,26 +15,28 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
     const token = event.authorizationToken.replace('Bearer ', '');
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
 
-    if (decoded.user.role !== 'company') {
-      throw new Error('User is not a company');
+    if (!['company', 'customer', 'admin'].includes(decoded.user.role)) {
+      throw new Error('Invalid role');
     }
 
     return {
-    principalId: decoded.user.id,
-    policyDocument: {
+      principalId: decoded.user.id,
+      policyDocument: {
         Version: '2012-10-17',
         Statement: [
-        {
+          {
             Action: 'execute-api:Invoke',
             Effect: 'Allow',
             Resource: event.methodArn,
-        },
+          },
         ],
-    },
-    context: {
+      },
+      context: {
         userId: decoded.user.id,
         userRole: decoded.user.role,
-    },
+        company_id: decoded.user.company_id || null,
+        associateCompanyIds: JSON.stringify(decoded.user.associate_company_ids || []),
+      },
     };
   } catch (err) {
     return {

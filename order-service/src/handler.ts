@@ -27,13 +27,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    // POST /orders
+    // Post /orders
     if (path === '/orders' && httpMethod === 'POST') {
-      if (userRole !== 'company') {
+      if (userRole !== 'company' && userRole !== 'customer') {
         return {
           statusCode: 403,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Unauthorized: Company role required' }),
+          body: JSON.stringify({ message: 'Unauthorized: Company or Customer role required' }),
         };
       }
       let parsedBody;
@@ -54,7 +54,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           body: JSON.stringify({ message: 'Unauthorized: User ID mismatch' }),
         };
       }
-      const order = await Order.create(data.entity);
+      const order = await Order.create({
+        ...data.entity,
+        customer_id: userRole === 'customer' ? userId : undefined,
+      });
       return {
         statusCode: 201,
         headers: { 'Content-Type': 'application/json' },
@@ -64,14 +67,20 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // GET /orders
     if (path === '/orders' && httpMethod === 'GET') {
-      if (userRole !== 'company') {
+      let orders;
+      if (userRole === 'admin') {
+        orders = await Order.find({});
+      } else if (userRole === 'company') {
+        orders = await Order.find({ user_id: userId });
+      } else if (userRole === 'customer') {
+        orders = await Order.find({ customer_id: userId });
+      } else {
         return {
           statusCode: 403,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Unauthorized: Company role required' }),
+          body: JSON.stringify({ message: 'Unauthorized: Invalid role' }),
         };
       }
-      const orders = await Order.find({ user_id: userId });
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
