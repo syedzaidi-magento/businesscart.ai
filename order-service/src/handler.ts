@@ -8,6 +8,8 @@ import { createOrderSchema, updateOrderSchema } from './validation';
 interface AuthorizerContext {
   userId?: string;
   userRole?: string;
+  companyId?: string;
+  associateCompanyIds?: string;
 }
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -18,16 +20,19 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const authorizer: AuthorizerContext = requestContext.authorizer || {};
     const userId = authorizer.userId;
     const userRole = authorizer.userRole;
+    const companyId = authorizer.companyId;
+    const associateCompanyIds = authorizer.associateCompanyIds ? JSON.parse(authorizer.associateCompanyIds) : [];
 
-    if (!userId) {
+    if (!userId || !userRole) {
+      console.error('Missing user ID or role:', { userId, userRole });
       return {
         statusCode: 403,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'Unauthorized: User ID required' }),
+        body: JSON.stringify({ message: 'Unauthorized: User ID or role required' }),
       };
     }
 
-    // Post /orders
+    // POST /orders
     if (path === '/orders' && httpMethod === 'POST') {
       if (userRole !== 'company' && userRole !== 'customer') {
         return {
@@ -54,9 +59,30 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           body: JSON.stringify({ message: 'Unauthorized: User ID mismatch' }),
         };
       }
+      let orderCompanyId = undefined;
+      if (userRole === 'customer') {
+        if (!associateCompanyIds || associateCompanyIds.length === 0) {
+          return {
+            statusCode: 400,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'No associated company IDs found' }),
+          };
+        }
+        orderCompanyId = associateCompanyIds[0]; // Use first associated company
+      } else if (userRole === 'company') {
+        if (!companyId) {
+          return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Unauthorized: Company ID missing' }),
+          };
+        }
+        orderCompanyId = companyId;
+      }
       const order = await Order.create({
         ...data.entity,
         customer_id: userRole === 'customer' ? userId : undefined,
+        company_id: orderCompanyId,
       });
       return {
         statusCode: 201,
@@ -71,7 +97,20 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       if (userRole === 'admin') {
         orders = await Order.find({});
       } else if (userRole === 'company') {
-        orders = await Order.find({ user_id: userId });
+        if (!companyId) {
+          return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Unauthorized: Company ID missing' }),
+          };
+        }
+        orders = await Order.find({
+          $or: [
+            { user_id: userId }, // Company's own orders
+            { company_id: companyId }, // Orders from associated customers
+            { customer_id: { $in: await Order.distinct('customer_id', { company_id: companyId }) } }, // Orders from customers linked to the company
+          ],
+        });
       } else if (userRole === 'customer') {
         orders = await Order.find({ customer_id: userId });
       } else {
@@ -100,11 +139,33 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             body: JSON.stringify({ message: 'Order not found' }),
           };
         }
-        if (userRole === 'company' && order.user_id !== userId) {
+        if (userRole === 'admin') {
           return {
-            statusCode: 403,
+            statusCode: 200,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: 'Unauthorized access to order' }),
+            body: JSON.stringify(order),
+          };
+        }
+        if (userRole === 'company') {
+          if (!companyId) {
+            return {
+              statusCode: 403,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: 'Unauthorized: Company ID missing' }),
+            };
+          }
+          const customerIds = await Order.distinct('customer_id', { company_id: companyId });
+          if (order.user_id !== userId && (!order.company_id || order.company_id !== companyId) && !(order.customer_id && customerIds.includes(order.customer_id))) {
+            return {
+              statusCode: 403,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: 'Unauthorized access to order' }),
+            };
+          }
+          return {
+            statusCode: 200,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(order),
           };
         }
         if (userRole === 'customer' && order.customer_id !== userId) {
@@ -150,7 +211,15 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             body: JSON.stringify({ message: 'Order not found' }),
           };
         }
-        if (order.user_id !== userId) {
+        if (!companyId) {
+          return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Unauthorized: Company ID missing' }),
+          };
+        }
+        const customerIds = await Order.distinct('customer_id', { company_id: companyId });
+        if (order.user_id !== userId && !(order.customer_id && customerIds.includes(order.customer_id))) {
           return {
             statusCode: 403,
             headers: { 'Content-Type': 'application/json' },
@@ -206,7 +275,15 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             body: JSON.stringify({ message: 'Order not found' }),
           };
         }
-        if (order.user_id !== userId) {
+        if (!companyId) {
+          return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Unauthorized: Company ID missing' }),
+          };
+        }
+        const customerIds = await Order.distinct('customer_id', { company_id: companyId });
+        if (order.user_id !== userId && !(order.customer_id && customerIds.includes(order.customer_id))) {
           return {
             statusCode: 403,
             headers: { 'Content-Type': 'application/json' },

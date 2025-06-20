@@ -5,6 +5,8 @@ interface JwtPayload {
   user: {
     id: string;
     role: string;
+    company_id?: string;
+    associate_company_ids?: string[];
   };
 }
 
@@ -28,6 +30,8 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
       context: {
         userId: decoded.user.id,
         userRole: decoded.user.role,
+        companyId: decoded.user.company_id || '',
+        associateCompanyIds: JSON.stringify(decoded.user.associate_company_ids || []),
       },
     };
   } catch (err) {

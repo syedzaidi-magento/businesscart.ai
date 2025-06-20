@@ -67,6 +67,8 @@ beforeAll(async () => {
           authorizer: {
             userId: req.headers['x-user-id'],
             userRole: req.headers['x-user-role'],
+            companyId: req.headers['x-company-id'],
+            associateCompanyIds: req.headers['x-associate-company-ids'],
           },
         } as any,
         pathParameters: orderId ? { orderId } : null,
@@ -113,6 +115,7 @@ describe('Order Service API', () => {
   const userId2 = 'user456';
   const customerId = 'customer789';
   const companyId = 'company123';
+  const companyId2 = 'company456'; // Added for unauthorized tests
   const adminId = 'admin123';
 
   const validOrderData = {
@@ -164,6 +167,7 @@ describe('Order Service API', () => {
       .post('/orders')
       .set('x-user-id', userId1)
       .set('x-user-role', 'company')
+      .set('x-company-id', companyId)
       .send(validOrderData);
 
     expect(response.status).toBe(201);
@@ -192,6 +196,7 @@ describe('Order Service API', () => {
       .post('/orders')
       .set('x-user-id', customerId)
       .set('x-user-role', 'customer')
+      .set('x-associate-company-ids', JSON.stringify([companyId]))
       .send(customerOrderData);
 
     expect(response.status).toBe(201);
@@ -214,7 +219,7 @@ describe('Order Service API', () => {
       .send(validOrderData);
 
     expect(response.status).toBe(403);
-    expect(response.body).toEqual({ message: 'Unauthorized: User ID required' });
+    expect(response.body).toEqual({ message: 'Unauthorized: User ID or role required' });
   }, 10000);
 
   test('should reject create order with invalid role', async () => {
@@ -236,6 +241,7 @@ describe('Order Service API', () => {
       .post('/orders')
       .set('x-user-id', userId1)
       .set('x-user-role', 'company')
+      .set('x-company-id', companyId)
       .send(invalidData);
 
     expect(response.status).toBe(403);
@@ -255,6 +261,7 @@ describe('Order Service API', () => {
       .post('/orders')
       .set('x-user-id', userId1)
       .set('x-user-role', 'company')
+      .set('x-company-id', companyId)
       .send(invalidData);
 
     expect(response.status).toBe(400);
@@ -266,6 +273,7 @@ describe('Order Service API', () => {
       .post('/orders')
       .set('x-user-id', userId1)
       .set('x-user-role', 'company')
+      .set('x-company-id', companyId)
       .set('Content-Type', 'application/json')
       .send('{invalid}');
 
@@ -277,13 +285,14 @@ describe('Order Service API', () => {
     await Order.create([
       { ...validOrderData.entity, user_id: userId1, customer_email: 'test1@example.com' },
       { ...validOrderData.entity, user_id: userId1, grand_total: 299.99, customer_email: 'test2@example.com' },
-      { ...validOrderData.entity, user_id: userId2, customer_email: 'test3@example.com' },
+      { ...validOrderData.entity, user_id: userId2, customer_email: 'test3@example.com', company_id: companyId2, customer_id: 'customer999' },
     ]);
 
     const response = await request
       .get('/orders')
       .set('x-user-id', userId1)
-      .set('x-user-role', 'company');
+      .set('x-user-role', 'company')
+      .set('x-company-id', companyId);
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
@@ -301,7 +310,8 @@ describe('Order Service API', () => {
     const response = await request
       .get('/orders')
       .set('x-user-id', customerId)
-      .set('x-user-role', 'customer');
+      .set('x-user-role', 'customer')
+      .set('x-associate-company-ids', JSON.stringify([companyId]));
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
@@ -341,7 +351,8 @@ describe('Order Service API', () => {
     const response = await request
       .get(`/orders/${order._id}`)
       .set('x-user-id', userId1)
-      .set('x-user-role', 'company');
+      .set('x-user-role', 'company')
+      .set('x-company-id', companyId);
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
@@ -352,12 +363,13 @@ describe('Order Service API', () => {
   }, 10000);
 
   test('should get a specific order by ID for customer user', async () => {
-    const order = await Order.create(validOrderData.entity);
+    const order = await Order.create({ ...validOrderData.entity, customer_id: customerId, user_id: customerId });
 
     const response = await request
       .get(`/orders/${order._id}`)
       .set('x-user-id', customerId)
-      .set('x-user-role', 'customer');
+      .set('x-user-role', 'customer')
+      .set('x-associate-company-ids', JSON.stringify([companyId]));
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
@@ -370,19 +382,21 @@ describe('Order Service API', () => {
     const response = await request
       .get('/orders/invalidId')
       .set('x-user-id', userId1)
-      .set('x-user-role', 'company');
+      .set('x-user-role', 'company')
+      .set('x-company-id', companyId);
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ message: 'Order not found' });
   }, 10000);
 
   test('should reject get order for unauthorized company user', async () => {
-    const order = await Order.create({ ...validOrderData.entity, user_id: userId2 });
+    const order = await Order.create({ ...validOrderData.entity, user_id: userId2, company_id: companyId2 });
 
     const response = await request
       .get(`/orders/${order._id}`)
       .set('x-user-id', userId1)
-      .set('x-user-role', 'company');
+      .set('x-user-role', 'company')
+      .set('x-company-id', companyId);
 
     expect(response.status).toBe(403);
     expect(response.body).toEqual({ message: 'Unauthorized access to order' });
@@ -394,13 +408,12 @@ describe('Order Service API', () => {
     const response = await request
       .get(`/orders/${order._id}`)
       .set('x-user-id', userId1)
-      .set('x-user-role', 'customer');
+      .set('x-user-role', 'customer')
+      .set('x-associate-company-ids', JSON.stringify([companyId]));
 
     expect(response.status).toBe(403);
     expect(response.body).toEqual({ message: 'Unauthorized access to order' });
   }, 10000);
-
-
 
   test('should update an order with valid input', async () => {
     const order = await Order.create(validOrderData.entity);
@@ -423,6 +436,7 @@ describe('Order Service API', () => {
       .put(`/orders/${order._id}`)
       .set('x-user-id', userId1)
       .set('x-user-role', 'company')
+      .set('x-company-id', companyId)
       .send(updateData);
 
     expect(response.status).toBe(200);
@@ -442,6 +456,7 @@ describe('Order Service API', () => {
       .put(`/orders/${order._id}`)
       .set('x-user-id', userId1)
       .set('x-user-role', 'customer')
+      .set('x-associate-company-ids', JSON.stringify([companyId]))
       .send({ entity: { grand_total: 249.99 } });
 
     expect(response.status).toBe(403);
@@ -453,6 +468,7 @@ describe('Order Service API', () => {
       .put('/orders/invalidId')
       .set('x-user-id', userId1)
       .set('x-user-role', 'company')
+      .set('x-company-id', companyId)
       .send({ entity: { grand_total: 249.99 } });
 
     expect(response.status).toBe(404);
@@ -460,12 +476,13 @@ describe('Order Service API', () => {
   }, 10000);
 
   test('should reject update order for unauthorized user', async () => {
-    const order = await Order.create({ ...validOrderData.entity, user_id: userId2 });
+    const order = await Order.create({ ...validOrderData.entity, user_id: userId2, company_id: companyId2 });
 
     const response = await request
       .put(`/orders/${order._id}`)
       .set('x-user-id', userId1)
       .set('x-user-role', 'company')
+      .set('x-company-id', companyId)
       .send({ entity: { grand_total: 249.99 } });
 
     expect(response.status).toBe(403);
@@ -478,7 +495,8 @@ describe('Order Service API', () => {
     const response = await request
       .delete(`/orders/${order._id}`)
       .set('x-user-id', userId1)
-      .set('x-user-role', 'company');
+      .set('x-user-role', 'company')
+      .set('x-company-id', companyId);
 
     expect(response.status).toBe(204);
     expect(response.body).toEqual({});
@@ -493,7 +511,8 @@ describe('Order Service API', () => {
     const response = await request
       .delete(`/orders/${order._id}`)
       .set('x-user-id', userId1)
-      .set('x-user-role', 'customer');
+      .set('x-user-role', 'customer')
+      .set('x-associate-company-ids', JSON.stringify([companyId]));
 
     expect(response.status).toBe(403);
     expect(response.body).toEqual({ message: 'Unauthorized: Company role required' });
@@ -503,19 +522,21 @@ describe('Order Service API', () => {
     const response = await request
       .delete('/orders/invalidId')
       .set('x-user-id', userId1)
-      .set('x-user-role', 'company');
+      .set('x-user-role', 'company')
+      .set('x-company-id', companyId);
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ message: 'Order not found' });
   }, 10000);
 
   test('should reject delete order for unauthorized user', async () => {
-    const order = await Order.create({ ...validOrderData.entity, user_id: userId2 });
+    const order = await Order.create({ ...validOrderData.entity, user_id: userId2, company_id: companyId2 });
 
     const response = await request
       .delete(`/orders/${order._id}`)
       .set('x-user-id', userId1)
-      .set('x-user-role', 'company');
+      .set('x-user-role', 'company')
+      .set('x-company-id', companyId);
 
     expect(response.status).toBe(403);
     expect(response.body).toEqual({ message: 'Unauthorized access to order' });
@@ -530,6 +551,7 @@ describe('Order Service API', () => {
       .post('/orders')
       .set('x-user-id', userId1)
       .set('x-user-role', 'company')
+      .set('x-company-id', companyId)
       .send(validOrderData);
 
     expect(response.status).toBe(400);
@@ -543,6 +565,7 @@ describe('Order Service API', () => {
       .post('/unknown')
       .set('x-user-id', userId1)
       .set('x-user-role', 'company')
+      .set('x-company-id', companyId)
       .send({});
 
     expect(response.status).toBe(404);
