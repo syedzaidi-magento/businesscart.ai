@@ -55,6 +55,19 @@ export const login = async (data: { email: string; password: string }): Promise<
   return response.data;
 };
 
+export const logout = async (): Promise<void> => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      await api.post(`${USER_API_URL}/users/logout`, {});
+    }
+  } catch (error) {
+    console.error('Logout API error:', error);
+  } finally {
+    localStorage.removeItem('accessToken');
+  }
+};
+
 export const getUsers = async (): Promise<User[]> => {
   const response = await api.get(`${USER_API_URL}/users`);
   return response.data;
