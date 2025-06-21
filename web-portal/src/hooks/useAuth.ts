@@ -1,24 +1,34 @@
 import { useState, useEffect } from 'react';
+import { logout } from '../api';
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('accessToken'));
 
+  const decodeJWT = (token: string) => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.user?.role || null;
+    } catch (err) {
+      return null;
+    }
+  };
+
   useEffect(() => {
     const handleStorageChange = () => {
-      setIsAuthenticated(!!localStorage.getItem('accessToken'));
+      const hasToken = !!localStorage.getItem('accessToken');
+      if (hasToken !== isAuthenticated) {
+        setIsAuthenticated(hasToken);
+      }
     };
 
-    // Listen for storage events (cross-tab updates)
     window.addEventListener('storage', handleStorageChange);
-
-    // Poll for localStorage changes (same-tab updates)
-    const interval = setInterval(handleStorageChange, 100);
+    const interval = setInterval(handleStorageChange, 1000);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, []);
+  }, [isAuthenticated]);
 
-  return isAuthenticated;
+  return { isAuthenticated, logout, decodeJWT };
 };

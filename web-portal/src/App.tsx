@@ -11,38 +11,83 @@ import Sidebar from './components/Sidebar';
 import { useAuth } from './hooks/useAuth';
 
 const App = () => {
-  const isAuthenticated = useAuth();
+  const { isAuthenticated, decodeJWT } = useAuth();
+
+  const getRedirectPath = () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return '/login';
+    const role = decodeJWT(token);
+    if (!['customer', 'admin', 'company'].includes(role)) {
+      localStorage.removeItem('accessToken');
+      return '/login';
+    }
+    return role === 'customer' ? '/home' : '/dashboard';
+  };
+
+  const protectedRoutes = [
+    '/dashboard',
+    '/companies',
+    '/products',
+    '/orders',
+    '/users',
+    '/admin',
+    '/admin/users',
+    '/admin/products',
+    '/admin/orders',
+  ];
 
   return (
     <Router>
       <div className="min-h-screen bg-gray-100 flex">
-        {isAuthenticated && <Sidebar />}
+        {isAuthenticated && (
+          <Routes>
+            {protectedRoutes.map((path) => (
+              <Route key={path} path={path} element={<Sidebar />} />
+            ))}
+          </Routes>
+        )}
         <div className="flex-1">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
-            <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/login" element={isAuthenticated ? <Navigate to={getRedirectPath()} replace /> : <Login />} />
+            <Route path="/register" element={isAuthenticated ? <Navigate to={getRedirectPath()} replace /> : <Register />} />
             <Route
               path="/dashboard"
-              element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+              element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />}
             />
             <Route
               path="/companies"
-              element={isAuthenticated ? <CompanyForm /> : <Navigate to="/login" />}
+              element={isAuthenticated ? <CompanyForm /> : <Navigate to="/login" replace />}
             />
             <Route
               path="/products"
-              element={isAuthenticated ? <ProductForm /> : <Navigate to="/login" />}
+              element={isAuthenticated ? <ProductForm /> : <Navigate to="/login" replace />}
             />
             <Route
               path="/orders"
-              element={isAuthenticated ? <OrderForm /> : <Navigate to="/login" />}
+              element={isAuthenticated ? <OrderForm /> : <Navigate to="/login" replace />}
             />
             <Route
               path="/users"
-              element={isAuthenticated ? <UserForm /> : <Navigate to="/login" />}
+              element={isAuthenticated ? <UserForm /> : <Navigate to="/login" replace />}
             />
-            <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+            <Route
+              path="/admin"
+              element={isAuthenticated ? <div>Admin Panel</div> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/admin/users"
+              element={isAuthenticated ? <UserForm /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/admin/products"
+              element={isAuthenticated ? <ProductForm /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/admin/orders"
+              element={isAuthenticated ? <OrderForm /> : <Navigate to="/login" replace />}
+            />
+            <Route path="/" element={<Home />} />
             <Route path="*" element={<div className="p-4 text-center text-gray-600">404 Not Found</div>} />
           </Routes>
         </div>

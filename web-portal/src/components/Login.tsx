@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../api';
-import toast, { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth';
 
-const Login = () => {
+const Login: React.FC = () => {
   const navigate = useNavigate();
+  const { decodeJWT } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,22 +27,24 @@ const Login = () => {
     setIsLoading(true);
     try {
       const response = await login({ email: formData.email, password: formData.password });
-      localStorage.setItem('accessToken', response.accessToken);
+      const token = response.accessToken;
+      localStorage.setItem('accessToken', token);
+
+      const role = decodeJWT(token);
+      if (!['customer', 'admin', 'company'].includes(role)) {
+        localStorage.removeItem('accessToken');
+        throw new Error('Invalid user role');
+      }
+
       toast.success('Login successful');
-      navigate('/dashboard', { replace: true });
+      navigate(role === 'customer' ? '/home' : '/dashboard', { replace: true });
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Login failed');
+      localStorage.removeItem('accessToken');
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (localStorage.getItem('accessToken')) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -85,6 +89,12 @@ const Login = () => {
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+        <p className="text-center text-gray-600 mt-4">
+          Don’t have an account?{' '}
+          <Link to="/register" className="text-blue-600 hover:underline">
+            Register
+          </Link>
+        </p>
       </div>
     </div>
   );

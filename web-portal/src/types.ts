@@ -33,6 +33,7 @@ export interface Product {
   price: number;
   companyId: string;
   description: string;
+  image?: string;
 }
 
 export interface Order {
