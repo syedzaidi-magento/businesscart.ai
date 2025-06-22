@@ -73,7 +73,7 @@ const Home: React.FC = () => {
       <Toaster position="top-right" />
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {loading && <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto my-12"></div>}
+        {loading && <div className="animate-spin h-8 w-8 border-4 border-teal-600 border-t-transparent rounded-full mx-auto my-12"></div>}
 
         {/* Guest/Non-authenticated users - Company focused content */}
         {!isAuthenticated && (
@@ -222,13 +222,13 @@ const Home: React.FC = () => {
                 <div className="space-x-4">
                   <Link
                     to="/dashboard"
-                    className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+                    className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition"
                   >
                     Manage Products
                   </Link>
                   <Link
                     to="/orders"
-                    className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+                    className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition"
                   >
                     Manage Orders
                   </Link>
@@ -242,19 +242,19 @@ const Home: React.FC = () => {
                 <div className="space-x-4">
                   <Link
                     to="/admin/users"
-                    className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+                    className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition"
                   >
                     Manage Users
                   </Link>
                   <Link
                     to="/admin/products"
-                    className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+                    className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition"
                   >
                     Manage Products
                   </Link>
                   <Link
                     to="/admin/orders"
-                    className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+                    className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition"
                   >
                     Manage Orders
                   </Link>

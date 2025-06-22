@@ -105,7 +105,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="text-lg font-medium text-gray-800 mb-2">Products Overview</h3>
             {isLoading ? (
-              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
+              <div className="animate-spin h-8 w-8 border-4 border-teal-600 border-t-transparent rounded-full mx-auto"></div>
             ) : (
               <p className="text-gray-600">
                 You have {productCount ?? '0'} product{productCount !== 1 ? 's' : ''}. View them in the Products section.
@@ -115,7 +115,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="text-lg font-medium text-gray-800 mb-2">Companies Overview</h3>
             {isLoading ? (
-              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
+              <div className="animate-spin h-8 w-8 border-4 border-teal-600 border-t-transparent rounded-full mx-auto"></div>
             ) : (
               <p className="text-gray-600">Company count coming soon. View them in the Companies section.</p>
             )}

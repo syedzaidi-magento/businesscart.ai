@@ -367,7 +367,7 @@ const OrderForm = () => {
           <h2 className="text-2xl font-semibold text-gray-800">Orders</h2>
           <button
             onClick={openModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors flex items-center space-x-2"
           >
             <PlusIcon className="h-5 w-5" />
             <span>Add Order</span>
@@ -454,7 +454,7 @@ const OrderForm = () => {
                 key={i + 1}
                 onClick={() => paginate(i + 1)}
                 className={`px-3 py-1 border border-gray-300 rounded-md text-sm font-medium ${
-                  currentPage === i + 1 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
+                  currentPage === i + 1 ? 'bg-teal-600 text-white' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 {i + 1}
@@ -733,7 +733,7 @@ const OrderForm = () => {
                         <button
                           type="submit"
                           disabled={isLoading}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                          className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700 disabled:opacity-50"
                         >
                           {isLoading ? 'Saving...' : editingId ? 'Update' : 'Create'}
                         </button>
