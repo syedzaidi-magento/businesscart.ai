@@ -69,7 +69,7 @@ const Navbar: React.FC = () => {
                     <div className="relative">
                       <ShoppingCartIcon className="h-6 w-6 text-gray-600 cursor-pointer" />
                       {cartCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                        <span className="absolute -top-1 -right-1 bg-teal-600 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                           {cartCount}
                         </span>
                       )}

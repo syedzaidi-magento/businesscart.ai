@@ -216,7 +216,7 @@ const UserForm = () => {
           {currentRole === 'admin' && (
             <button
               onClick={openModal}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors flex items-center space-x-2"
             >
               <PlusIcon className="h-5 w-5" />
               <span>Add User</span>
@@ -232,7 +232,7 @@ const UserForm = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search users by name or email..."
-              className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             />
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           </div>
@@ -242,7 +242,7 @@ const UserForm = () => {
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {isLoading ? (
             <div className="p-6 flex justify-center">
-              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+              <div className="animate-spin h-8 w-8 border-4 border-teal-600 border-t-transparent rounded-full"></div>
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="p-6 text-center text-gray-600">No users found.</div>
@@ -311,7 +311,7 @@ const UserForm = () => {
               <button
                 key={i + 1}
                 onClick={() => paginate(i + 1)}
-                className={`px-3 py-1 border border-gray-300 rounded-md text-sm font-medium ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
+                className={`px-3 py-1 border border-gray-300 rounded-md text-sm font-medium ${currentPage === i + 1 ? 'bg-teal-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
               >
                 {i + 1}
               </button>
@@ -372,7 +372,7 @@ const UserForm = () => {
                             value={formData.name}
                             onChange={handleChange}
                             placeholder="John Doe"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -383,7 +383,7 @@ const UserForm = () => {
                             value={formData.email}
                             onChange={handleChange}
                             placeholder="john@example.com"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -394,7 +394,7 @@ const UserForm = () => {
                             value={formData.password}
                             onChange={handleChange}
                             placeholder={editingId ? 'Leave blank to keep unchanged' : 'Enter password'}
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -403,7 +403,7 @@ const UserForm = () => {
                             name="role"
                             value={formData.role}
                             onChange={handleChange}
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           >
                             <option value="admin">Admin</option>
                             <option value="company">Company</option>
@@ -417,7 +417,7 @@ const UserForm = () => {
                             value={formData.phoneNumber}
                             onChange={handleChange}
                             placeholder="1234567890"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -427,7 +427,7 @@ const UserForm = () => {
                             value={formData.company_id}
                             onChange={handleChange}
                             placeholder="Company ID"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                       </div>
@@ -442,7 +442,7 @@ const UserForm = () => {
                         <button
                           type="submit"
                           disabled={isLoading}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                          className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700 disabled:opacity-50"
                         >
                           {isLoading ? 'Saving...' : editingId ? 'Update' : 'Create'}
                         </button>

@@ -195,7 +195,7 @@ const ProductForm = () => {
           <h2 className="text-2xl font-semibold text-gray-800">Products</h2>
           <button
             onClick={openModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors flex items-center space-x-2"
           >
             <PlusIcon className="h-5 w-5" />
             <span>Add Product</span>
@@ -210,7 +210,7 @@ const ProductForm = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search products by name..."
-              className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             />
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           </div>
@@ -220,7 +220,7 @@ const ProductForm = () => {
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {isLoading ? (
             <div className="p-6 flex justify-center">
-              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+              <div className="animate-spin h-8 w-8 border-4 border-teal-600 border-t-transparent rounded-full"></div>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="p-6 text-center text-gray-600">No products found.</div>
@@ -284,7 +284,7 @@ const ProductForm = () => {
                 key={i + 1}
                 onClick={() => paginate(i + 1)}
                 className={`px-3 py-1 border border-gray-300 rounded-md text-sm font-medium ${
-                  currentPage === i + 1 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
+                  currentPage === i + 1 ? 'bg-teal-600 text-white' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 {i + 1}
@@ -345,7 +345,7 @@ const ProductForm = () => {
                           value={formData.name}
                           onChange={handleChange}
                           placeholder="Product Name"
-                          className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                         />
                       </div>
                       <div>
@@ -357,7 +357,7 @@ const ProductForm = () => {
                           value={formData.price}
                           onChange={handleChange}
                           placeholder="19.99"
-                          className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                         />
                       </div>
                       <div>
@@ -367,7 +367,7 @@ const ProductForm = () => {
                           value={formData.companyId}
                           onChange={handleChange}
                           placeholder="Company ID"
-                          className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                         />
                       </div>
                       <div>
@@ -377,7 +377,7 @@ const ProductForm = () => {
                           value={formData.description}
                           onChange={handleChange}
                           placeholder="Product description"
-                          className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           rows={4}
                         />
                       </div>
@@ -392,7 +392,7 @@ const ProductForm = () => {
                         <button
                           type="submit"
                           disabled={isLoading}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                          className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700 disabled:opacity-50"
                         >
                           {isLoading ? 'Saving...' : editingId ? 'Update' : 'Create'}
                         </button>

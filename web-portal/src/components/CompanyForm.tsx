@@ -270,7 +270,7 @@ const CompanyForm = () => {
           <h2 className="text-2xl font-semibold text-gray-800">Companies</h2>
           <button
             onClick={openModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors flex items-center space-x-2"
           >
             <PlusIcon className="h-5 w-5" />
             <span>Add Company</span>
@@ -285,7 +285,7 @@ const CompanyForm = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search companies by name or code..."
-              className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             />
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           </div>
@@ -295,7 +295,7 @@ const CompanyForm = () => {
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {isLoading ? (
             <div className="p-6 flex justify-center">
-              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+              <div className="animate-spin h-8 w-8 border-4 border-teal-600 border-t-transparent rounded-full"></div>
             </div>
           ) : filteredCompanies.length === 0 ? (
             <div className="p-6 text-center text-gray-600">No companies found.</div>
@@ -360,7 +360,7 @@ const CompanyForm = () => {
               <button
                 key={i + 1}
                 onClick={() => paginate(i + 1)}
-                className={`px-3 py-1 border border-gray-300 rounded-md text-sm font-medium ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
+                className={`px-3 py-1 border border-gray-300 rounded-md text-sm font-medium ${currentPage === i + 1 ? 'bg-teal-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
               >
                 {i + 1}
               </button>
@@ -421,7 +421,7 @@ const CompanyForm = () => {
                             value={formData.name}
                             onChange={handleChange}
                             placeholder="Test Company"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -431,7 +431,7 @@ const CompanyForm = () => {
                             value={formData.companyCode}
                             onChange={handleChange}
                             placeholder="CODE123"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div className="md:col-span-2">
@@ -441,7 +441,7 @@ const CompanyForm = () => {
                             value={formData.paymentMethods.join(', ')}
                             onChange={handleChange}
                             placeholder="cash, credit_card"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -451,7 +451,7 @@ const CompanyForm = () => {
                             value={formData.address.street}
                             onChange={handleChange}
                             placeholder="123 Main St"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -461,7 +461,7 @@ const CompanyForm = () => {
                             value={formData.address.city}
                             onChange={handleChange}
                             placeholder="Anytown"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -471,7 +471,7 @@ const CompanyForm = () => {
                             value={formData.address.state}
                             onChange={handleChange}
                             placeholder="CA"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -481,7 +481,7 @@ const CompanyForm = () => {
                             value={formData.address.zip}
                             onChange={handleChange}
                             placeholder="12345"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -493,7 +493,7 @@ const CompanyForm = () => {
                             value={formData.address.coordinates.lat}
                             onChange={handleChange}
                             placeholder="37.7749"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -505,7 +505,7 @@ const CompanyForm = () => {
                             value={formData.address.coordinates.lng}
                             onChange={handleChange}
                             placeholder="-122.4194"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -517,7 +517,7 @@ const CompanyForm = () => {
                             value={formData.sellingArea.radius}
                             onChange={handleChange}
                             placeholder="10"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -529,7 +529,7 @@ const CompanyForm = () => {
                             value={formData.sellingArea.center.lat}
                             onChange={handleChange}
                             placeholder="37.7749"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                         <div>
@@ -541,7 +541,7 @@ const CompanyForm = () => {
                             value={formData.sellingArea.center.lng}
                             onChange={handleChange}
                             placeholder="-122.4194"
-                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
                       </div>
@@ -556,7 +556,7 @@ const CompanyForm = () => {
                         <button
                           type="submit"
                           disabled={isLoading}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                          className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700 disabled:opacity-50"
                         >
                           {isLoading ? 'Saving...' : editingId ? 'Update' : 'Create'}
                         </button>

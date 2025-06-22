@@ -22,7 +22,7 @@ const Sidebar = () => {
             to={link.path}
             className={({ isActive }) =>
               `flex items-center px-6 py-3 text-gray-200 hover:bg-gray-700 transition-colors ${
-                isActive ? 'bg-gray-900 text-white border-l-4 border-blue-500' : ''
+                isActive ? 'bg-gray-900 text-white border-l-4 border-teal-500' : ''
               }`
             }
           >
