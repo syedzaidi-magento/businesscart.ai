@@ -5,6 +5,16 @@ import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
 
 export default [
+    {
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'coverage/**',
+      'build/**',
+      '**/*.d.ts',
+      'vite.config.ts'
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

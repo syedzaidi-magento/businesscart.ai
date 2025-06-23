@@ -21,6 +21,7 @@ api.interceptors.request.use((config) => {
       }
       config.headers.Authorization = `Bearer ${token}`;
     } catch (e) {
+      console.error('Error decoding JWT:', e);
       localStorage.removeItem('accessToken');
       window.location.href = '/login';
     }

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BellIcon, ShoppingCartIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { BellIcon, ShoppingCartIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Toaster, toast } from 'react-hot-toast';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 const Navbar: React.FC = () => {
@@ -38,7 +37,7 @@ const Navbar: React.FC = () => {
         setCompanyName(payload.user?.company_id ? `Company ${payload.user.company_id}` : 'BusinessCart');
         setUserRole(payload.user?.role || null);
       } catch (e) {
-        console.error('Invalid token');
+        console.error('Invalid token', e);
         toast.error('Failed to load user data');
         logout();
       }
@@ -47,7 +46,7 @@ const Navbar: React.FC = () => {
 
   return (
     <Disclosure as="nav" className="bg-white shadow">
-      {({ open }) => (
+      {() => (
         <>
           <Toaster position="top-right" />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,7 +122,7 @@ const Navbar: React.FC = () => {
                               onClick={logout}
                               className={`${active ? 'bg-gray-100' : ''} flex items-center w-full px-4 py-2 text-sm text-gray-700`}
                             >
-                              <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
+                              <ArrowRightStartOnRectangleIcon className="h-5 w-5 mr-2" />
                               Sign out
                             </button>
                           )}
