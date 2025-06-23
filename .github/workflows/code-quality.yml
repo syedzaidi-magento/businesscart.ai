@@ -22,11 +22,11 @@ jobs:
 
       - name: Install dependencies
         working-directory: web-portal
-        run: npm install
+        run: npm ci
 
       - name: Run ESLint
         working-directory: web-portal
-        run: npx eslint . --ext .js,.jsx,.ts,.tsx
+        run: npm run lint
 
   sonarcloud:
     name: SonarQube Analysis
