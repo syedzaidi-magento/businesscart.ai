@@ -5,6 +5,7 @@ USER_API="http://127.0.0.1:3000"
 COMPANY_API="http://127.0.0.1:3001"
 PRODUCT_API="http://127.0.0.1:3002"
 ORDER_API="http://127.0.0.1:3003"
+CART_API="http://127.0.0.1:3004"
 PASSWORD="securepassword"
 PHONE_NUMBER="1234567890"
 COMPANY_CODE="CODE12345"
@@ -237,6 +238,21 @@ else
   exit 1
 fi
 
+# List cart items for company user
+echo "Listing cart items for company user (${USER_IDS[company]})..."
+CART_ITEMS_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$CART_API/cart" \
+  -H "Authorization: Bearer ${JWTS[company]}")
+CART_ITEMS_STATUS=$(echo "$CART_ITEMS_RESPONSE" | tail -n1)
+CART_ITEMS_BODY=$(echo "$CART_ITEMS_RESPONSE" | sed -e '$d')
+if [ "$CART_ITEMS_STATUS" -eq 200 ]; then
+  echo "Cart items for company user (${USER_IDS[company]}):"
+  echo "$CART_ITEMS_BODY" | jq .
+else
+  echo -e "${RED}Error fetching cart items for company user: HTTP $CART_ITEMS_STATUS${NC}"
+  exit 1
+fi
+
+
 # Step 4: Find or Create Order and List All Orders
 echo "4. Finding order for company ($COMPANY_ID)..."
 ORDER_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$ORDER_API/orders" \
@@ -355,6 +371,39 @@ if [ -z "${JWTS[customer]}" ]; then
   exit 1
 fi
 echo -e "${GREEN}Customer associated with company successfully. New JWT: ${JWTS[customer]}${NC}"
+
+# Add item in Cart for customer user
+echo "Add cart items for customer user (${USER_IDS[customer]})..."
+CART_ITEMS_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$CART_API/cart" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${JWTS[customer]}" \
+  -d "{\"entity\":{\"productId\":\"prod_123\",\"quantity\":2}}")
+CART_ITEMS_STATUS=$(echo "$CART_ITEMS_RESPONSE" | tail -n1)
+CART_ITEMS_BODY=$(echo "$CART_ITEMS_RESPONSE" | sed -e '$d')
+if [ "$CART_ITEMS_STATUS" -eq 201 ]; then
+  echo "Item added to cart for customer user (${USER_IDS[customer]}):"
+  echo "$CART_ITEMS_BODY" | jq .
+else
+  echo -e "${RED}Error adding cart item for customer user: HTTP $CART_ITEMS_STATUS${NC}"
+  exit 1
+fi
+
+# List cart items for customer user
+echo "Listing cart items for customer user (${USER_IDS[customer]})..."
+CART_ITEMS_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$CART_API/cart" \
+  -H "Authorization: Bearer ${JWTS[customer]}")
+CART_ITEMS_STATUS=$(echo "$CART_ITEMS_RESPONSE" | tail -n1)
+CART_ITEMS_BODY=$(echo "$CART_ITEMS_RESPONSE" | sed -e '$d')
+if [ "$CART_ITEMS_STATUS" -eq 200 ]; then
+  echo "Cart items for customer user (${USER_IDS[customer]}):"
+  echo "$CART_ITEMS_BODY" | jq .
+elif [ "$CART_ITEMS_STATUS" -eq 400 ]; then
+  echo "Cart items not found for customer user (${USER_IDS[customer]}):"
+  echo "$CART_ITEMS_BODY" | jq .
+else
+  echo -e "${RED}Error fetching cart items for customer user: HTTP $CART_ITEMS_STATUS${NC}"
+  exit 1
+fi
 
 # Step 4: Create and List Orders for Customer
 echo "4. Creating order for customer (${USER_IDS[customer]})..."
