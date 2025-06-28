@@ -32,6 +32,7 @@ export interface Product {
   name: string;
   price: number;
   companyId: string;
+  userId: string;
   description: string;
   image?: string;
 }

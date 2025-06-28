@@ -19,12 +19,14 @@ const ProductForm = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
-  const [companyId, setCompanyId] = useState<string>(''); // New state variable
+  const [companyId, setCompanyId] = useState<string>('');
+  const [userId, setUserId] = useState<string>(''); // New state variable for userId
   const [formData, setFormData] = useState({
     name: '',
     price: 0,
     companyId: '',
     description: '',
+    userId: '',
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
@@ -50,10 +52,13 @@ const ProductForm = () => {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         const company = payload.user?.company_id || '';
+        const user = payload.user?.user_id || ''; // Extract userId
         setCompanyId(company);
+        setUserId(user); // Set userId state
         setFormData((prev) => ({
           ...prev,
           companyId: company,
+          userId: user, // Set userId in formData
         }));
       } catch (e) {
         console.error('Failed to decode token:', e);
@@ -110,13 +115,13 @@ const ProductForm = () => {
     setIsLoading(true);
     try {
       if (editingId) {
-        await updateProduct(editingId, formData);
+        await updateProduct(editingId, { ...formData, userId });
         toast.success('Product updated successfully');
       } else {
-        await createProduct(formData);
+        await createProduct({ ...formData, userId });
         toast.success('Product created successfully');
       }
-      setFormData({ name: '', price: 0, companyId: companyId, description: '' });
+      setFormData({ name: '', price: 0, companyId: companyId, description: '', userId: userId }); 
       setEditingId(null);
       setIsModalOpen(false);
       invalidateCache();
@@ -143,6 +148,7 @@ const ProductForm = () => {
       price: product.price,
       companyId: product.companyId,
       description: product.description,
+      userId: product.userId, // Set userId when editing
     });
     setEditingId(product._id);
     setIsModalOpen(true);
@@ -171,7 +177,7 @@ const ProductForm = () => {
   };
 
   const openModal = () => {
-    setFormData({ name: '', price: 0, companyId: companyId, description: '' });
+    setFormData({ name: '', price: 0, companyId: companyId, description: '', userId: userId });
     setEditingId(null);
     setErrors([]);
     setIsModalOpen(true);
