@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Fragment } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BellIcon, ShoppingCartIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Toaster, toast } from 'react-hot-toast';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
@@ -101,6 +101,18 @@ const Navbar: React.FC = () => {
                               >
                                 Dashboard
                               </button>
+                            )}
+                          </Menu.Item>
+                        )}
+                        {userRole === 'customer' && (
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link
+                                to="/catalog"
+                                className={`${active ? 'bg-gray-100' : ''} flex items-center w-full px-4 py-2 text-sm text-gray-700`}
+                              >
+                                Product Catalog
+                              </Link>
                             )}
                           </Menu.Item>
                         )}
