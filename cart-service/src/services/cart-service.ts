@@ -3,7 +3,10 @@ import { CreateCartItemInput, UpdateCartItemInput } from '../validation';
 import { Types } from 'mongoose';
 
 export class CartService {
-  async createCartItem(data: CreateCartItemInput['entity'], userId: string): Promise<ICart> {
+  async createCartItem(data: CreateCartItemInput['entity'], userId: string, userRole: string): Promise<ICart> {
+    if (userRole !== 'customer') {
+      throw new Error('Unauthorized: Only customers can add items to the cart');
+    }
     let cart = await Cart.findOne({ userId });
     if (!cart) {
       cart = new Cart({ userId, items: [] });
@@ -76,6 +79,16 @@ export class CartService {
     }
 
     cart.items.splice(itemIndex, 1);
+    await cart.save();
+    return cart;
+  }
+
+  async clearCart(userId: string): Promise<ICart> {
+    let cart = await Cart.findOne({ userId });
+    if (!cart) {
+      cart = new Cart({ userId, items: [] }); // Create an empty cart if not found
+    }
+    cart.items = [];
     await cart.save();
     return cart;
   }
