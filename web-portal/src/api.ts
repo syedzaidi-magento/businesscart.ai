@@ -1,10 +1,11 @@
 import axios from 'axios';
-import { User, Company, Product, Order } from './types';
+import { User, Company, Product, Order, Cart } from './types';
 
 const USER_API_URL = import.meta.env.VITE_USER_API_URL || 'http://127.0.0.1:3000';
 const COMPANY_API_URL = import.meta.env.VITE_COMPANY_API_URL || 'http://127.0.0.1:3001';
 const PRODUCT_API_URL = import.meta.env.VITE_PRODUCT_API_URL || 'http://127.0.0.1:3002';
 const ORDER_API_URL = import.meta.env.VITE_ORDER_API_URL || 'http://127.0.0.1:3003';
+const CART_API_URL = import.meta.env.VITE_CART_API_URL || 'http://127.0.0.1:3004';
 
 const api = axios.create();
 
@@ -21,6 +22,7 @@ api.interceptors.request.use((config) => {
       }
       config.headers.Authorization = `Bearer ${token}`;
     } catch (e) {
+      console.error('Error decoding JWT:', e);
       localStorage.removeItem('accessToken');
       window.location.href = '/login';
     }
@@ -157,4 +159,29 @@ export const updateOrder = async (id: string, data: { entity: Omit<Order, '_id'>
 
 export const deleteOrder = async (id: string): Promise<void> => {
   await api.delete(`${ORDER_API_URL}/orders/${id}`);
+};
+
+export const addItemToCart = async (data: { entity: { productId: string; quantity: number } }): Promise<Cart> => {
+  const response = await api.post(`${CART_API_URL}/cart`, data);
+  return response.data;
+};
+
+export const getCart = async (): Promise<Cart> => {
+  const response = await api.get(`${CART_API_URL}/cart`);
+  return response.data;
+};
+
+export const updateCartItem = async (itemId: string, data: { entity: { quantity: number } }): Promise<Cart> => {
+  const response = await api.put(`${CART_API_URL}/cart/${itemId}`, data);
+  return response.data;
+};
+
+export const removeItemFromCart = async (itemId: string): Promise<Cart> => {
+  const response = await api.delete(`${CART_API_URL}/cart/${itemId}`);
+  return response.data;
+};
+
+export const clearCart = async (): Promise<Cart> => {
+  const response = await api.delete(`${CART_API_URL}/cart`);
+  return response.data;
 };

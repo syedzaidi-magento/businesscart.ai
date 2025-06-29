@@ -1,17 +1,22 @@
-import { useState, useEffect } from 'react';
-import { logout } from '../api';
+import { useState, useEffect, useCallback } from 'react';
+import { logout as apiLogout } from '../api'; // Renamed to avoid conflict
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('accessToken'));
 
-  const decodeJWT = (token: string) => {
+  const decodeJWT = useCallback((token: string) => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.user?.role || null;
-    } catch (err) {
+      return payload.user?.role ?? null;
+    } catch {
       return null;
     }
-  };
+  }, []);
+
+  const logout = useCallback(async () => { // Wrapped in useCallback
+    await apiLogout(); // Call the actual API logout
+    setIsAuthenticated(false);
+  }, []); // No dependencies needed as apiLogout and setIsAuthenticated are stable
 
   useEffect(() => {
     const handleStorageChange = () => {

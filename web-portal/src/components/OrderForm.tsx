@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { createOrder, getOrders, updateOrder, deleteOrder } from '../api';
 import { Order } from '../types';
 import Navbar from './Navbar';
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
 import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -394,7 +393,7 @@ const OrderForm = () => {
             <div className="p-6 flex justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
             </div>
-          ) : filteredOrders.length == 0 ? (
+          ) : filteredOrders.length === 0 ? (
             <div className="p-6 text-center text-gray-600">No orders found.</div>
           ) : (
             <div className="overflow-x-auto">

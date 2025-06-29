@@ -4,13 +4,6 @@ import axios from 'axios';
 import Navbar from './Navbar';
 import { useAuth } from '../hooks/useAuth';
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-}
-
 interface User {
   id: string;
   name?: string;

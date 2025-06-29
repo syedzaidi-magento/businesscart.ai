@@ -32,6 +32,7 @@ export interface Product {
   name: string;
   price: number;
   companyId: string;
+  userId: string;
   description: string;
   image?: string;
 }
@@ -67,4 +68,14 @@ export interface Order {
   }[];
   company_id: string;
   user_id: string;
+}
+
+export interface Cart {
+  _id: string;
+  userId: string;
+  items: {
+    productId: string;
+    quantity: number;
+    _id?: string;
+  }[];
 }

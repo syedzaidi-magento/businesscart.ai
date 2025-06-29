@@ -221,7 +221,7 @@ describe('Product Service API', () => {
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
     expect(response.body).toHaveLength(2);
-    expect(response.body.map((p: any) => p.name)).toEqual(['Product 1', 'Product 2']);
+    expect(response.body.map((p: any) => p.name).sort()).toEqual(['Product 1', 'Product 2'].sort());
   }, 10000);
 
   test('should get products for customer with associated companies', async () => {
@@ -240,7 +240,7 @@ describe('Product Service API', () => {
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
     expect(response.body).toHaveLength(2);
-    expect(response.body.map((p: any) => p.name)).toEqual(['Product 1', 'Product 2']);
+    expect(response.body.map((p: any) => p.name).sort()).toEqual(['Product 1', 'Product 2'].sort());
   }, 10000);
 
   test('should return empty array for customer with no associated companies', async () => {

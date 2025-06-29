@@ -41,6 +41,26 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: Endpoint
+      CorsConfiguration:
+        AllowHeaders:
+          - 'Content-Type'
+          - 'X-Amz-Date'
+          - 'Authorization'
+          - 'X-Api-Key'
+          - 'X-Amz-Security-Token'
+          - 'x-user-id'
+          - 'x-user-role'
+          - 'x-company-id'
+          - 'x-associate-company-ids'
+        AllowMethods:
+          - 'OPTIONS'
+          - 'GET'
+          - 'POST'
+          - 'PUT'
+          - 'DELETE'
+          - 'PATCH'
+        AllowOrigins:
+          - '*'
     Metadata:
       aws:cdk:path: CdkBackendStack/Endpoint/Resource
   EndpointDeployment318525DA42a40aa2dd6496d20c338aba918e92c6:
