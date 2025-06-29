@@ -10,6 +10,7 @@ import Dashboard from './components/Dashboard';
 import Sidebar from './components/Sidebar';
 import { useAuth } from './hooks/useAuth';
 import Catalog from './pages/Catalog';
+import Cart from './pages/Cart';
 
 const App = () => {
   const { isAuthenticated, decodeJWT } = useAuth();
@@ -67,6 +68,10 @@ const App = () => {
             <Route
               path="/catalog"
               element={isAuthenticated ? <Catalog /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/cart"
+              element={isAuthenticated ? <Cart /> : <Navigate to="/login" replace />}
             />
             <Route
               path="/orders"

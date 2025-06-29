@@ -74,8 +74,8 @@ export class CartServiceStack extends cdk.Stack {
     });
 
     // CORS
-    cart.addCorsPreflight({ allowOrigins: ['*'], allowMethods: ['GET', 'POST', 'OPTIONS'] });
-    cartItem.addCorsPreflight({ allowOrigins: ['*'], allowMethods: ['PUT', 'DELETE', 'OPTIONS'] });
+    cart.addCorsPreflight({ allowOrigins: ['*'], allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowHeaders: ['Content-Type', 'Authorization'] });
+    cartItem.addCorsPreflight({ allowOrigins: ['*'], allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowHeaders: ['Content-Type', 'Authorization'] });
 
     // Output API Endpoint
     new cdk.CfnOutput(this, 'CartApiUrl', {

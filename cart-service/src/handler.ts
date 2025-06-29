@@ -4,6 +4,21 @@ import { CartService } from './services/cart-service';
 import { createCartItemSchema, updateCartItemSchema } from './validation';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  console.log('Received event:', JSON.stringify(event, null, 2));
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT,DELETE',
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    console.log('Handling OPTIONS request');
+    return {
+      statusCode: 200,
+      headers,
+      body: '',
+    };
+  }
   try {
     await connectDB();
     const userId = event.requestContext.authorizer?.userId;
@@ -100,6 +115,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     return {
       statusCode: 405,
       body: JSON.stringify({ message: 'Method not allowed' }),
+      headers,
     };
   } catch (error: any) {
     console.error(error);
@@ -117,6 +133,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     return {
       statusCode,
       body: JSON.stringify({ message }),
+      headers,
     };
   }
 };

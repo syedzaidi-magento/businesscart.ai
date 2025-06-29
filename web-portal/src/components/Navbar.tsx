@@ -1,9 +1,10 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BellIcon, ShoppingCartIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Toaster, toast } from 'react-hot-toast';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { useAuth } from '../hooks/useAuth';
+import { getCart } from '../api'; // Import getCart
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -11,14 +12,36 @@ const Navbar: React.FC = () => {
   const [userInitials, setUserInitials] = useState('');
   const [companyName, setCompanyName] = useState('BusinessCart');
   const [notificationCount] = useState(3); // Placeholder
-  const [cartCount] = useState(2); // Placeholder
+  const [cartItemCount, setCartItemCount] = useState(0); // Initialize cartItemCount to 0
   const [userRole, setUserRole] = useState<'customer' | 'company' | 'admin' | null>(null);
+
+  const fetchCartCount = useCallback(async () => {
+    const cached = localStorage.getItem('cart_cache');
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        setCartItemCount(data.items.length);
+        return;
+      }
+    }
+    try {
+      const cart = await getCart();
+      setCartItemCount(cart.items.length);
+      localStorage.setItem('cart_cache', JSON.stringify({ data: cart, timestamp: Date.now() }));
+    } catch (error) {
+      console.error('Failed to fetch cart count:', error);
+      setCartItemCount(0);
+      localStorage.removeItem('cart_cache'); // Invalidate cache on error
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
       setUserInitials('');
       setCompanyName('BusinessCart');
       setUserRole(null);
+      setCartItemCount(0); // Clear cart count on logout
       return;
     }
 
@@ -36,6 +59,7 @@ const Navbar: React.FC = () => {
         setUserInitials(initials);
         setCompanyName(payload.user?.company_id ? `Company ${payload.user.company_id}` : 'BusinessCart');
         setUserRole(payload.user?.role || null);
+        fetchCartCount(); // Fetch cart count when authenticated
       } catch (e) {
         console.error('Invalid token', e);
         toast.error('Failed to load user data');
@@ -43,6 +67,14 @@ const Navbar: React.FC = () => {
       }
     }
   }, [isAuthenticated, logout]);
+
+  useEffect(() => {
+    window.addEventListener('cartUpdated', fetchCartCount);
+
+    return () => {
+      window.removeEventListener('cartUpdated', fetchCartCount);
+    };
+  }, [fetchCartCount]);
 
   return (
     <Disclosure as="nav" className="bg-white shadow">
@@ -66,12 +98,14 @@ const Navbar: React.FC = () => {
                       )}
                     </div>
                     <div className="relative">
-                      <ShoppingCartIcon className="h-6 w-6 text-gray-600 cursor-pointer" />
-                      {cartCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-teal-600 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                          {cartCount}
-                        </span>
-                      )}
+                      <Link to="/cart">
+                        <ShoppingCartIcon className="h-6 w-6 text-gray-600 cursor-pointer" />
+                        {cartItemCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-teal-600 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                            {cartItemCount}
+                          </span>
+                        )}
+                      </Link>
                     </div>
                   </>
                 )}

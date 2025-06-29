@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../hooks/useAuth';
 import { Product } from '../types';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'; // Assuming this import is needed for the search icon
+import AddToCartButton from '../components/AddToCartButton';
 
 const CACHE_KEY = 'products_catalog_cache';
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
@@ -145,9 +146,7 @@ const Catalog: React.FC = () => {
                   <p className="text-gray-600 text-sm line-clamp-2">Product ID: {product._id}</p>
                   <p className="text-gray-600 text-sm line-clamp-2">User ID: {product.userId}</p>
                   <p className="text-teal-600 font-bold mt-2">Price: ${product.price.toFixed(2)}</p>
-                  <button className="mt-4 w-full bg-teal-600 text-white py-2 rounded-md hover:bg-teal-700 transition">
-                    Add to Cart
-                  </button>
+                  <AddToCartButton product={product} />
                 </div>
               </div>
             ))}
