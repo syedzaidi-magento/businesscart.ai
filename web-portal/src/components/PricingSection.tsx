@@ -106,7 +106,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({
         </p>
         <span className="text-base font-semibold text-teal-800">Max $5 per order</span>
         <p className="mt-2 text-xs text-gray-500">
-          2% per order on orders 101 to 1,000 · still never more than $5
+          2% per order on orders 101 to 1,000 · never more than $5
         </p>
         <p className="mt-1 text-xs text-gray-500">
           Invoiced monthly, never deducted from your sales
@@ -142,7 +142,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({
         </p>
         <span className="text-base font-semibold text-teal-800">Max $5 per order</span>
         <p className="mt-2 text-xs text-gray-500">
-          1% per order on order 1,001 onwards · still never more than $5
+          1% per order on order 1,001 onwards · never more than $5
         </p>
         <p className="mt-1 text-xs text-gray-500">
           Invoiced monthly, never deducted from your sales

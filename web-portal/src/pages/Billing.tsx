@@ -399,7 +399,7 @@ const AdminView: React.FC = () => {
     }
   };
 
-  const historyCols = activeFilter === 'all' ? 10 : 9;
+  const historyCols = activeFilter === 'all' ? 9 : 8;
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -474,7 +474,6 @@ const AdminView: React.FC = () => {
                         <th className={`${TH} text-left`}>Company</th>
                         <th className={`${TH} text-center`}>Orders</th>
                         <th className={`${TH} text-left`}>Tier</th>
-                        <th className={`${TH} text-right`}>Monthly fee</th>
                         <th className={`${TH} text-right`}>Txn fees</th>
                         <th className={`${TH} text-right`}>Total due</th>
                         <th className={`${TH} text-left`}>This period</th>
@@ -502,7 +501,7 @@ const AdminView: React.FC = () => {
                               </button>
                             </td>
                             {r.error ? (
-                              <td colSpan={7} className={`${TD} text-center text-red-500`}>
+                              <td colSpan={6} className={`${TD} text-center text-red-500`}>
                                 {r.error}
                               </td>
                             ) : s ? (
@@ -510,9 +509,6 @@ const AdminView: React.FC = () => {
                                 <td className={`${TD} text-center text-gray-700 tabular-nums`}>{s.orderCount}</td>
                                 <td className={TD}>
                                   <Pill tone="teal">{s.tier}</Pill>
-                                </td>
-                                <td className={`${TD} text-right text-gray-700 tabular-nums`}>
-                                  {money(s.monthlyFee)}
                                 </td>
                                 <td className={`${TD} text-right text-gray-700 tabular-nums`}>
                                   {money(s.transactionFees)}
@@ -627,7 +623,6 @@ const AdminView: React.FC = () => {
                           <th className={`${TH} text-left hidden sm:table-cell`}>Sent</th>
                           <th className={`${TH} text-center`}>Orders</th>
                           <th className={`${TH} text-left`}>Tier</th>
-                          <th className={`${TH} text-right hidden md:table-cell`}>Monthly fee</th>
                           <th className={`${TH} text-right hidden md:table-cell`}>Txn fees</th>
                           <th className={`${TH} text-right`}>Total billed</th>
                           <th className={`${TH} text-left`}>Status</th>
@@ -654,9 +649,6 @@ const AdminView: React.FC = () => {
                               <td className={`${TD} text-center text-gray-700 tabular-nums`}>{s.orderCount}</td>
                               <td className={TD}>
                                 <Pill tone="teal">{s.tier}</Pill>
-                              </td>
-                              <td className={`${TD} text-right text-gray-700 hidden md:table-cell tabular-nums`}>
-                                {money(s.monthlyFee)}
                               </td>
                               <td className={`${TD} text-right text-gray-700 hidden md:table-cell tabular-nums`}>
                                 {money(s.transactionFees)}
@@ -838,7 +830,7 @@ const CompanyView: React.FC<{ accountId: string }> = ({ accountId }) => {
                       </span>
                       <span className="text-gray-300">·</span>
                       <span>
-                        {money(current.monthlyFee)} monthly fee + {money(current.transactionFees)} txn fees
+                        {money(current.transactionFees)} in per-order fees
                       </span>
                     </div>
                   )}
@@ -880,7 +872,6 @@ const CompanyView: React.FC<{ accountId: string }> = ({ accountId }) => {
                         <th className={`${TH} text-left hidden sm:table-cell`}>Sent</th>
                         <th className={`${TH} text-center`}>Orders</th>
                         <th className={`${TH} text-left`}>Tier</th>
-                        <th className={`${TH} text-right hidden md:table-cell`}>Monthly fee</th>
                         <th className={`${TH} text-right hidden md:table-cell`}>Txn fees</th>
                         <th className={`${TH} text-right`}>Total billed</th>
                         <th className={`${TH} text-left`}>Status</th>
@@ -900,9 +891,6 @@ const CompanyView: React.FC<{ accountId: string }> = ({ accountId }) => {
                             <Pill tone="teal">{s.tier}</Pill>
                           </td>
                           <td className={`${TD} text-right text-gray-700 hidden md:table-cell tabular-nums`}>
-                            {money(s.monthlyFee)}
-                          </td>
-                          <td className={`${TD} text-right text-gray-700 hidden md:table-cell tabular-nums`}>
                             {money(s.transactionFees)}
                           </td>
                           <td className={`${TD} text-right font-bold text-gray-900 tabular-nums`}>
@@ -915,7 +903,7 @@ const CompanyView: React.FC<{ accountId: string }> = ({ accountId }) => {
                       ))}
                       {capped && (
                         <tr>
-                          <td colSpan={8} className={`${TD} text-center text-xs text-amber-700`}>
+                          <td colSpan={7} className={`${TD} text-center text-xs text-amber-700`}>
                             Only your 24 most recent statements are listed.
                           </td>
                         </tr>
@@ -1085,9 +1073,6 @@ const SendStatementModal: React.FC<ModalProps> = ({ row, period, onClose, onSent
                 </p>
               </>
             )}
-            <p className="text-gray-600">
-              Monthly fee: <strong>{money(stmt.monthlyFee)}</strong>
-            </p>
             <p className="text-gray-600">
               Transaction fees: <strong>{money(stmt.transactionFees)}</strong>
             </p>

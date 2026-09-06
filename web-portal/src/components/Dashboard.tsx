@@ -269,7 +269,6 @@ const Dashboard: React.FC = () => {
                       <div className="flex items-baseline gap-2.5 mt-1">
                         <span className="text-3xl font-extrabold tracking-tight text-teal-700">{tier.tier}</span>
                         <span className="text-sm text-gray-500 tabular-nums">
-                          {tier.monthlyFee > 0 ? `$${tier.monthlyFee.toLocaleString('en-US')}/mo + ` : ''}
                           {(bandRate(tier.monthOrderCount + 1) * 100).toFixed(0)}% on your next order
                           {tier.perOrderCap !== null ? `, capped at $${tier.perOrderCap}/order` : ''}
                         </span>
