@@ -515,7 +515,7 @@ const llmsTxt = `# BusinessCart.ai
 
 > Your Commerce, Your Rules.
 
-BusinessCart.ai is a US-based e-commerce platform that gives businesses their own branded online store, private commerce portal, and B2B tools. **Every feature is included in every tier** — no feature locks. Your tier auto-applies based on monthly order volume. Starter ($0/month + 6% per order, capped at $5/order) for up to 100 orders/month. Growth ($499/month + 1% per order) for 101–1,000 orders. Enterprise ($1,999/month + 0.25% per order) at 1,001+ orders. The platform serves businesses of any size, from local restaurants to national distributors.
+BusinessCart.ai is a US-based e-commerce platform that gives businesses their own branded online store, private commerce portal, and B2B tools. **Every feature is included in every tier**, no feature locks. There is no monthly fee at any volume. Pricing is per order and gets cheaper as you grow: 6% on your first 100 orders each month, 2% on orders 101 to 1,000, and 1% on order 1,001 onwards, every order capped at $5 no matter its size. Each order is priced by its own position in the month, so growing never re-prices orders already placed. The platform serves businesses of any size, from local restaurants to national distributors.
 
 ## Company Information
 
@@ -741,9 +741,9 @@ Planned premium features for the Enterprise tier.
 
 Three tiers — **every feature included in every tier**. Tier auto-applies based on your monthly order volume. No manual upgrades, no feature locks, no surprise bills. Your platform fee grows only when your business does.
 
-- **Starter** — Auto-applies at up to 100 orders/month. **$0/month + 6% per order, capped at $5/order.**
-- **Growth** — Auto-applies at 101–1,000 orders/month. **$499/month + 1% per order.** 30-day money-back guarantee.
-- **Enterprise** — Auto-applies at 1,001+ orders/month. **$1,999/month + 0.25% per order.** Includes dedicated success manager + SLA. 30-day money-back guarantee.
+- **Starter band**: your first 100 orders each month. **6% per order, capped at $5.**
+- **Growth band**: orders 101 to 1,000 in the same month. **2% per order, capped at $5.** Orders already placed are never re-priced. 30-day money-back guarantee.
+- **Enterprise band**: order 1,001 onwards in the same month. **1% per order, capped at $5.** Includes dedicated success manager + SLA. 30-day money-back guarantee.
 
 All tiers include: branded storefront on custom domain, private B2B portal, per-customer pricing/credit/spend caps, quote negotiation, customer groups, custom catalogs, all payment options (Stripe, Amazon Pay, Authorize.net, PO, offline), shopping-channel feeds, AI discovery (schema.org, llms.txt, markdown), multiple pickup/warehouse locations, time-based deals, email notifications, built-in analytics and visitor tracking (no Google Analytics or third-party tags), full REST API, and end-to-end support (technical, migration, integration, onboarding).
 

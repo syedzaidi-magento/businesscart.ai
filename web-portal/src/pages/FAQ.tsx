@@ -28,7 +28,7 @@ export const sections: Section[] = [
       {
         id: 'what-is-businesscart',
         question: 'What is BusinessCart.ai?',
-        answer: 'BusinessCart.ai is an e-commerce platform that gives businesses their own branded online store, private commerce portal, and B2B tools, free to start with a $5 max platform fee per order, no matter the size. Every feature is included in every tier. No feature locks. Your tier auto-applies based on your monthly order volume: Starter ($0/mo) up to 100 orders, Growth ($499/mo) for 101-1,000, Enterprise ($1,999/mo) at 1,001+.',
+        answer: 'BusinessCart.ai is an e-commerce platform that gives businesses their own branded online store, private commerce portal, and B2B tools, free to start with a $5 max platform fee per order, no matter the size. Every feature is included in every tier. No feature locks. There is no monthly fee at any volume: you pay 6% on your first 100 orders each month, 2% on orders 101 to 1,000, and 1% beyond that, never more than $5 per order.',
       },
       {
         id: 'who-is-it-for',
@@ -43,7 +43,7 @@ export const sections: Section[] = [
       {
         id: 'pricing',
         question: 'How much does it cost?',
-        answer: 'Three tiers, every feature included in every tier. Tier auto-applies based on your monthly order volume. No manual upgrades, no feature locks, no surprise bills. Starter: $0/month with a $5 max per order (no matter the size) for up to 100 orders/month. A $10,000 wholesale order costs $5 in fees. Growth: $499/month + 1% per order for 101-1,000 orders. Enterprise: $1,999/month + 0.25% per order at 1,001+, with dedicated success manager and SLA. Connecting the other systems you run is included on every tier at no extra cost; if one of those systems charges for its own API access, you pay that vendor directly. 30-day money-back on Growth and Enterprise.',
+        answer: 'No monthly fee, at any volume, and every feature is included at every volume. Pricing is per order and gets cheaper as you grow: 6% on your first 100 orders each month, 2% on orders 101 to 1,000, and 1% on order 1,001 onwards. Every order is capped at $5 no matter its size, so a $10,000 wholesale order costs $5 in fees. Each order is priced by its own position in the month, so growing never re-prices orders you have already taken. Connecting the other systems you run is included on every tier at no extra cost; if one of those systems charges for its own API access, you pay that vendor directly. 30-day money-back on Growth and Enterprise.',
       },
     ],
   },

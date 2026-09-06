@@ -78,15 +78,15 @@ const PricingSection: React.FC<PricingSectionProps> = ({
           </span>
         </div>
         <p className="mt-2 text-xs text-gray-500">
-          $5 max per order, no matter the size · 6% only on tiny orders under $83
+          $5 max per order, no matter the size · 6% only on orders under $83
         </p>
         <p className="mt-1 text-xs text-gray-500">
           Invoiced monthly, never deducted from your sales
         </p>
         <p className="mt-auto pt-6 text-xs text-gray-500 flex items-start justify-center gap-1">
           <span className="text-teal-700 font-medium">→</span>
-          Moves to Growth when you cross 100 orders/mo. Always at month
-          boundaries, never mid-month
+          Only your first 100 orders each month are priced here. Order 101
+          onwards is cheaper, and nothing already placed is re-priced
         </p>
       </div>
  
@@ -102,9 +102,12 @@ const PricingSection: React.FC<PricingSectionProps> = ({
           101 to 1,000 orders / month
         </p>
         <p className="mt-5 text-4xl font-extrabold text-teal-700">
-          $499<span className="text-lg font-medium text-gray-500"> / mo</span>
+          $0<span className="text-lg font-medium text-gray-500"> / mo</span>
         </p>
-        <p className="mt-3 text-base text-gray-700">+ 1% per order</p>
+        <span className="text-base font-semibold text-teal-800">Max $5 per order</span>
+        <p className="mt-2 text-xs text-gray-500">
+          2% per order on orders 101 to 1,000 · still never more than $5
+        </p>
         <p className="mt-1 text-xs text-gray-500">
           Invoiced monthly, never deducted from your sales
         </p>
@@ -122,8 +125,8 @@ const PricingSection: React.FC<PricingSectionProps> = ({
           ))}
           <p className="text-xs text-gray-500 pt-2 flex items-start gap-1">
             <span className="text-teal-700 font-medium">→</span>
-            Moves to Enterprise when you cross 1,000 orders/mo. Always at month
-            boundaries, never mid-month
+            Only orders 101 to 1,000 are priced here. Order 1,001 onwards is
+            cheaper again
           </p>
         </div>
       </div>
@@ -135,9 +138,12 @@ const PricingSection: React.FC<PricingSectionProps> = ({
           1,001+ orders / month
         </p>
         <p className="mt-5 text-4xl font-extrabold text-teal-700">
-          $1,999<span className="text-lg font-medium text-gray-500"> / mo</span>
+          $0<span className="text-lg font-medium text-gray-500"> / mo</span>
         </p>
-        <p className="mt-3 text-base text-gray-700">+ 0.25% per order</p>
+        <span className="text-base font-semibold text-teal-800">Max $5 per order</span>
+        <p className="mt-2 text-xs text-gray-500">
+          1% per order on order 1,001 onwards · still never more than $5
+        </p>
         <p className="mt-1 text-xs text-gray-500">
           Invoiced monthly, never deducted from your sales
         </p>
@@ -174,7 +180,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({
     {/* Footer note */}
     <p className="mt-4 text-center text-sm text-gray-600 max-w-3xl mx-auto">
       Connecting the other systems you run is included on every tier at no extra cost.
-      · 30-day money-back on Growth and Enterprise · No setup costs · No
+      · 30-day money-back · No monthly fee at any volume · No setup costs · No
       long-term contracts ·{" "}
       <strong className="text-gray-800">
         No fee on purchase orders or offline payments. Ever.

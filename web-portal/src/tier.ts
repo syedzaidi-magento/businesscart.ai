@@ -1,15 +1,32 @@
-// Tier computation — pure logic, derives current pricing tier from this month's
-// orders. Used on the company dashboard, sidebar badge, and (later) admin
-// billing page. The tier is NEVER stored on the Company model; it is always
+// Tier computation: pure logic, derives this month's billing figures from the
+// month's orders. Used on the company dashboard, the sidebar badge and the
+// Billing page. The tier is NEVER stored on the Company model; it is always
 // derived from order data so it stays self-correcting on refunds/cancellations.
 //
-// Brackets (matches exclude/APPLICATION.md and the marketing pages):
-//   Starter:    ≤100 orders/mo  → $0/mo + 6% per order, capped at $5/order
-//   Growth:     101–1,000/mo    → $499/mo + 1% per order
-//   Enterprise: 1,001+/mo       → $1,999/mo + 0.25% per order
+// MARGINAL BANDS, $5 cap in every band, no monthly fee. Must match
+// checkout-service/internal/statement/compute.go exactly; if these two drift a
+// seller's dashboard estimate contradicts the statement they are actually sent.
+//
+//   orders 1-100      6%
+//   orders 101-1,000  2%
+//   orders 1,001+     1%
+//
+// An order is priced by its own position in the month, so growth never
+// re-prices orders already placed, and the $5 cap holds at every volume rather
+// than vanishing the moment a seller passes 100 orders.
 import { Order } from './types';
 
 export type TierName = 'Starter' | 'Growth' | 'Enterprise';
+
+// The most any single order can cost, in every band.
+export const PER_ORDER_CAP = 5;
+
+// Marginal rate for the order at this 1-based position in the month.
+export function bandRate(position: number): number {
+  if (position <= 100) return 0.06;
+  if (position <= 1000) return 0.02;
+  return 0.01;
+}
 
 export interface TierInfo {
   tier: TierName;
@@ -46,50 +63,24 @@ export function computeTier(orders: Order[], now: Date = new Date()): TierInfo {
   const count = monthOrders.length;
   const grandTotal = monthOrders.reduce((s, o) => s + (o.grandTotal || 0), 0);
 
-  let tier: TierName;
-  let monthlyFee: number;
-  let perOrderRate: number;
-  let perOrderCap: number | null;
-  let nextTierThreshold: number | null;
-  let nextTierName: TierName | null;
+  const tier: TierName = count <= 100 ? 'Starter' : count <= 1000 ? 'Growth' : 'Enterprise';
+  const nextTierThreshold = count <= 100 ? 100 : count <= 1000 ? 1000 : null;
+  const nextTierName: TierName | null = count <= 100 ? 'Growth' : count <= 1000 ? 'Enterprise' : null;
 
-  if (count <= 100) {
-    tier = 'Starter';
-    monthlyFee = 0;
-    perOrderRate = 0.06;
-    perOrderCap = 5;
-    nextTierThreshold = 100;
-    nextTierName = 'Growth';
-  } else if (count <= 1000) {
-    tier = 'Growth';
-    monthlyFee = 499;
-    perOrderRate = 0.01;
-    perOrderCap = null;
-    nextTierThreshold = 1000;
-    nextTierName = 'Enterprise';
-  } else {
-    tier = 'Enterprise';
-    monthlyFee = 1999;
-    perOrderRate = 0.0025;
-    perOrderCap = null;
-    nextTierThreshold = null;
-    nextTierName = null;
-  }
+  // Oldest first: position in the month decides the rate, so the array order
+  // must come from the order dates, not from however the API returned them.
+  const chronological = [...monthOrders].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
 
-  // Fees are charged on NET revenue, mirroring Order.NetTotal and the fee loop in
-  // checkout-service/internal/statement/compute.go. Both must stay in step or the
-  // dashboard's estimated bill contradicts the statement the seller is actually
-  // sent: a $209.97 order refunded $174.98 estimates $5.00 here (6% of gross, hit
-  // the cap) against $2.10 billed (6% of net). Clamped at 0 like NetTotal so an
-  // over-refund cannot produce a negative fee.
-  // Rounded to cents to mirror statement.Compute's round2. Without it the
-  // dashboard estimate shows a fraction of a cent the invoice never charges.
+  // Fees are charged on NET revenue, mirroring Order.NetTotal and the fee loop
+  // in compute.go. Clamped at 0 like NetTotal so an over-refund cannot produce a
+  // negative fee, and capped at $5 in every band.
   const round2 = (n: number) => Math.round(n * 100) / 100;
-  const perOrderFees = monthOrders.reduce((s, o) => {
+  const perOrderFees = chronological.reduce((sum, o, i) => {
     const refunded = (o.refunds || []).reduce((r, x) => r + (x.amount || 0), 0);
     const net = Math.max(0, (o.grandTotal || 0) - refunded);
-    const fee = perOrderRate * net;
-    return s + (perOrderCap !== null ? Math.min(fee, perOrderCap) : fee);
+    return sum + Math.min(bandRate(i + 1) * net, PER_ORDER_CAP);
   }, 0);
 
   const ordersToNextTier =
@@ -98,13 +89,19 @@ export function computeTier(orders: Order[], now: Date = new Date()): TierInfo {
   return {
     tier,
     monthOrderCount: count,
-    monthGrandTotal: grandTotal,
+    monthGrandTotal: round2(grandTotal),
     nextTierThreshold,
     nextTierName,
     ordersToNextTier,
-    monthlyFee,
-    perOrderRate,
-    perOrderCap,
-    estimatedBill: round2(monthlyFee + round2(perOrderFees)),
+    // No monthly fee at any volume. Kept on the shape because the Billing page
+    // and the statement email still render the line.
+    monthlyFee: 0,
+    // The rate the LAST order paid, i.e. the deepest band reached. NOT the next
+    // order's rate: at exactly 100 orders this reads 6% while order 101 costs 2%.
+    // Callers wanting "what does my next order cost" call bandRate(count + 1),
+    // as the dashboard does.
+    perOrderRate: bandRate(count),
+    perOrderCap: PER_ORDER_CAP,
+    estimatedBill: round2(perOrderFees),
   };
 }

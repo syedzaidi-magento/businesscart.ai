@@ -190,7 +190,7 @@ const SolutionsRestaurants: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {[
-                    ['Cost', '15-30% per order', '$49-499/mo', '$0-1,999/mo (3 tiers)'],
+                    ['Cost', '15-30% per order', '$49-499/mo', 'No monthly fee, 6%/2%/1% per order, $5 cap'],
                     ['You own customer data', 'No', 'Sometimes', 'Yes, fully'],
                     ['Code-gated regulars-only menu', 'No', 'Limited (paid tiers)', 'Yes, built-in'],
                     ['Catering quote workflow', 'No', 'Limited', 'Built-in'],

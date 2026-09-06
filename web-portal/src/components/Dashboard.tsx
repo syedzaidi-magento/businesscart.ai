@@ -5,7 +5,7 @@ import Navbar from './Navbar';
 import { useAuth } from '../hooks/useAuth';
 import { getProducts, getOrders, getAccounts } from '../api';
 import { Account, Order } from '../types';
-import { computeTier, TierInfo } from '../tier';
+import { computeTier, TierInfo, bandRate } from '../tier';
 import { Band, Tile, Pill, STATUS_TONE } from './ui';
 
 interface User {
@@ -270,7 +270,7 @@ const Dashboard: React.FC = () => {
                         <span className="text-3xl font-extrabold tracking-tight text-teal-700">{tier.tier}</span>
                         <span className="text-sm text-gray-500 tabular-nums">
                           {tier.monthlyFee > 0 ? `$${tier.monthlyFee.toLocaleString('en-US')}/mo + ` : ''}
-                          {(tier.perOrderRate * 100).toFixed(tier.perOrderRate < 0.01 ? 2 : 0)}% per order
+                          {(bandRate(tier.monthOrderCount + 1) * 100).toFixed(0)}% on your next order
                           {tier.perOrderCap !== null ? `, capped at $${tier.perOrderCap}/order` : ''}
                         </span>
                       </div>
@@ -298,7 +298,7 @@ const Dashboard: React.FC = () => {
                     <p className="mt-3.5 text-[13px] text-gray-600 tabular-nums">
                       <b className="text-teal-700 font-bold">{tier.monthOrderCount} order{tier.monthOrderCount !== 1 ? 's' : ''}</b> this month
                       {tier.nextTierThreshold !== null
-                        ? <> · <b className="text-teal-700 font-bold">{tier.ordersToNextTier} more</b> → graduate to {tier.nextTierName}</>
+                        ? <> · <b className="text-teal-700 font-bold">{tier.ordersToNextTier} more</b> → rate drops to {(bandRate(tier.nextTierThreshold + 1) * 100).toFixed(0)}%</>
                         : <> · top tier</>}
                     </p>
                   </div>

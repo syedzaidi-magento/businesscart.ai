@@ -1608,12 +1608,10 @@ func (h *LambdaHandler) handleStatementsRequest(request events.APIGatewayProxyRe
 // flat email DTO. Pre-formats the per-order rate string so the email package
 // stays decoupled from pricing-tier logic.
 func buildStatementEmailData(stmt statement.Computed, companyName, periodLabel, paymentInstructions string) mailer.MonthlyStatementData {
-	var rateStr string
-	if stmt.PerOrderCap != nil {
-		rateStr = fmt.Sprintf("%.2f%%, capped at $%.0f/order", stmt.PerOrderRate*100, *stmt.PerOrderCap)
-	} else {
-		rateStr = fmt.Sprintf("%.2f%% per order", stmt.PerOrderRate*100)
-	}
+	// Marginal bands mean there is no single rate to quote, so the email states
+	// the schedule rather than a number that would misdescribe the bill. The cap
+	// is the part sellers actually care about and it now holds in every band.
+	rateStr := "6% on orders 1-100, 2% on 101-1,000, 1% beyond. Never more than $5 per order."
 	return mailer.MonthlyStatementData{
 		CompanyName:         companyName,
 		PeriodLabel:         periodLabel,
