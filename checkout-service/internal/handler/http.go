@@ -1367,6 +1367,7 @@ func (h *LambdaHandler) handleSendStatementRequest(request events.APIGatewayProx
 		PeriodLabel         string `json:"periodLabel"`
 		PaymentInstructions string `json:"paymentInstructions"`
 		DryRun              bool   `json:"dryRun"`
+		AllowDuplicate      bool   `json:"allowDuplicate"`
 	}
 	if err := json.Unmarshal([]byte(request.Body), &req); err != nil {
 		return h.errorResponse(http.StatusBadRequest, "Invalid request body"), nil
@@ -1421,6 +1422,25 @@ func (h *LambdaHandler) handleSendStatementRequest(request events.APIGatewayProx
 			Headers:    corsHeaders(h.requestOrigin),
 			Body:       string(respBody),
 		}, nil
+	}
+
+	// Duplicate guard. Placed AFTER the dry-run return so a preview always
+	// renders, and BEFORE the send so a refused duplicate never reaches the
+	// customer: Save only runs once the email is away, so a guard any later
+	// would leave the company holding a second invoice we have no record of.
+	// Billing the same period twice is nearly always a slip; when it is not, the
+	// caller says so with allowDuplicate rather than the platform guessing.
+	if !req.AllowDuplicate {
+		existing, dupErr := h.statementService.FindByPeriod(req.SellerID, from, to)
+		if dupErr != nil {
+			log.Printf("ERROR: FindByPeriod: %v", dupErr)
+			return h.errorResponse(http.StatusInternalServerError, "Failed to check existing statements"), nil
+		}
+		if existing != nil {
+			return h.errorResponse(http.StatusConflict, fmt.Sprintf(
+				"A statement for this period was already sent to %s on %s for $%.2f. Retract it first, or confirm to send anyway.",
+				existing.RecipientEmail, existing.SentAt.Format("2006-01-02"), existing.TotalDue)), nil
+		}
 	}
 
 	if h.emailSender == nil {
@@ -1482,6 +1502,7 @@ func (h *LambdaHandler) handleSendStatementRequest(request events.APIGatewayProx
 // retraction (DELETE for a statement sent in error). All other methods rejected.
 //
 //	GET    /checkout/statements?sellerId=<id>   admin or own-seller
+//	PUT    /checkout/statements/{id}            admin only, mark paid / unpaid
 //	DELETE /checkout/statements/{id}            admin only
 func (h *LambdaHandler) handleStatementsRequest(request events.APIGatewayProxyRequest, accountID, orgID, role, orgRole string) (events.APIGatewayProxyResponse, error) {
 	// A billing statement is what this company owes the platform: its tier,
@@ -1541,19 +1562,56 @@ func (h *LambdaHandler) handleStatementsRequest(request events.APIGatewayProxyRe
 		}, nil
 	}
 
-	return h.errorResponse(http.StatusMethodNotAllowed, "Use GET /checkout/statements or DELETE /checkout/statements/{id}"), nil
+	// Payment settlement. PaidAt and PaymentReference were reserved on the model
+	// from the start precisely so this needed no migration; this is the write
+	// path they were waiting for. Admin only, like retraction: a company must not
+	// be able to declare its own bill settled.
+	if request.HTTPMethod == "PUT" && len(parts) == 3 {
+		if role != "admin" {
+			return h.errorResponse(http.StatusForbidden, "Forbidden: admin only"), nil
+		}
+		oid, err := primitive.ObjectIDFromHex(parts[2])
+		if err != nil {
+			return h.errorResponse(http.StatusBadRequest, "invalid statement id"), nil
+		}
+		var body struct {
+			Paid             bool   `json:"paid"`
+			PaymentReference string `json:"paymentReference"`
+		}
+		if err := json.Unmarshal([]byte(request.Body), &body); err != nil {
+			return h.errorResponse(http.StatusBadRequest, "Invalid request body"), nil
+		}
+		if len(body.PaymentReference) > 200 {
+			return h.errorResponse(http.StatusBadRequest, "paymentReference too long (max 200 chars)"), nil
+		}
+		updated, err := h.statementService.SetPaid(oid, body.Paid, body.PaymentReference)
+		if err != nil {
+			log.Printf("ERROR: statement SetPaid: %v", err)
+			return h.errorResponse(http.StatusInternalServerError, "Failed to update statement"), nil
+		}
+		if updated == nil {
+			return h.errorResponse(http.StatusNotFound, "Statement not found"), nil
+		}
+		log.Printf("INFO: admin %s set statement %s paid=%v", accountID, parts[2], body.Paid)
+		respBody, _ := json.Marshal(updated)
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusOK,
+			Headers:    corsHeaders(h.requestOrigin),
+			Body:       string(respBody),
+		}, nil
+	}
+
+	return h.errorResponse(http.StatusMethodNotAllowed, "Use GET /checkout/statements, PUT /checkout/statements/{id} or DELETE /checkout/statements/{id}"), nil
 }
 
 // buildStatementEmailData adapts the statement.Computed domain object to the
 // flat email DTO. Pre-formats the per-order rate string so the email package
 // stays decoupled from pricing-tier logic.
 func buildStatementEmailData(stmt statement.Computed, companyName, periodLabel, paymentInstructions string) mailer.MonthlyStatementData {
-	var rateStr string
-	if stmt.PerOrderCap != nil {
-		rateStr = fmt.Sprintf("%.2f%%, capped at $%.0f/order", stmt.PerOrderRate*100, *stmt.PerOrderCap)
-	} else {
-		rateStr = fmt.Sprintf("%.2f%% per order", stmt.PerOrderRate*100)
-	}
+	// Marginal bands mean there is no single rate to quote, so the email states
+	// the schedule rather than a number that would misdescribe the bill. The cap
+	// is the part sellers actually care about and it now holds in every band.
+	rateStr := "6% on orders 1-100, 2% on 101-1,000, 1% beyond. Never more than $5 per order."
 	return mailer.MonthlyStatementData{
 		CompanyName:         companyName,
 		PeriodLabel:         periodLabel,

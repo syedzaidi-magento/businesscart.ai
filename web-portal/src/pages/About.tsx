@@ -43,7 +43,7 @@ const About: React.FC = () => {
                   <CurrencyDollarIcon className="h-6 w-6" />
                 </div>
                 <h3 className="mt-4 text-lg font-semibold text-gray-900">Pricing That Scales With You</h3>
-                <p className="mt-2 text-gray-500">Every feature in every tier. No feature locks. Starter is $0/month with a $5 max per order, no matter the size. Growth and Enterprise apply automatically as your monthly order volume grows. 30-day money-back on paid tiers.</p>
+                <p className="mt-2 text-gray-500">Every feature in every tier. No feature locks. No monthly fee at any volume, and every order is capped at $5 no matter its size. The per-order rate falls as your monthly order volume grows. 30-day money-back on paid tiers.</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center h-12 w-12 rounded-md bg-teal-700 text-white mx-auto">

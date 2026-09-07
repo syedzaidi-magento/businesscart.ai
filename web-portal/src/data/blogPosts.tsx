@@ -198,7 +198,7 @@ const blogPosts: BlogPostData[] = [
           <tbody>
             <tr><td>Shopify Plus (native unlimited catalogs)</td><td>~$2,300/mo</td><td>Enterprise contract, big jump from standard plan</td></tr>
             <tr><td>Advanced + B2B app + portal app</td><td>~$600 to $800/mo</td><td>Three vendors, update conflicts, split support</td></tr>
-            <tr><td>BusinessCart per-customer pricing</td><td><strong>$0/mo Starter, $499 Growth, $1,999 Enterprise</strong></td><td>Smaller third-party app ecosystem</td></tr>
+            <tr><td>BusinessCart per-customer pricing</td><td><strong>$0 at every volume, no monthly fee</strong></td><td>Smaller third-party app ecosystem</td></tr>
           </tbody>
         </table></div>
         <p>BusinessCart's tiers are volume-based, not feature-gated. Per-customer pricing, credit limits, net terms, and quote negotiation are in every tier, including the $0/month Starter (up to 100 orders/month, $5 max per order). Your tier tracks order volume, not which B2B feature you are trying to unlock.</p>
@@ -246,7 +246,7 @@ const blogPosts: BlogPostData[] = [
             <tr><td>Implementation cost (reported)</td><td>~$50,000 to $200,000+</td><td><strong>None; self-serve setup</strong></td></tr>
             <tr><td>Time to launch (reported)</td><td>6 to 12 months</td><td><strong>Days</strong></td></tr>
             <tr><td>Team required</td><td>Dedicated developers</td><td><strong>None</strong></td></tr>
-            <tr><td>Monthly cost</td><td>~$2,000+/mo cloud</td><td><strong>$0 Starter / $499 Growth / $1,999 Enterprise</strong></td></tr>
+            <tr><td>Monthly cost</td><td>~$2,000+/mo cloud</td><td><strong>$0 at every volume, no monthly fee</strong></td></tr>
             <tr><td>Per-customer pricing, credit limits, quote negotiation</td><td>Yes, after build</td><td><strong>Yes, built in</strong></td></tr>
           </tbody>
         </table></div>
@@ -347,7 +347,7 @@ const blogPosts: BlogPostData[] = [
           </thead>
           <tbody>
             <tr><td>Entry requirement</td><td>Enterprise plan</td><td><strong>None; start on Starter</strong></td></tr>
-            <tr><td>Reported monthly cost</td><td>~$1,000 to $2,000+/mo</td><td><strong>$0 / $499 / $1,999</strong></td></tr>
+            <tr><td>Reported monthly cost</td><td>~$1,000 to $2,000+/mo</td><td><strong>$0 at every volume</strong></td></tr>
             <tr><td>Custom price lists</td><td>Enterprise tier only</td><td><strong>Per-customer pricing, every tier</strong></td></tr>
             <tr><td>Pricing transparency</td><td>Custom quote, GMV-based</td><td><strong>Published, volume-based tiers</strong></td></tr>
             <tr><td>Forced upgrades</td><td>When sales cross plan threshold</td><td><strong>Tier tracks order volume, features unchanged</strong></td></tr>
@@ -446,7 +446,7 @@ const blogPosts: BlogPostData[] = [
         <h2>The Alternatives</h2>
 
         <h3>1. BusinessCart.ai: Best for Zero Monthly Cost + Speed</h3>
-        <p><strong>Cost:</strong> $0/month + 6% per order, capped at $5/order (Starter plan). Growth tier $499/mo + 1% per order. Enterprise $1,999/mo + 0.25% per order. 30-day money-back on paid tiers.</p>
+        <p><strong>Cost:</strong> $0/month + 6% per order, capped at $5/order (Starter plan). Orders 101-1,000 are 2% per order and order 1,001 onwards is 1%, every order capped at $5. 30-day money-back on paid tiers.</p>
         <p>BusinessCart.ai generates a static HTML storefront for your business. No JavaScript framework, no server-side rendering, pure HTML served from 200+ CDN edge locations worldwide.</p>
         <p>What this means in practice:</p>
         <ul>
@@ -496,7 +496,7 @@ const blogPosts: BlogPostData[] = [
 
         <h2>The Bottom Line</h2>
         <p>If you are starting an online store in 2026, paying $39+/month before your first sale does not make sense. The alternatives have caught up, and in some areas, passed Shopify entirely.</p>
-        <p>BusinessCart.ai's Starter plan starts at $0/month, gives you the fastest storefront on the web, and includes every feature, including SEO, multi-location, full B2B, and the operations layer that connects your other systems, all of which Shopify charges thousands for. Your tier auto-applies based on monthly order volume (Starter ≤100 orders, Growth $499/mo at 101-1,000, Enterprise $1,999/mo at 1,001+). Every feature is in every tier, no feature locks. The trade-off is a smaller app ecosystem, but for most businesses, what is built in is all you need.</p>
+        <p>BusinessCart.ai's Starter plan starts at $0/month, gives you the fastest storefront on the web, and includes every feature, including SEO, multi-location, full B2B, and the operations layer that connects your other systems, all of which Shopify charges thousands for. BusinessCart charges no monthly fee at any volume, and the per-order rate falls as volume grows: 6% on your first 100 orders each month, 2% on orders 101 to 1,000, 1% beyond that, with every order capped at $5. Every feature is in every tier, no feature locks. The trade-off is a smaller app ecosystem, but for most businesses, what is built in is all you need.</p>
         <p>Stop paying for a store before you have customers. <strong><a href="/contact-us">Start for free on BusinessCart.ai</a></strong> and pay only when you sell.</p>
         <p>Related: <a href="/solutions/d2c-brands">D2C Brands solution page</a>, full feature breakdown, comparison tables, and pricing for direct-to-consumer sellers.</p>
       </>
@@ -573,7 +573,7 @@ const blogPosts: BlogPostData[] = [
             <tr><td>SSL</td><td>Free</td></tr>
             <tr><td>CDN hosting</td><td>Free</td></tr>
             <tr><td>SEO tools</td><td>Free</td></tr>
-            <tr><td>Per order</td><td>6% capped at $5 (Starter) / 1% (Growth $499/mo) / 0.25% (Enterprise $1,999/mo)</td></tr>
+            <tr><td>Per order</td><td>6% on orders 1-100, 2% on 101-1,000, 1% beyond, every order capped at $5, no monthly fee</td></tr>
             <tr><td><strong>Monthly fee</strong></td><td><strong>$0</strong></td></tr>
           </tbody>
         </table></div>
@@ -816,7 +816,7 @@ const blogPosts: BlogPostData[] = [
           <li><strong>Own your data:</strong> Every customer, every order, every piece of data is yours.</li>
           <li><strong>Build your brand:</strong> Create a fully customized, branded storefront from start to finish.</li>
           <li><strong>Increase your profits:</strong> Keep the 30% you have been giving away and reinvest it in your business.</li>
-          <li><strong>Free Starter plan:</strong> $0/month, pay only when you make sales (6% per order capped at $5/order). Growth ($499/mo) and Enterprise ($1,999/mo) auto-apply by monthly order volume. Every feature in every tier, no feature locks.</li>
+          <li><strong>Free Starter plan:</strong> $0/month, pay only when you make sales (6% per order capped at $5/order). Cheaper per-order rates apply automatically at higher monthly order volume. Every feature in every tier, no feature locks.</li>
         </ul>
         <p>Stop being a tenant in someone else's store. It is time to build your own. <strong><a href="/contact-us">Get started for free on BusinessCart.ai</a></strong>.</p>
         <p>Related: <a href="/solutions/marketplace-escape">Marketplace Escape solution page</a>, vertical-specific playbooks for leaving Etsy, Amazon, DoorDash, Instacart, and Faire.</p>
@@ -885,7 +885,7 @@ const blogPosts: BlogPostData[] = [
         <h2>Your Alternatives</h2>
 
         <h3>1. BusinessCart.ai: Best for Zero Monthly Cost + Instant Storefront</h3>
-        <p><strong>Fees:</strong> $0/month + 6% per order (capped at $5/order) on Starter, auto-applies up to 100 orders/mo. Growth $499/mo + 1% (101-1,000 orders), Enterprise $1,999/mo + 0.25% (1,001+). Every feature in every tier. 30-day money-back on paid tiers.</p>
+        <p><strong>Fees:</strong> No monthly fee at any volume. BusinessCart charges 6% on your first 100 orders each month, 2% on orders 101 to 1,000, and 1% on order 1,001 onwards, with every order capped at $5. Every feature in every tier. 30-day money-back guarantee.</p>
         <p>You get a branded storefront with your products, your branding, your domain. Generated as static HTML, loads in under 1 second, works with AI assistants, auto-generates SEO. No code needed. No hosting to manage.</p>
         <p><strong>Best for:</strong> Sellers who want their own store running today without spending money upfront. Works especially well if you already have product photos and descriptions from Etsy.</p>
 
@@ -967,7 +967,7 @@ const blogPosts: BlogPostData[] = [
         <h2>The Alternatives</h2>
 
         <h3>BusinessCart.ai: Fastest Stores, Zero Monthly Fee</h3>
-        <p><strong>Cost:</strong> $0/month + 6% per order (capped at $5/order) on Starter (≤100 orders/mo). Growth $499/mo (101-1,000) and Enterprise $1,999/mo (1,001+) auto-apply by order volume. Every feature in every tier.</p>
+        <p><strong>Cost:</strong> No monthly fee at any volume. BusinessCart charges 6% on your first 100 orders each month, 2% on orders 101 to 1,000, and 1% on order 1,001 onwards, with every order capped at $5. Every feature in every tier.</p>
         <p>Static HTML storefronts served from 200+ CDN locations. Sub-1-second load times, not 3-5 seconds like Squarespace. Full schema.org markup, auto-generated sitemap, AI-readable product catalog.</p>
         <p><strong>Design trade-off:</strong> You do not get Squarespace's drag-and-drop template editor. Your storefront is generated from your products and branding. It is clean and professional, but not infinitely customizable. For most businesses selling products, this is a feature, not a limitation, your store is live in minutes, not weeks.</p>
 
@@ -2140,7 +2140,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
           <li>Recurring orders / standing orders for predictable replenishment</li>
         </ul>
 
-        <p>Shopify B2B requires Shopify Plus at $2,300+/month to access these. NetSuite gets you there but at $8K+/month. BusinessCart.ai ships these on every tier, starting at $0/mo on Starter, with auto-promotion to Growth ($499/mo) and Enterprise ($1,999/mo) only as your monthly order volume grows.</p>
+        <p>Shopify B2B requires Shopify Plus at $2,300+/month to access these. NetSuite gets you there but at $8K+/month. BusinessCart.ai ships these at every volume, with no monthly fee and per-order rates that fall as you grow (6% on orders 1-100, 2% on 101-1,000, 1% beyond, every order capped at $5, no monthly fee).</p>
 
         <h2>Bottom Line</h2>
 
@@ -2547,7 +2547,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
 
         <p>The barriers to entry are lower than most caterers assume, you need a menu that scales, a B2B ordering platform that handles per-account pricing and net-30 invoicing, and a willingness to do 20-30 cold outreach emails per week until accounts #1-#5 land.</p>
 
-        <p><strong><a href="/contact-us">Set up your B2B catering ordering free on BusinessCart.ai</a></strong>, code-gated private client catalogs, recurring orders, invoice terms. Every feature in every tier, Starter $0/mo auto-applies to ≤100 orders; Growth ($499/mo) and Enterprise ($1,999/mo) apply automatically as your volume grows.</p>
+        <p><strong><a href="/contact-us">Set up your B2B catering ordering free on BusinessCart.ai</a></strong>, code-gated private client catalogs, recurring orders, invoice terms. Every feature in every tier, no monthly fee at any volume, 6% on your first 100 orders each month and cheaper per-order rates as your volume grows.</p>
 
         <p>Related: <a href="/solutions/restaurants">Restaurants &amp; Food solution page</a> · <a href="/solutions/wholesale">Wholesale &amp; B2B solution page</a> · <a href="/blog/why-catering-companies-are-leaving-doordash-for-direct-online-ordering">Why Catering Companies Are Leaving DoorDash</a></p>
       </>
@@ -3014,7 +3014,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
             <tr><td>SAP Business One</td><td>$50K-$200K (license + implementation)</td><td>$15K-$50K/yr</td><td>6-12 months</td><td>Mid-market, not SMB</td></tr>
             <tr><td>Shopify Plus + B2B apps</td><td>~$28K (Plus + apps)</td><td>~$28K/yr + dev</td><td>2-4 months</td><td>Possible but app-stack complexity</td></tr>
             <tr><td>Hire a developer to build custom</td><td>$50K-$200K</td><td>Maintenance burden</td><td>4-8 months</td><td>No, wrong use of capital</td></tr>
-            <tr><td>BusinessCart.ai (auto-scaling)</td><td>$0-$5,988 (Starter to Growth)</td><td>$0-$23,988</td><td>Days</td><td>Built for SMB</td></tr>
+            <tr><td>BusinessCart.ai (auto-scaling)</td><td>No monthly fee, per-order only</td><td>~$13,200 at 400 orders/mo @ $100 AOV</td><td>Days</td><td>Built for SMB</td></tr>
           </tbody>
         </table></div>
 
@@ -3055,7 +3055,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
             <tr><td>CSR labor on order entry</td><td>$5,200/mo</td><td>$1,000/mo (exceptions only)</td><td>$4,200/mo</td></tr>
             <tr><td>Order errors (wrong pricing applied)</td><td>$1,000/mo (3-5% error rate × $30K orders)</td><td>$100/mo</td><td>$900/mo</td></tr>
             <tr><td>Customer onboarding time</td><td>2 hours per new account</td><td>15 minutes</td><td>Variable</td></tr>
-            <tr><td>Platform cost (BusinessCart Growth)</td><td>$0</td><td>$499/mo + 1% per order</td><td>($899/mo cost on 400 orders/mo @ $100 AOV)</td></tr>
+            <tr><td>Platform cost (BusinessCart)</td><td>$0</td><td>No monthly fee, 6% then 2% per order, $5 cap</td><td>($1,100/mo on 400 orders/mo @ $100 AOV)</td></tr>
             <tr><td><strong>Net monthly improvement</strong></td><td></td><td></td><td><strong>~$4,200/mo</strong></td></tr>
           </tbody>
         </table></div>
@@ -3103,8 +3103,8 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
           </thead>
           <tbody>
             <tr><td>Under $1M</td><td>BusinessCart Starter</td><td>Free monthly, capped per-order fee, all B2B features included</td></tr>
-            <tr><td>$1M-$5M</td><td>BusinessCart Growth</td><td>$499/mo, no enterprise lift, but full B2B (per-customer pricing, credit, quotes)</td></tr>
-            <tr><td>$5M-$20M</td><td>BusinessCart Enterprise OR Shopify Plus B2B</td><td>BC at $1,999/mo + 0.25% vs Shopify Plus at $2,300+/mo + apps</td></tr>
+            <tr><td>$1M-$5M</td><td>BusinessCart</td><td>No monthly fee, $5 max per order, full B2B (per-customer pricing, credit, quotes)</td></tr>
+            <tr><td>$5M-$20M</td><td>BusinessCart OR Shopify Plus B2B</td><td>BC at $5 max per order, no monthly fee, vs Shopify Plus at $2,300+/mo + apps</td></tr>
             <tr><td>$20M-$50M</td><td>Shopify Plus B2B or NetSuite</td><td>NetSuite if ERP+commerce integration is required; Shopify Plus if just commerce</td></tr>
             <tr><td>$50M+</td><td>NetSuite, SAP, Microsoft Dynamics</td><td>Full ERP necessary at this scale</td></tr>
           </tbody>
@@ -3173,8 +3173,8 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
         <p>Auto-scales by monthly order volume, no manual tier selection:</p>
         <ul>
           <li><strong>Starter</strong> ($0/mo + 6% per order, capped at $5), up to 100 orders/month. For wholesalers under $50K/month in order volume.</li>
-          <li><strong>Growth</strong> ($499/mo + 1% per order), 101-1,000 orders/month. Most SMB wholesalers ($1M-$10M revenue) live here.</li>
-          <li><strong>Enterprise</strong> ($1,999/mo + 0.25% per order), 1,001+ orders/month. Includes dedicated success manager and SLA.</li>
+          <li><strong>Orders 101-1,000 each month</strong>: 2% per order, capped at $5. Most SMB wholesalers ($1M-$10M revenue) live here, and at wholesale order sizes every order hits the $5 cap.</li>
+          <li><strong>Order 1,001 onwards each month</strong>: 1% per order, capped at $5. Includes dedicated success manager and SLA.</li>
         </ul>
         <p>Connecting the other systems you run is included on every tier at no extra cost.</p>
 
@@ -3185,7 +3185,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
           <li>Days to deploy, not months, manual product upload today, bulk CSV import in beta</li>
           <li>No app ecosystem dependency, features are built in</li>
           <li>Auto-scaling pricing, your bill grows only when your business does</li>
-          <li>30-day money-back on Growth and Enterprise tiers</li>
+          <li>30-day money-back guarantee</li>
         </ul>
 
         <h3>What doesn&rsquo;t</h3>
@@ -3208,7 +3208,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
             <tr><th>Cost line</th><th>Shopify Plus B2B</th><th>NetSuite</th><th>BusinessCart Growth</th></tr>
           </thead>
           <tbody>
-            <tr><td>Year 1 license / monthly fees</td><td>$27,600</td><td>$60,000</td><td>$5,988</td></tr>
+            <tr><td>Year 1 license / monthly fees</td><td>$27,600</td><td>$60,000</td><td>$0 (no monthly fee)</td></tr>
             <tr><td>Year 1 implementation</td><td>$15,000 (theme + apps)</td><td>$150,000</td><td>$0</td></tr>
             <tr><td>Year 1 transaction / per-order fees</td><td>$0 (Shopify Payments)</td><td>$0</td><td>$4,800 (1% × $480K)</td></tr>
             <tr><td>Year 1 apps subscriptions</td><td>$10,000</td><td>$0 (built in)</td><td>$0 (built in)</td></tr>
@@ -3350,7 +3350,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
 
         <p>Ask about it. Demo it. Make it part of your evaluation. The platforms that handle it natively will have a clear, consistent answer; the ones that don&rsquo;t will hedge.</p>
 
-        <p><strong><a href="/contact-us">See BusinessCart.ai&rsquo;s quote-time credit enforcement live</a></strong>, credit limits, spend caps, payment terms, all enforced at quote time before the order is committed. Starter $0/mo + 6% capped at $5; auto-scales to Growth ($499/mo) and Enterprise ($1,999/mo).</p>
+        <p><strong><a href="/contact-us">See BusinessCart.ai&rsquo;s quote-time credit enforcement live</a></strong>, credit limits, spend caps, payment terms, all enforced at quote time before the order is committed. Starter $0/mo + 6% capped at $5; rates fall to 2% then 1% as your volume grows, always capped at $5.</p>
 
         <p>Related: <a href="/solutions/wholesale">Wholesale &amp; B2B solution page</a> · <a href="/blog/shopify-b2b-vs-netsuite-vs-businesscart-smb-wholesale">Shopify B2B vs NetSuite vs BusinessCart</a></p>
       </>
@@ -3454,7 +3454,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
 
         <p>Manufacturer with 50 active distributors averaging 10 quotes/month each = 500 quotes/month. At 3 hours per quote (sales rep time) = 1,500 sales-rep hours/month = 9 FTE equivalents at $80K/year fully loaded = $720K/year in direct sales-rep cost on quote production.</p>
 
-        <p>If self-serve handles 70% of quote volume, that&rsquo;s $504K/year recovered. The platform cost (BusinessCart Growth at $499/mo + 1% on $5M GMV) is ~$56K/year. Net: $448K/year savings.</p>
+        <p>If self-serve handles 70% of quote volume, that&rsquo;s $504K/year recovered. The platform cost (no monthly fee, ~208 orders/month at $2,000 AOV, every order capped at $5) is ~$12.5K/year. Net: $491.5K/year savings.</p>
 
         <p>Plus indirect benefits: faster turnaround time, fewer pricing errors, distributor satisfaction, sales-rep time freed for account growth.</p>
 
@@ -3474,7 +3474,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
 
         <p>30 days is realistic. Sales-team productivity recovery is significant. Distributor satisfaction improves. The blocker is no longer technology; it&rsquo;s deciding to start.</p>
 
-        <p><strong><a href="/contact-us">Set up your distributor portal free on BusinessCart.ai</a></strong>, per-distributor pricing tiers, MOQ enforcement, lead times, credit limits, quote workflow. Starter $0/mo + 6% capped at $5/order; auto-scales to Growth ($499/mo) and Enterprise ($1,999/mo) as your volume grows.</p>
+        <p><strong><a href="/contact-us">Set up your distributor portal free on BusinessCart.ai</a></strong>, per-distributor pricing tiers, MOQ enforcement, lead times, credit limits, quote workflow. Starter $0/mo + 6% capped at $5/order; rates fall to 2% then 1% as your volume grows, always capped at $5 as your volume grows.</p>
 
         <p>Related: <a href="/solutions/manufacturers">Manufacturers solution page</a> · <a href="/blog/credit-limit-enforcement-at-quote-time-b2b-feature">Credit Limit Enforcement at Quote Time</a></p>
       </>
@@ -3575,8 +3575,8 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
         <p>Auto-scales by monthly order volume, no manual tier selection:</p>
         <ul>
           <li><strong>Starter</strong> ($0/mo + 6% per order, capped at $5), up to 100 orders/month. For manufacturers under $50K/month in distributor order volume.</li>
-          <li><strong>Growth</strong> ($499/mo + 1% per order), 101-1,000 orders/month. Most mid-market manufacturers ($10M-$50M revenue) live here.</li>
-          <li><strong>Enterprise</strong> ($1,999/mo + 0.25% per order), 1,001+ orders/month. Includes dedicated success manager and SLA.</li>
+          <li><strong>Orders 101-1,000 each month</strong>: 2% per order, capped at $5. Most mid-market manufacturers ($10M-$50M revenue) live here.</li>
+          <li><strong>Order 1,001 onwards each month</strong>: 1% per order, capped at $5. Includes dedicated success manager and SLA.</li>
         </ul>
         <p>Connecting the other systems you run is included on every tier at no extra cost, and handles ERP and accounting integration without code.</p>
 
@@ -3608,20 +3608,20 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
 
         <div className="table-scroll"><table>
           <thead>
-            <tr><th>Cost line</th><th>Adobe Commerce Cloud</th><th>SAP Business One + Commerce</th><th>BusinessCart Growth</th></tr>
+            <tr><th>Cost line</th><th>Adobe Commerce Cloud</th><th>SAP Business One + Commerce</th><th>BusinessCart</th></tr>
           </thead>
           <tbody>
-            <tr><td>Year 1 license / fees</td><td>$45,000</td><td>$120,000</td><td>$5,988</td></tr>
+            <tr><td>Year 1 license / fees</td><td>$45,000</td><td>$120,000</td><td>$0 (no licence, no monthly fee)</td></tr>
             <tr><td>Year 1 implementation</td><td>$200,000</td><td>$300,000</td><td>$0</td></tr>
-            <tr><td>Year 1 transaction / per-order</td><td>$0</td><td>$0</td><td>$7,200 (1% × $720K GMV via portal)</td></tr>
+            <tr><td>Year 1 transaction / per-order</td><td>$0</td><td>$0</td><td>$18,000 (600 orders/mo at $100 AOV: first 100 at the $5 cap, the rest at 2%)</td></tr>
             <tr><td>Year 1 ongoing engineering / agency</td><td>$60,000</td><td>$50,000 (SAP partner support)</td><td>$0</td></tr>
-            <tr><td><strong>Year 1 total</strong></td><td><strong>$305,000</strong></td><td><strong>$470,000</strong></td><td><strong>$13,188</strong></td></tr>
-            <tr><td>Years 2-5 annual</td><td>$105,000</td><td>$170,000</td><td>$13,188</td></tr>
-            <tr><td><strong>5-year total</strong></td><td><strong>$725,000</strong></td><td><strong>$1,150,000</strong></td><td><strong>$65,940</strong></td></tr>
+            <tr><td><strong>Year 1 total</strong></td><td><strong>$305,000</strong></td><td><strong>$470,000</strong></td><td><strong>$18,000</strong></td></tr>
+            <tr><td>Years 2-5 annual</td><td>$105,000</td><td>$170,000</td><td>$18,000</td></tr>
+            <tr><td><strong>5-year total</strong></td><td><strong>$725,000</strong></td><td><strong>$1,150,000</strong></td><td><strong>$90,000</strong></td></tr>
           </tbody>
         </table></div>
 
-        <p>For a $25M/year manufacturer, the platform-cost delta is $660K-$1M over 5 years. That&rsquo;s 3-5 sales-engineering hires you could fund instead.</p>
+        <p>For a $25M/year manufacturer, the platform-cost delta is $635K to $1.06M over 5 years. That&rsquo;s 3-5 sales-engineering hires you could fund instead.</p>
 
         <h2>The Decision Framework</h2>
 
@@ -3779,7 +3779,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
 
         <p>The technology to do this is no longer a multi-million-dollar SAP rollout. It&rsquo;s a $0-$2K/month SMB-focused B2B platform deployable in weeks. The competitive bar shifted; the platforms that meet it are available; the winners will be the distributors who execute.</p>
 
-        <p><strong><a href="/contact-us">Set up your distributor portal free on BusinessCart.ai</a></strong>, per-customer pricing, multi-buyer accounts, multi-warehouse inventory, quote workflow, credit limits at quote time. Starter $0/mo + 6% capped at $5; auto-scales to Growth ($499/mo) and Enterprise ($1,999/mo).</p>
+        <p><strong><a href="/contact-us">Set up your distributor portal free on BusinessCart.ai</a></strong>, per-customer pricing, multi-buyer accounts, multi-warehouse inventory, quote workflow, credit limits at quote time. Starter $0/mo + 6% capped at $5; rates fall to 2% then 1% as your volume grows, always capped at $5.</p>
 
         <p>Related: <a href="/solutions/distributors">Distributors solution page</a> · <a href="/blog/multi-supplier-buyer-accounts-one-login-12-vendor-portals">Multi-Supplier Buyer Accounts</a></p>
       </>
@@ -3887,7 +3887,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
 
         <p>If you&rsquo;re a distributor evaluating B2B platforms in 2026, multi-supplier capability should be a top-3 evaluation criterion alongside per-customer pricing and quote-time credit enforcement. The platforms that don&rsquo;t support it are competing with one hand tied behind their back.</p>
 
-        <p><strong><a href="/contact-us">See multi-supplier buyer accounts on BusinessCart.ai</a></strong>, one buyer login, multiple supplier catalogs, segregated data, no commission. Starter $0/mo + 6% capped at $5; auto-scales to Growth ($499/mo) and Enterprise ($1,999/mo) as your volume grows.</p>
+        <p><strong><a href="/contact-us">See multi-supplier buyer accounts on BusinessCart.ai</a></strong>, one buyer login, multiple supplier catalogs, segregated data, no commission. Starter $0/mo + 6% capped at $5; rates fall to 2% then 1% as your volume grows, always capped at $5 as your volume grows.</p>
 
         <p>Related: <a href="/solutions/distributors">Distributors solution page</a> · <a href="/blog/beating-amazon-business-independent-distributors-2026">Beating Amazon Business</a></p>
       </>
@@ -4151,7 +4151,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
 
         <p>Adding a full ERP (NetSuite, SAP) to replace QuickBooks costs $30K-$500K/year and takes 6-18 months to implement. For SMB wholesalers under $20M revenue, this is rarely justified.</p>
 
-        <p>Better strategy: keep QuickBooks for accounting (GL, AR, AP, inventory, reporting), add a separate B2B portal for ordering, integrate them via API. The portal handles the customer-facing ordering experience; QuickBooks handles the back-office accounting. Total combined cost: $90/month QuickBooks + $499/month BusinessCart Growth = $7K/year. Compared to NetSuite all-in at $50K-$120K/year, the savings are substantial.</p>
+        <p>Better strategy: keep QuickBooks for accounting (GL, AR, AP, inventory, reporting), add a separate B2B portal for ordering, integrate them via API. The portal handles the customer-facing ordering experience; QuickBooks handles the back-office accounting. Total combined cost for a wholesaler placing 100 orders a month: $90/month QuickBooks plus BusinessCart at the $5 per-order cap and no monthly fee, so $1,080 + $6,000 = about $7K/year. Compared to NetSuite all-in at $50K-$120K/year, the savings are substantial.</p>
 
         <h2>The 7 Signals It&rsquo;s Time to Add a Portal</h2>
 
@@ -4242,7 +4242,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
 
         <p>The right path: keep QuickBooks, add a B2B portal alongside, integrate via API. Total cost increase ~$6K/year. Outcome: customers can self-serve, CSRs do less data entry, AR controls automate, you can scale without adding headcount.</p>
 
-        <p><strong><a href="/contact-us">Set up your wholesale portal free on BusinessCart.ai</a></strong>, keeps QuickBooks as your accounting system, adds the customer ordering layer. REST API for sync. Starter $0/mo + 6% capped at $5; Growth $499/mo + 1% as you scale.</p>
+        <p><strong><a href="/contact-us">Set up your wholesale portal free on BusinessCart.ai</a></strong>, keeps QuickBooks as your accounting system, adds the customer ordering layer. REST API for sync. Starter $0/mo + 6% capped at $5; 2% per order from order 101, 1% from order 1,001, always capped at $5.</p>
 
         <p>Related: <a href="/solutions/wholesale">Wholesale &amp; B2B solution page</a> · <a href="/blog/how-smb-wholesalers-modernize-b2b-ordering-without-developers">How SMB Wholesalers Modernize B2B Ordering</a></p>
       </>
@@ -4625,7 +4625,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
 
         <p>The features that matter: per-project ordering, multi-address shipping per line item, multi-buyer accounts with role permissions, mobile UX, real-time inventory. If your current platform doesn&rsquo;t do these, your customers will eventually find one that does.</p>
 
-        <p><strong><a href="/contact-us">See construction-distributor-grade ordering free on BusinessCart.ai</a></strong>, multi-buyer accounts, multi-address shipping, project codes, mobile-first portal, per-customer pricing. Starter $0/mo + 6% capped at $5; auto-scales to Growth ($499/mo) and Enterprise ($1,999/mo) as your volume grows.</p>
+        <p><strong><a href="/contact-us">See construction-distributor-grade ordering free on BusinessCart.ai</a></strong>, multi-buyer accounts, multi-address shipping, project codes, mobile-first portal, per-customer pricing. Starter $0/mo + 6% capped at $5; rates fall to 2% then 1% as your volume grows, always capped at $5 as your volume grows.</p>
 
         <p>Related: <a href="/solutions/distributors">Distributors solution page</a> · <a href="/blog/beating-amazon-business-independent-distributors-2026">Beating Amazon Business</a></p>
       </>
@@ -4659,13 +4659,13 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
           </thead>
           <tbody>
             <tr><td>BusinessCart Starter</td><td><strong>$0</strong></td><td>$5 max per order</td><td>$0</td><td>No</td></tr>
-            <tr><td>BusinessCart Growth</td><td>$499</td><td>1% per order</td><td>$0</td><td>No</td></tr>
-            <tr><td>BusinessCart Enterprise</td><td>$1,999</td><td>0.25% per order</td><td>$0</td><td>No</td></tr>
+            <tr><td>BusinessCart, orders 101-1,000</td><td>$0</td><td>2% per order, $5 cap</td><td>$0</td><td>No</td></tr>
+            <tr><td>BusinessCart, order 1,001+</td><td>$0</td><td>1% per order, $5 cap</td><td>$0</td><td>No</td></tr>
             <tr><td>Logicblock CORE</td><td>$999.95</td><td>None</td><td>$1,000+</td><td>No</td></tr>
             <tr><td>Sana Commerce</td><td>~$833+ (custom)</td><td>None</td><td>Custom (typically $10K-$50K+)</td><td>Typically annual</td></tr>
           </tbody>
         </table></div>
-        <p>A $5M wholesale operation processing 200 orders per month at $2,000 average order value would pay $499 + 200 x $20 = $4,499 per month on BusinessCart Growth, $999.95 per month on Logicblock CORE flat, and roughly $833+ per month on Sana Commerce. BusinessCart per-order percentage rewards high AOV: a $10,000 wholesale order costs $5 in BusinessCart Starter fees, $100 on Growth, or $25 on Enterprise. Per-order pricing penalizes high order count, the opposite of Sana and Logicblock flat-rate model.</p>
+        <p>A $5M wholesale operation processing 200 orders per month at $2,000 average order value would pay 200 x $5 = $1,000 per month on BusinessCart, because every $2,000 order hits the $5 cap, $999.95 per month on Logicblock CORE flat, and roughly $833+ per month on Sana Commerce. BusinessCart per-order percentage rewards high AOV: a $10,000 wholesale order costs $5 in BusinessCart Starter fees, $100 on Growth, or $25 on Enterprise. Per-order pricing penalizes high order count, the opposite of Sana and Logicblock flat-rate model.</p>
 
         <h2>How does per-customer pricing work in each platform?</h2>
         <p>All three platforms support per-customer pricing, but they implement it differently. BusinessCart enforces per-customer pricing at quote and order time. Sana Commerce sources prices from the connected ERP in real time. Logicblock manages pricing rules inside Logicblock itself.</p>
@@ -4694,8 +4694,8 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
           </thead>
           <tbody>
             <tr><td>Under $500K revenue or just starting</td><td><strong>BusinessCart Starter</strong></td><td>$0/month, pay $5 max only when you sell</td></tr>
-            <tr><td>$500K to $5M revenue, no ERP commitment</td><td><strong>BusinessCart Growth</strong></td><td>$499/mo + 1%, full B2B feature set on every tier</td></tr>
-            <tr><td>$5M to $20M revenue, no ERP commitment</td><td><strong>BusinessCart Enterprise</strong></td><td>$1,999/mo + 0.25%, predictable at high volume</td></tr>
+            <tr><td>$500K to $5M revenue, no ERP commitment</td><td><strong>BusinessCart</strong></td><td>No monthly fee, $5 max per order, full B2B feature set at every volume</td></tr>
+            <tr><td>$5M to $20M revenue, no ERP commitment</td><td><strong>BusinessCart</strong></td><td>No monthly fee, $5 max per order, fully predictable at high volume</td></tr>
             <tr><td>Already on Microsoft Dynamics or SAP, need real-time sync</td><td><strong>Sana Commerce</strong></td><td>Native real-time ERP integration is hard to replicate</td></tr>
             <tr><td>Already on QuickBooks Online, prefer flat rate</td><td><strong>Logicblock CORE</strong></td><td>$999.95/mo flat with QuickBooks built in</td></tr>
             <tr><td>Selling to Fortune 500 buyers using Coupa, Ariba, or SAP procurement</td><td><strong>None of the three today</strong></td><td>All three lack Fortune 500-grade Punchout / cXML / OCI in 2026</td></tr>
@@ -4708,7 +4708,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
         <h2>FAQ</h2>
 
         <h3>Is BusinessCart cheaper than Sana Commerce and Logicblock?</h3>
-        <p>At SMB volumes (under 100 orders per month), yes. BusinessCart Starter is $0/month with a $5 max per order; Sana Commerce starts at approximately $10,000/year; Logicblock CORE is $999.95/month. At high volumes (1,000+ orders/month), BusinessCart Enterprise is $1,999/month + 0.25%, which can run higher than Logicblock CORE flat depending on order count and AOV. The cost-versus-feature tradeoff favors BusinessCart for low-to-mid volumes and Logicblock for stable-high volumes with simple ERP needs.</p>
+        <p>At SMB volumes (under 100 orders per month), yes. BusinessCart Starter is $0/month with a $5 max per order; Sana Commerce starts at approximately $10,000/year; Logicblock CORE is $999.95/month. At high volumes (1,000+ orders/month) BusinessCart is still $5 per order at wholesale order sizes, with no monthly fee, so 1,000 orders costs $5,000/month against Logicblock's flat $999.95 plus its setup fee. Below roughly 200 orders/month BusinessCart is the cheapest of the three; above that, flat-fee platforms start to win on price alone. </p>
 
         <h3>Can BusinessCart replace Sana Commerce for a Microsoft Dynamics 365 shop?</h3>
         <p>Not today. Sana real-time native Dynamics integration is its primary differentiator; BusinessCart connects to Dynamics through REST API, or we connect it for you (asynchronous, not native real-time). For businesses where ERP sync latency matters, Sana wins in 2026. BusinessCart native ERP connectors land in Q3 2026 per the published roadmap.</p>
@@ -4720,7 +4720,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
         <p>BusinessCart typical deployment is days, not months, because there is no ERP-bound implementation project. Sana and Logicblock typically require multi-week or multi-month implementations to configure ERP sync. Migration data (products, customers, orders) imports via CSV or BusinessCart REST API.</p>
 
         <h3>What is the per-order fee in BusinessCart on a $10,000 wholesale order?</h3>
-        <p>$5 on Starter (capped), $100 on Growth (1%), $25 on Enterprise (0.25%). The cap exists because B2B orders are typically high-value; a percentage fee on a $10,000 wholesale order would be punitive. The $5 cap rewards wholesalers and distributors with high AOV.</p>
+        <p>$5, at every volume. The cap applies in all three bands, so a $10,000 order costs $5 whether it is your first order of the month or your two-thousandth. The cap exists because B2B orders are typically high-value; a percentage fee on a $10,000 wholesale order would be punitive. The $5 cap rewards wholesalers and distributors with high AOV.</p>
 
         <h2>Bottom line</h2>
         <p>BusinessCart, Sana Commerce, and Logicblock all fit the SMB B2B segment. BusinessCart wins on starting cost (zero) and feature density on every tier; Sana wins on real-time native ERP integration with Microsoft Dynamics and SAP; Logicblock wins on flat-rate pricing predictability for stable wholesalers already on QuickBooks Online. The right choice depends on your ERP commitments, starting budget, and order volume. For most SMB wholesalers and distributors with $500K to $20M in revenue and no committed ERP, BusinessCart is the lowest-risk place to start.</p>
@@ -4737,7 +4737,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
     metaDescription: 'Honest 2026 math: what wholesale CSR labor for manual order entry costs at $5M, $10M, and $20M revenue, and where BusinessCart cost lands against that labor.',
     content: (
       <>
-        <p className="text-base text-gray-700 italic border-l-4 border-teal-700 bg-teal-50 px-4 py-3 rounded-r-md mb-4"><strong>TL;DR:</strong> SMB wholesalers spend $15,000 to $120,000 per year on customer service rep labor for manual order entry and the surrounding work (price lookups, quote prep, status follow-ups, error rework). Per Conexiom industry data, CSRs spend 20% to 40% of their time on order handling at roughly 12 minutes per order. BusinessCart's self-serve buyer portal lets customers place their own orders with their specific pricing already applied, displacing 30% to 50% of total CSR work in typical wholesale operations. BusinessCart starts at $0/month with a $5 max per order on Starter, $499/month + 1% on Growth, and $1,999/month + 0.25% on Enterprise. This post quantifies CSR labor cost honestly for $5M, $10M, and $20M wholesale operations and shows where the BusinessCart cost lands against that labor.</p>
+        <p className="text-base text-gray-700 italic border-l-4 border-teal-700 bg-teal-50 px-4 py-3 rounded-r-md mb-4"><strong>TL;DR:</strong> SMB wholesalers spend $15,000 to $120,000 per year on customer service rep labor for manual order entry and the surrounding work (price lookups, quote prep, status follow-ups, error rework). Per Conexiom industry data, CSRs spend 20% to 40% of their time on order handling at roughly 12 minutes per order. BusinessCart's self-serve buyer portal lets customers place their own orders with their specific pricing already applied, displacing 30% to 50% of total CSR work in typical wholesale operations. BusinessCart charges no monthly fee at any volume and caps every order at $5, so a $5M wholesaler placing 208 orders a month at $2,000 average order value pays $12,480 a year. This post quantifies CSR labor cost for $5M, $10M, and $20M wholesale operations and shows where the BusinessCart cost lands against that labor.</p>
 
         <p>Customer service labor is the hidden tax on SMB wholesale operations. CSRs spend a measurable share of their hours re-keying orders from email, phone, and PDF into the ERP. The Institute of Finance and Management (IOFM) reports that businesses can save up to 70% of the time spent on order entry through automation. APQC benchmarks the manual error rate at 1% to 3% of orders. This post quantifies the real cost honestly for $5M, $10M, and $20M wholesale operations and compares it to the cost of running a self-serve buyer portal on BusinessCart.</p>
 
@@ -4778,15 +4778,15 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
         <p>IOFM cites up to 70% time savings via automation. A wholesale case study published by B2B Ecommerce Association documented Howard Elliott Collection cutting manual order entry from 4 hours to 15 minutes per order using automated order processing systems. BusinessCart specifically applies these gains through three mechanisms: per-customer pricing enforced at quote time (no "what's my price?" emails), credit limit and spending cap enforcement at quote time (no rejected orders after fulfillment), and saved cart + one-click reorder (no re-keying repeat orders).</p>
 
         <h2>What does BusinessCart cost vs the CSR labor saved?</h2>
-        <p>BusinessCart pricing scales by order volume. For a $5M wholesaler doing 208 orders per month, BusinessCart Growth at $499/month + 1% per order costs roughly $56,000 per year. For a $10M wholesaler at 417 orders per month, Growth costs roughly $106,000 per year. For a $20M wholesaler at 833 orders per month (still on Growth), the cost is roughly $206,000; once order count crosses 1,001/month, Enterprise tier at $1,999/month + 0.25% per order kicks in and the cost drops sharply.</p>
+        <p>BusinessCart charges per order and caps every order at $5, with no monthly fee at any volume. At wholesale order sizes the cap decides the bill: 2% of a $2,000 order is $40, so every order bills at the $5 ceiling regardless of which band it falls in. A $5M wholesaler placing 208 orders a month pays $1,040 a month, or $12,480 a year. A $10M wholesaler at 417 orders a month pays $25,020 a year. A $20M wholesaler at 833 orders a month pays $49,980 a year. BusinessCart cost therefore tracks order count, not revenue, which is why a high average order value works in the wholesaler's favour.</p>
         <div className="table-scroll"><table>
           <thead>
             <tr><th>Revenue</th><th>Tier</th><th>BusinessCart annual cost</th><th>Displaceable CSR labor (low to high)</th><th>Net impact</th></tr>
           </thead>
           <tbody>
-            <tr><td>$5M</td><td>Growth</td><td>$55,988</td><td>$45,000 to $90,000</td><td>Break-even to +$34K</td></tr>
-            <tr><td>$10M</td><td>Growth</td><td>$105,988</td><td>$90,000 to $180,000</td><td>Break-even to +$74K</td></tr>
-            <tr><td>$20M (still Growth)</td><td>Growth</td><td>$205,988</td><td>$180,000 to $360,000</td><td>Break-even to +$154K</td></tr>
+            <tr><td>$5M</td><td>208 orders/mo</td><td>$12,480</td><td>$45,000 to $90,000</td><td>+$32.5K to +$77.5K</td></tr>
+            <tr><td>$10M</td><td>417 orders/mo</td><td>$25,020</td><td>$90,000 to $180,000</td><td>+$65K to +$155K</td></tr>
+            <tr><td>$20M</td><td>833 orders/mo</td><td>$49,980</td><td>$180,000 to $360,000</td><td>+$130K to +$310K</td></tr>
             <tr><td>$20M (Enterprise, 1,001+ orders/mo)</td><td>Enterprise</td><td>$73,988</td><td>$180,000 to $360,000</td><td>+$106K to +$286K</td></tr>
           </tbody>
         </table></div>
@@ -4819,7 +4819,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
         <p>1% to 3% per APQC benchmarks. On a wholesale operation processing 5,000 orders per year, that is 50 to 150 incorrect orders requiring rework, credit memos, or short-ship recovery. Eliminating that error rate through buyer self-serve is an additional savings layer not counted in the labor-displacement math above.</p>
 
         <h2>Bottom line</h2>
-        <p>Wholesale CSR labor for manual order entry is real money: $15,000 to $60,000 per year on order entry alone, and $45,000 to $360,000 per year on the broader CSR work a self-serve buyer portal can displace. BusinessCart costs $0/month + $5 max per order on Starter, $499/month + 1% on Growth, and $1,999/month + 0.25% on Enterprise. ROI is strongest at Enterprise tier (1,001+ orders/month) where the per-order fee drops to 0.25%, and at any tier where the displaceable CSR work is the broader 30% to 50% of total CSR time, not just the order-entry minutes. For most SMB wholesalers with $5M to $20M in revenue, the honest pitch is that BusinessCart pays for itself on CSR labor displacement plus error reduction plus time-to-cash, not on order-entry minutes alone.</p>
+        <p>Wholesale CSR labor for manual order entry is real money: $15,000 to $60,000 per year on order entry alone, and $45,000 to $360,000 per year on the broader CSR work a self-serve buyer portal can displace. BusinessCart charges no monthly fee and caps every order at $5, which puts platform cost between $12,480 and $49,980 a year for a $5M to $20M wholesale operation. That lands below the displaceable CSR labor at every one of those revenue points, so BusinessCart pays for itself on labor displacement alone, before counting error reduction, 24/7 order capture, and faster time-to-cash. The cap is what does the work: wholesale order values are high, and a percentage fee on a $2,000 order would not be.</p>
 
         <p>Related: <a href="/solutions/wholesale">B2B Wholesale solution page</a> · <a href="/compare">Full feature comparison</a> · <a href="/blog/businesscart-vs-sana-commerce-vs-logicblock-smb-b2b-2026">BusinessCart vs Sana Commerce vs Logicblock</a> · <a href="/blog/how-smb-wholesalers-modernize-b2b-ordering-without-developers">How SMB Wholesalers Modernize B2B Ordering</a></p>
       </>
@@ -4867,7 +4867,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
         <p>BusinessCart enforces this pricing at quote time, order time, and invoice generation. The same pricing model also drives the storefront catalog view (customer sees their price when browsing) and the CSV order export (P&amp;L matches what was actually charged). One source of truth, applied everywhere.</p>
 
         <h2>How much does the switch cost?</h2>
-        <p>BusinessCart Starter is $0/month with a $5 max per order. For an SMB wholesaler processing under 100 orders per month, the platform cost is $0 to $500 per month, depending on order volume. Setup is days, not months: import your existing customers and products via CSV, set up customer groups and overrides, assign Business Codes, and go live. There is no ERP-bound implementation project. The Starter tier auto-promotes to Growth ($499/month + 1% per order) at 101 orders per month, then to Enterprise ($1,999/month + 0.25%) at 1,001+ orders per month.</p>
+        <p>BusinessCart Starter is $0/month with a $5 max per order. For an SMB wholesaler processing under 100 orders per month, the platform cost is $0 to $500 per month, depending on order volume. Setup is days, not months: import your existing customers and products via CSV, set up customer groups and overrides, assign Business Codes, and go live. There is no ERP-bound implementation project. Rates fall as volume grows, to 2% per order from order 101 and 1% from order 1,001, and the $5 cap holds in every band.</p>
         <p>The most common objection from spreadsheet-pricing wholesalers is "we will lose our pricing flexibility." In practice, the precedence model (per-customer override beats group beats base) is more flexible than tabs because it lets you express any customer relationship without creating a new tab. If your spreadsheet has 30 tabs today, BusinessCart compresses that into 1 base price list + 3 to 5 group prices + a handful of per-customer overrides for true edge cases.</p>
 
         <h2>FAQ</h2>
@@ -4902,7 +4902,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
     metaDescription: 'Realistic ROI math for replacing inside sales order desk with self-serve buyer portal at $5M, $10M, $20M SMB wholesalers, with BusinessCart cost vs labor displacement.',
     content: (
       <>
-        <p className="text-base text-gray-700 italic border-l-4 border-teal-700 bg-teal-50 px-4 py-3 rounded-r-md mb-4"><strong>TL;DR:</strong> 80% of the B2B buying journey now happens without direct vendor contact per Gartner 2024 data, and 71% of B2B buyers are willing to spend over $50,000 via self-service per McKinsey. A self-serve buyer portal pays back honestly for SMB wholesalers when three conditions align: adoption reaches 70% or higher, platform fees stay below 50% of displaced labor cost, and the operation processes enough order volume to land in BusinessCart Enterprise tier (1,001+ orders/month at 0.25% per order). At BusinessCart Growth tier (1% per order), the math is roughly break-even and the win comes from soft savings (error reduction, time-to-cash, 24/7 capture). This post breaks down honest ROI for $5M, $10M, and $20M wholesalers with realistic adoption ramps.</p>
+        <p className="text-base text-gray-700 italic border-l-4 border-teal-700 bg-teal-50 px-4 py-3 rounded-r-md mb-4"><strong>TL;DR:</strong> 80% of the B2B buying journey now happens without direct vendor contact per Gartner 2024 data, and 71% of B2B buyers are willing to spend over $50,000 via self-service per McKinsey. A self-serve buyer portal pays back for SMB wholesalers when adoption reaches 70% or higher and platform fees stay below 50% of displaced labor cost. BusinessCart clears the second condition by default at wholesale order sizes: no monthly fee, and every order capped at $5, which puts a $5M wholesaler at $12,480 a year against $45,000 to $90,000 of displaceable CSR labor. This post breaks down honest ROI for $5M, $10M, and $20M wholesalers with realistic adoption ramps.</p>
 
         <p>The CFO conversation for SMB wholesale operations evaluating a buyer portal usually starts with one question: "What does this save me, and when do I see it?" Marketing materials from B2B platform vendors promise large savings without naming the conditions. This post names the conditions. The ROI math for replacing an inside sales order desk with a self-serve buyer portal depends on three variables: total cost of the inside sales team, percent of that labor displaceable by the portal, and adoption ramp speed across the customer base. BusinessCart pricing layers on top of those variables. The result, for SMB wholesalers between $5,000,000 and $20,000,000 in revenue, lands between break-even and strongly positive depending on tier and adoption.</p>
 
@@ -4937,15 +4937,15 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
         <p>The ROI math must use a blended adoption rate across the period, not the steady-state rate. Year 1 typical: 35% blended. Year 2: 65% blended. Year 3: 80% blended.</p>
 
         <h2>What is the BusinessCart cost vs labor saved at $5M, $10M, $20M?</h2>
-        <p>BusinessCart cost scales with order volume rather than monthly seat count. At Growth tier ($499/month + 1% per order), a $5M wholesaler processing 208 orders/month at $2,000 AOV pays $499 × 12 + 1% × $5M = $55,988/year. At Enterprise tier ($1,999/month + 0.25%), the same operation would pay $23,988 + $12,500 = $36,488/year, but Enterprise requires 1,001+ orders/month which a $5M wholesaler at $2K AOV does not hit. Tier eligibility matters.</p>
+        <p>BusinessCart cost scales with order count rather than monthly seat count or revenue. A $5M wholesaler processing 208 orders a month at $2,000 average order value pays 208 x $5 = $1,040 a month, or $12,480 a year, because 2% of a $2,000 order is $40 and every order bills at the $5 cap instead. There is no monthly fee to add on top. Revenue growth that arrives as larger orders rather than more orders costs the wholesaler nothing extra on BusinessCart.</p>
         <div className="table-scroll"><table>
           <thead>
             <tr><th>Revenue</th><th>Orders/mo (at $2K AOV)</th><th>Tier</th><th>BusinessCart annual cost</th></tr>
           </thead>
           <tbody>
-            <tr><td>$5,000,000</td><td>208</td><td>Growth</td><td>$55,988</td></tr>
-            <tr><td>$10,000,000</td><td>417</td><td>Growth</td><td>$105,988</td></tr>
-            <tr><td>$20,000,000</td><td>833</td><td>Growth</td><td>$205,988</td></tr>
+            <tr><td>$5,000,000</td><td>208</td><td>$5 cap on every order</td><td>$12,480</td></tr>
+            <tr><td>$10,000,000</td><td>417</td><td>$5 cap on every order</td><td>$25,020</td></tr>
+            <tr><td>$20,000,000</td><td>833</td><td>$5 cap on every order</td><td>$49,980</td></tr>
             <tr><td>$20,000,000 (low AOV at $500)</td><td>3,333</td><td>Enterprise</td><td>$73,988</td></tr>
           </tbody>
         </table></div>
@@ -4988,13 +4988,13 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
         <p>Marginally, at year 3 with 80% adoption. The layered savings (error reduction, 24/7 capture, cash-to-cash) typically push the math positive sooner, often by year 2. Wholesalers focused purely on labor displacement should run the math conservatively and not expect year-1 payback.</p>
 
         <h3>What changes the math at Enterprise tier?</h3>
-        <p>The per-order fee drops from 1% to 0.25%, which is the single biggest lever in the BusinessCart pricing model. For high-order-count operations (1,001+ orders/month), Enterprise tier shifts the ROI from break-even to strongly positive even in year 1 of adoption.</p>
+        <p>The $5 per-order cap is the single biggest lever in the BusinessCart pricing model, not the percentage. At a $2,000 average order value the cap binds in all three bands, so a wholesaler pays $5 an order whether it is their first of the month or their two-thousandth. The percentage only matters below roughly $83 an order, which is D2C territory rather than wholesale.</p>
 
         <h3>How does BusinessCart support the hybrid (rep + portal) model?</h3>
         <p>BusinessCart admin allows reps to place orders on behalf of customers with the same per-customer pricing, credit limits, and quote workflow that customers see on their portal. Reps can stay in the loop for top accounts and complex orders while the broader buyer base self-serves. There is no separate "rep tool" tier; the same admin interface handles both paths.</p>
 
         <h2>Bottom line</h2>
-        <p>Replacing an inside sales order desk with a self-serve buyer portal is a long-payback investment, not an immediate cost cut. Honest math for SMB wholesalers: BusinessCart Growth tier ($499/month + 1% per order) is roughly break-even on labor alone over 3 years, with layered savings (error reduction, 24/7 capture, working capital) tipping the math positive in year 2. Enterprise tier ($1,999/month + 0.25%) is strongly positive once order volume crosses 1,001+ per month. The decision to invest should not rest on year-1 labor savings; it should rest on the structural shift in how buyers prefer to engage in 2026 (Gartner: 80% of journey self-directed, McKinsey: 71% willing to self-serve $50K+ orders). BusinessCart Starter ($0/month + $5 max per order) lets you start with no fixed cost while testing portal adoption with friendly accounts.</p>
+        <p>Replacing an inside sales order desk with a self-serve buyer portal is a long-payback investment, not an immediate cost cut. Honest math for SMB wholesalers: BusinessCart costs $12,480 a year for a $5M operation at 208 orders a month, against $45,000 to $90,000 of displaceable CSR labor, so labor displacement alone covers it with room left over. What remains a long payback is adoption, not price. Portal adoption ramps over quarters, and the year-1 saving depends on how fast buyers switch. The decision should rest on the structural shift in how buyers prefer to engage in 2026 (Gartner: 80% of journey self-directed, McKinsey: 71% willing to self-serve $50K+ orders), with BusinessCart's no-monthly-fee pricing meaning a slow adoption ramp costs nothing in fixed platform spend while it happens.</p>
 
         <p>Related: <a href="/solutions/wholesale">B2B Wholesale solution page</a> · <a href="/compare">Full feature comparison</a> · <a href="/blog/wholesale-csr-labor-cost-manual-order-entry">Wholesale CSR Labor Cost</a> · <a href="/blog/5-signs-wholesale-outgrown-spreadsheet-pricing">5 Signs You Have Outgrown Spreadsheet Pricing</a></p>
       </>
@@ -5047,7 +5047,7 @@ We deliver within a 10-mile radius of Portland and offer pickup at our two locat
           </thead>
           <tbody>
             <tr><td>BusinessCart Starter</td><td>$0 + $5 max per order</td><td>Days</td><td>At quote, order, invoice</td></tr>
-            <tr><td>BusinessCart Growth</td><td>$5,988 + 1% per order</td><td>Days</td><td>At quote, order, invoice</td></tr>
+            <tr><td>BusinessCart</td><td>No monthly fee, 2% per order capped at $5</td><td>Days</td><td>At quote, order, invoice</td></tr>
             <tr><td>Excel + custom invoice template</td><td>$0 software, $30K to $60K hidden labor cost</td><td>Existing</td><td>Manual transcription each order</td></tr>
             <tr><td>Shopify Plus B2B</td><td>$2,300/mo + $50K to $150K Year 1 setup + apps</td><td>2 to 4 months</td><td>Native at quote, order</td></tr>
             <tr><td>NetSuite SuiteCommerce</td><td>$30K to $80K license + $50K to $250K implementation</td><td>6 to 18 months</td><td>Native real-time from ERP</td></tr>

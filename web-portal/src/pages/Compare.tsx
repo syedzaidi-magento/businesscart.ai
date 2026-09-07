@@ -36,14 +36,14 @@ const Compare: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">Monthly Fee</td>
-                  <td className="px-6 py-4 text-sm font-bold text-teal-700">$0 / $499 / $1,999, auto-applies by order volume, every feature in every tier</td>
+                  <td className="px-6 py-4 text-sm font-bold text-teal-700">$0, at every volume. No monthly fee, ever. Every feature in every tier</td>
                   <td className="px-6 py-4 text-sm text-gray-500">$39-399/mo (Plus: $2,300+/mo); features locked to plan</td>
                   <td className="px-6 py-4 text-sm text-gray-500">$30-100/mo (hosting + plugins)</td>
                   <td className="px-6 py-4 text-sm text-gray-500">$0 (but 15-30% per order)</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">Per-Order Fee</td>
-                  <td className="px-6 py-4 text-sm font-bold text-teal-700">$5 max per order (Starter) / 1% (Growth) / 0.25% (Enterprise). A $10,000 order = $5 in fees.</td>
+                  <td className="px-6 py-4 text-sm font-bold text-teal-700">6% on your first 100 orders each month, 2% on 101-1,000, 1% beyond. Never more than $5 per order, at any volume. A $10,000 order = $5 in fees.</td>
                   <td className="px-6 py-4 text-sm text-gray-500">2.9% + 30c (payment processing only)</td>
                   <td className="px-6 py-4 text-sm text-gray-500">2.9% + 30c (payment processing only)</td>
                   <td className="px-6 py-4 text-sm text-red-600 font-bold">15-30% commission</td>

@@ -4884,6 +4884,136 @@ class BackendFlowTest:
 
         self.run_test("List statements requires sellerId", test_get_statements_missing_seller)
 
+        # ── Duplicate-send guard (roadmap #51 phase 2, finding 4) ──
+        # Save runs only AFTER the email is away, so the guard has to refuse
+        # before the send or the company holds an invoice we have no record of.
+
+        def test_send_statement_duplicate_refused():
+            """A second send for the same period is refused with 409, not silently billed twice"""
+            self.use_token("admin")
+            resp = self.api.post("/checkout/orders/statement/send", {
+                "sellerId": c1_id,
+                "from": from_str,
+                "to": to_str,
+                "recipientEmail": "billing-test@example.com",
+                "companyName": "Test Co",
+                "periodLabel": "Test Period",
+                "dryRun": False,
+            })
+            assert_status(resp, 409, "Duplicate send")
+            body = resp.json().get("message", "")
+            assert "already sent" in body.lower(), f"409 body should name the existing statement, got: {body}"
+            ok("Duplicate send refused (409) and the message names the existing statement")
+
+        self.run_test("Duplicate statement send refused", test_send_statement_duplicate_refused)
+
+        def test_send_statement_dryrun_not_blocked_by_duplicate():
+            """Preview still renders for an already-billed period: the guard must not block looking"""
+            self.use_token("admin")
+            resp = self.api.post("/checkout/orders/statement/send", {
+                "sellerId": c1_id,
+                "from": from_str,
+                "to": to_str,
+                "recipientEmail": "billing-test@example.com",
+                "companyName": "Test Co",
+                "periodLabel": "Test Period",
+                "dryRun": True,
+            })
+            assert_status(resp, 200, "Dry run on a duplicate period")
+            assert resp.json().get("htmlBody"), "preview should still render"
+            ok("Dry-run preview unaffected by the duplicate guard")
+
+        self.run_test("Duplicate guard does not block preview", test_send_statement_dryrun_not_blocked_by_duplicate)
+
+        def test_send_statement_duplicate_allowed_with_flag():
+            """allowDuplicate is the deliberate override, so a real re-send stays possible"""
+            self.use_token("admin")
+            resp = self.api.post("/checkout/orders/statement/send", {
+                "sellerId": c1_id,
+                "from": from_str,
+                "to": to_str,
+                "recipientEmail": "billing-test@example.com",
+                "companyName": "Test Co",
+                "periodLabel": "Test Period",
+                "dryRun": False,
+                "allowDuplicate": True,
+            })
+            assert_status(resp, 200, "Duplicate send with override")
+            snap = resp.json().get("snapshot")
+            assert snap and snap.get("id"), "override send should persist a second snapshot"
+            self.tracker.track_statement(snap["id"])
+            ok("allowDuplicate override permits a deliberate second statement")
+
+        self.run_test("Duplicate send allowed with explicit flag", test_send_statement_duplicate_allowed_with_flag)
+
+        # ── Payment settlement (roadmap #51 phase 2) ──
+        # paidAt / paymentReference were reserved on the model from the start;
+        # PUT /checkout/statements/{id} is the write path they were waiting for.
+
+        def test_mark_statement_paid():
+            """Admin marks a statement paid, with a payment reference"""
+            self.use_token("admin")
+            sid = self.tracker.statements[0]
+            resp = self.api.put(f"/checkout/statements/{sid}", {"paid": True, "paymentReference": "ACH-TEST-4821"})
+            assert_status(resp, 200, "Mark paid")
+            body = resp.json()
+            assert body.get("paidAt"), f"paidAt not set: {body}"
+            assert body.get("paymentReference") == "ACH-TEST-4821", f"reference not stored: {body}"
+            ok(f"Statement marked paid with reference (paidAt={body['paidAt'][:19]})")
+
+        self.run_test("Mark statement paid", test_mark_statement_paid)
+
+        def test_marked_paid_survives_a_reread():
+            """The paid mark is persisted, not just echoed back by the write"""
+            self.use_token("admin")
+            sid = self.tracker.statements[0]
+            resp = self.api.get("/checkout/statements", params={"sellerId": c1_id})
+            assert_status(resp, 200, "List after marking paid")
+            row = next((x for x in resp.json() if x.get("id") == sid), None)
+            assert row is not None, "statement missing from list after marking paid"
+            assert row.get("paidAt"), "paidAt did not persist"
+            assert row.get("paymentReference") == "ACH-TEST-4821", "reference did not persist"
+            ok("Paid mark and reference persisted, visible on re-read")
+
+        self.run_test("Paid mark persists", test_marked_paid_survives_a_reread)
+
+        def test_mark_statement_unpaid_clears_both_fields():
+            """paid:false clears paidAt AND the reference, so a mis-click leaves nothing behind"""
+            self.use_token("admin")
+            sid = self.tracker.statements[0]
+            resp = self.api.put(f"/checkout/statements/{sid}", {"paid": False})
+            assert_status(resp, 200, "Mark unpaid")
+            body = resp.json()
+            assert not body.get("paidAt"), f"paidAt should be cleared: {body}"
+            assert not body.get("paymentReference"), f"paymentReference should be cleared: {body}"
+            ok("Paid mark cleared, reference cleared with it")
+
+        self.run_test("Mark statement unpaid clears settlement fields", test_mark_statement_unpaid_clears_both_fields)
+
+        def test_mark_paid_company_forbidden():
+            """A company must not be able to declare its own bill settled"""
+            self.use_token("company1")
+            sid = self.tracker.statements[0]
+            resp = self.api.put(f"/checkout/statements/{sid}", {"paid": True})
+            assert_status(resp, 403, "Company mark paid")
+            ok("Company cannot mark its own statement paid (403)")
+
+        self.run_test("Mark paid is admin-only", test_mark_paid_company_forbidden)
+
+        def test_mark_paid_validation():
+            """Bad id rejected, unknown id is 404, over-long reference rejected"""
+            self.use_token("admin")
+            resp = self.api.put("/checkout/statements/not-an-objectid", {"paid": True})
+            assert_status(resp, 400, "Malformed statement id")
+            resp = self.api.put("/checkout/statements/000000000000000000000000", {"paid": True})
+            assert_status(resp, 404, "Unknown statement id")
+            sid = self.tracker.statements[0]
+            resp = self.api.put(f"/checkout/statements/{sid}", {"paid": True, "paymentReference": "x" * 201})
+            assert_status(resp, 400, "Over-long payment reference")
+            ok("Mark-paid validation: 400 bad id, 404 unknown, 400 over-long reference")
+
+        self.run_test("Mark paid validation", test_mark_paid_validation)
+
     # ── Phase 8f: Blog posts (editorial CMS) ─────────────────────
     # Uses uSetGo's REAL welding-gloves blog post as the test fixture.
     # No synthetic create/delete — protects prod content from test churn.

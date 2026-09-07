@@ -63,7 +63,7 @@ const faqs = [
   },
   {
     q: 'What does this actually cost me?',
-    a: 'Three tiers, every feature included in every tier. Tier auto-applies based on your monthly order volume; no manual upgrades, no feature locks. Starter ($0/mo · max $5 per order, invoiced monthly, never deducted from your sales) for up to 100 orders/month. Growth ($499/mo + 1% per order) for 101-1,000 orders. Enterprise ($1,999/mo + 0.25% per order) at 1,001+. The operations layer that connects your other systems is included on every tier at no extra cost. 30-day money-back on Growth and Enterprise.',
+    a: 'No monthly fee at any volume, and every feature is included at every volume; no manual upgrades, no feature locks. Pricing is per order and gets cheaper as you grow: 6% on your first 100 orders each month, 2% on orders 101 to 1,000, 1% on order 1,001 onwards. Every order is capped at $5 no matter its size, and we invoice you monthly rather than deducting from your sales. The operations layer that connects your other systems is included on every tier at no extra cost. 30-day money-back on Growth and Enterprise.',
   },
   {
     q: 'How is this different from Shopify?',

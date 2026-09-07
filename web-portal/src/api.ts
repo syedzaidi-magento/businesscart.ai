@@ -371,6 +371,11 @@ export interface SendStatementPayload {
   periodLabel: string;
   paymentInstructions?: string;
   dryRun: boolean;
+  // Opt in to billing a period that already has a statement. The backend refuses
+  // a duplicate with 409 unless this is set, so a stale page cannot double-bill
+  // a company by showing no warning. Set only after the caller has actually
+  // shown the operator the existing statement.
+  allowDuplicate?: boolean;
 }
 
 export interface SendStatementResponse {
@@ -411,6 +416,20 @@ export const getStatements = async (sellerId: string): Promise<PersistedStatemen
 // Admin retraction — deletes a statement that was sent in error.
 export const deleteStatement = async (id: string): Promise<void> => {
   await api.delete(`${API_URL}/checkout/statements/${encodeURIComponent(id)}`);
+};
+
+// Admin payment settlement. Writes the paidAt / paymentReference fields the
+// model reserved from the start. paid:false clears both.
+export const setStatementPaid = async (
+  id: string,
+  paid: boolean,
+  paymentReference?: string
+): Promise<PersistedStatement> => {
+  const response = await api.put(`${API_URL}/checkout/statements/${encodeURIComponent(id)}`, {
+    paid,
+    paymentReference: paymentReference || '',
+  });
+  return response.data;
 };
 
 export const addItemToCart = async (data: { entity: { productId: string; quantity: number; sellerId: string; partnerId?: string; name: string; price: number, discountedPrice?: number, image?: string, dealPrice?: number } }, accountId?: string): Promise<Cart> => {

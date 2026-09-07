@@ -104,14 +104,14 @@ const TermsOfService: React.FC = () => {
 
               <section id="pricing-and-fees">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">6. Pricing and Fees</h2>
-                <p className="text-gray-600 mb-4">BusinessCart.ai offers three tiers. Every feature is included in every tier. There are no feature locks. Your tier applies automatically based on your monthly paid-order volume. Growth and Enterprise include a 30-day money-back guarantee on their monthly subscription fees.</p>
+                <p className="text-gray-600 mb-4">BusinessCart.ai charges no monthly fee at any volume. Every feature is included at every volume and there are no feature locks. Pricing is per order, and the rate applied to an order depends on that order's position within the calendar month. A 30-day money-back guarantee applies to the per-order fees charged in your first 30 days.</p>
                 <ul className="list-disc list-inside space-y-2 text-gray-600">
-                  <li><b>Starter:</b> $0/month with a $5 max per order (6% applies to orders under $83, capped at $5 above). Applies automatically when monthly paid-order volume is 100 or fewer.</li>
-                  <li><b>Growth:</b> $499/month + 1% per order. Applies automatically when monthly paid-order volume is 101 to 1,000.</li>
-                  <li><b>Enterprise:</b> $1,999/month + 0.25% per order. Applies automatically when monthly paid-order volume is 1,001 or more. Includes dedicated success manager and SLA.</li>
+                  <li><b>Starter band:</b> your first 100 paid orders each calendar month are charged 6% per order, capped at $5. This band applies to the first 100 orders of every month regardless of your total monthly volume.</li>
+                  <li><b>Growth band:</b> orders 101 to 1,000 in the same month are charged 2% per order, capped at $5. Orders already placed are never re-priced.</li>
+                  <li><b>Enterprise band:</b> order 1,001 onwards in the same month is charged 1% per order, capped at $5. Includes dedicated success manager and SLA.</li>
                 </ul>
                 <p className="text-gray-600 mt-4">
-                  Tier assignment is based on paid orders in the most recent billing period (rolling 30 days or calendar month, as disclosed on your invoice). Tier changes take effect at the next billing period. Connecting third-party systems you run is included on every tier at no additional platform fee. Any fees charged by those third-party providers for their own API access are your responsibility. Pricing is subject to change. We will notify existing customers before any changes take effect. All fees are in US Dollars. The 30-day money-back guarantee applies to monthly subscription fees on Growth and Enterprise tiers and does not apply to per-order transaction fees.
+                  Bands are applied within each UTC calendar month, counted by paid orders. Because bands are marginal, a lower rate takes effect on the very next order once the threshold is crossed, within the same month, and orders already placed are never re-priced. Connecting third-party systems you run is included on every tier at no additional platform fee. Any fees charged by those third-party providers for their own API access are your responsibility. Pricing is subject to change. We will notify existing customers before any changes take effect. All fees are in US Dollars. The 30-day money-back guarantee applies to the per-order fees charged during your first 30 days.
                 </p>
               </section>
 

@@ -189,7 +189,7 @@ const SolutionsGrocery: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {[
-                    ['Cost', '10-15% + delivery fees', '$99-499/mo', '$0-1,999/mo (3 tiers)'],
+                    ['Cost', '10-15% + delivery fees', '$99-499/mo', 'No monthly fee, 6%/2%/1% per order, $5 cap'],
                     ['You own customer data', 'No', 'Limited', 'Yes, fully'],
                     ['Custom domain', 'No', 'Sometimes', 'Yes'],
                     ['Code-gated wholesale customers', 'No', 'No', 'Yes'],

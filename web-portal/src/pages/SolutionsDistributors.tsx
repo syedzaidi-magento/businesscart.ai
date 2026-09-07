@@ -193,7 +193,7 @@ const SolutionsDistributors: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {[
-                    ['Cost', '$0 (and pain)', '$2,000+/mo', '$2,000-10,000+/mo', '$1,800-10,000+/mo', '$0-1,999/mo'],
+                    ['Cost', '$0 (and pain)', '$2,000+/mo', '$2,000-10,000+/mo', '$1,800-10,000+/mo', '$0/mo, $5 max per order'],
                     ['Per-customer tier pricing', 'Manual', 'Yes', 'Yes', 'Yes (custom dev)', 'Yes, enforced'],
                     ['Credit limit enforcement', 'None', 'Limited', 'Yes', 'Yes (custom dev)', 'Yes, at quote time'],
                     ['Multi-warehouse inventory', 'Yes (ERP)', 'Limited', 'Yes', 'Yes', 'Multiple locations'],

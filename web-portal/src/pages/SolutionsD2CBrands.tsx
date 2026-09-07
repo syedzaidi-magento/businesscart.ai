@@ -70,7 +70,7 @@ const roadmap = [
 const faqs = [
   {
     q: 'How is this $0/month? What\'s the catch?',
-    a: 'Three tiers, every feature included in every tier. Tier auto-applies based on your monthly order volume. No manual upgrades, no feature locks. Starter ($0/mo + 6% per order, capped at $5) up to 100 orders/month. Growth ($499/mo + 1% per order) for 101-1,000 orders. Enterprise ($1,999/mo + 0.25% per order) at 1,001+. 30-day money-back on Growth and Enterprise.',
+    a: 'No monthly fee at any volume, every feature included at every volume, no feature locks. Pricing is per order and gets cheaper as you grow: 6% on your first 100 orders each month, 2% on orders 101 to 1,000, and 1% on order 1,001 onwards, every order capped at $5 no matter its size. 30-day money-back guarantee.',
   },
   {
     q: 'Can I migrate from Shopify, Etsy, Magento, or WooCommerce?',
