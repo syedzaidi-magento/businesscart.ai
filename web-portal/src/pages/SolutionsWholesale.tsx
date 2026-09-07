@@ -195,7 +195,7 @@ const SolutionsWholesale: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {[
-                    ['Monthly cost', '$0 (and pain)', '$2,300+', '$5,000-15,000+', '$1,800-15,000+', '$0-1,999'],
+                    ['Monthly cost', '$0 (and pain)', '$2,300+', '$5,000-15,000+', '$1,800-15,000+', '$0/mo, $5 max per order'],
                     ['Per-customer pricing', 'Manual', 'Yes', 'Yes', 'Yes (custom dev)', 'Yes, enforced'],
                     ['Credit limit enforcement', 'None', 'Limited', 'Yes', 'Yes (custom dev)', 'Yes, at quote time'],
                     ['Min/max order limits', 'None', 'Limited', 'Yes', 'Custom dev', 'Yes, enforced'],

@@ -186,7 +186,7 @@ const SolutionsAICommerce: React.FC = () => {
                     ['Rich product schema.org JSON-LD', 'Basic theme defaults', 'Full schema (price, availability, image, offer, organization)'],
                     ['Shopping feeds (Google/FB/Bing/Pinterest/TikTok)', '$20+/mo per app', '$0, all 5 built-in'],
                     ['Custom domain', 'Included', 'Included'],
-                    ['Cost', '$39+/mo before first sale', '$0 Starter / $499 Growth / $1,999 Enterprise'],
+                    ['Cost', '$39+/mo before first sale', '$0/mo, $5 max per order'],
                   ].map(([feat, shopify, bc]) => (
                     <tr key={feat}>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{feat}</td>

@@ -626,7 +626,6 @@ func monthlyStatementText(d MonthlyStatementData) string {
 		fmt.Fprintf(&b, "Net revenue:         $%.2f\n", d.NetRevenue())
 	}
 	fmt.Fprintf(&b, "\nCharges\n")
-	fmt.Fprintf(&b, "  Monthly fee:       $%.2f\n", d.MonthlyFee)
 	fmt.Fprintf(&b, "  Transaction fees:  $%.2f\n", d.TransactionFees)
 	fmt.Fprintf(&b, "  ─────────────────────────────\n")
 	fmt.Fprintf(&b, "  Total due:         $%.2f\n\n", d.TotalDue)
@@ -675,10 +674,6 @@ const monthlyStatementHTMLTmpl = `<!DOCTYPE html>
   <h2 style="color:#1e293b;font-size:16px;margin-top:32px;margin-bottom:8px">Charges</h2>
   <table style="width:100%;border-collapse:collapse">
     <tbody>
-      <tr>
-        <td style="padding:8px;color:#64748b">Monthly fee</td>
-        <td style="padding:8px;text-align:right">${{printf "%.2f" .MonthlyFee}}</td>
-      </tr>
       <tr>
         <td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#64748b">Transaction fees</td>
         <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:right">${{printf "%.2f" .TransactionFees}}</td>

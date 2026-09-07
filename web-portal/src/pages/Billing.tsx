@@ -161,12 +161,12 @@ const MonthPicker: React.FC<{ value: Period; onChange: (p: Period) => void; disa
 };
 
 // A statement's status is only ever what the platform can actually prove. It
-// knows the bill was sent, because it holds the snapshot and the SES send. It
-// does NOT know whether the money arrived: paidAt and paymentReference are
-// reserved on the model and no code path anywhere writes them. Labelling an
-// unpaid-flagged row "Open" would claim a settlement state the system does not
-// track, and would read OPEN forever on bills already paid. "Sent" is the fact;
-// the Paid branch lights up on its own the day a paidAt write path exists.
+// knows the bill was sent, because it holds the snapshot and the SES send, and
+// it knows the bill was settled only when an admin says so via
+// PUT /checkout/statements/{id}, which writes paidAt and paymentReference.
+// "Open" was rejected as the unpaid label because it asserts a settlement state
+// the platform does not observe on its own; "Sent" is the fact, and Paid is a
+// deliberate human record, never inferred.
 const StatementStatus: React.FC<{ statement: PersistedStatement }> = ({ statement }) =>
   statement.paidAt ? (
     <div className="flex flex-col items-start gap-0.5">
@@ -314,8 +314,17 @@ const AdminView: React.FC = () => {
   const projected = round2(rows.reduce((sum, r) => sum + round2(r.statement?.totalDue || 0), 0));
   const failedCount = rows.filter((r) => r.error).length;
   const withOrders = rows.filter((r) => (r.statement?.orderCount || 0) > 0).length;
-  const periodSent = rows.flatMap((r) => statementsForPeriod(r.history, period));
+  const billedRows = rows.filter((r) => statementsForPeriod(r.history, period).length > 0);
+  const periodSent = billedRows.flatMap((r) => statementsForPeriod(r.history, period));
   const periodBilled = round2(periodSent.reduce((sum, s) => sum + round2(s.totalDue), 0));
+  // The live recompute for ONLY the companies that were billed, so the drift
+  // check compares the same population on both sides.
+  const billedRecompute = round2(
+    billedRows.reduce((sum, r) => sum + round2(r.statement?.totalDue || 0), 0)
+  );
+  // Two statements for one company in one period is a double-send, not drift.
+  const hasDuplicateSend = billedRows.some((r) => statementsForPeriod(r.history, period).length > 1);
+  const driftsFromBilled = !hasDuplicateSend && periodBilled !== billedRecompute;
 
   const allStatements = useMemo(
     () =>
@@ -447,11 +456,11 @@ const AdminView: React.FC = () => {
                     Billed {money(periodBilled)} across {periodSent.length} sent statement
                     {periodSent.length === 1 ? '' : 's'} for this period.
                   </span>
-                  {periodBilled !== projected && (
+                  {driftsFromBilled && (
                     <span className="text-amber-700 font-semibold">
                       {' '}
-                      That is what customers were invoiced; the figure above is a recompute from orders as they stand
-                      now.
+                      Those companies now recompute to {money(billedRecompute)}, so orders have changed since the
+                      statements went out, usually a refund.
                     </span>
                   )}
                 </div>

@@ -192,7 +192,7 @@ const SolutionsManufacturers: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {[
-                    ['Cost', '$0 (and pain)', '$100K-$500K all-in', '$22K-$125K+/yr (license + dev)', '$0-$1,999/mo'],
+                    ['Cost', '$0 (and pain)', '$100K-$500K all-in', '$22K-$125K+/yr (license + dev)', '$0/mo, $5 max per order'],
                     ['Setup time', 'Day one (errors)', '6-18 months', '6-12 months', 'Days'],
                     ['Per-distributor pricing', 'Manual', 'Yes (custom dev)', 'Yes (custom dev)', 'Yes, built-in'],
                     ['Per-distributor MOQ + lead times', 'Manual', 'Custom dev', 'Custom dev', 'Built-in'],
