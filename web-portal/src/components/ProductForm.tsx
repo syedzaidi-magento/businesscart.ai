@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createProduct, getProducts, updateProduct, deleteProduct, getAccount, getUploadUrl, uploadFileToS3 } from '../api';
-import { Product, Account, Attribute, PriceTier, Review, FAQItem } from '../types';
+import { Product, Account, Attribute, PriceTier, Review, FAQItem, ProductAudience } from '../types';
 import Navbar from './Navbar';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
@@ -55,6 +55,7 @@ const ProductForm = () => {
     attributes: [],
     priceTiers: [],
     groupIDs: [],
+    audience: 'retail',
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   // Row flash: briefly highlight the just-edited row so the eye lands on it
@@ -253,6 +254,7 @@ const ProductForm = () => {
           attributes: [],
           priceTiers: [],
           groupIDs: [],
+          audience: 'retail',
         });
         setEditingId(null);
         setSlugUnlocked(false);
@@ -423,6 +425,7 @@ const ProductForm = () => {
       attributes: product.attributes || [],
       priceTiers: product.priceTiers || [],
       groupIDs: product.groupIDs || [],
+      audience: product.audience || 'retail',
       minOrderQty: product.minOrderQty,
       orderIncrement: product.orderIncrement,
       maxOrderQty: product.maxOrderQty,
@@ -1139,6 +1142,31 @@ const ProductForm = () => {
                       {/* Section: Visibility */}
                       <div className="pt-2 border-t border-gray-100">
                         <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 mt-4">Visibility</h4>
+
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Sell to</label>
+                        <p className="text-xs text-gray-500 mb-2">
+                          Controls how this product appears on your public storefront. It does not change who can buy it
+                          in the portal: your B2B customers keep their negotiated pricing either way.
+                        </p>
+                        <select
+                          name="audience"
+                          value={formData.audience || 'retail'}
+                          onChange={(e) => setFormData({ ...formData, audience: e.target.value as ProductAudience })}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                        >
+                          <option value="retail">Retail only: price and Add to Cart on the storefront</option>
+                          <option value="both">Retail and wholesale: adds a trade-access link</option>
+                          <option value="wholesale">Wholesale only: no price, no Add to Cart, trade enquiry instead</option>
+                        </select>
+                        {formData.audience === 'wholesale' && (
+                          <p className="mt-2 text-xs text-amber-700">
+                            Wholesale only: this product stays visible and searchable on your storefront, but shoppers
+                            cannot see a price or buy it there, and it is removed from your shopping feeds and deals.
+                          </p>
+                        )}
+                      </div>
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">B2B Visibility Groups</label>
                         <p className="text-xs text-gray-500 mb-2">

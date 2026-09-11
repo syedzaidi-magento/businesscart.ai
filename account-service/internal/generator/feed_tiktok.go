@@ -24,6 +24,12 @@ func buildTikTokFeed(data StorefrontData) ([]byte, error) {
 	b.WriteString("sku_id,title,description,availability,condition,price,image_link,brand,google_product_category,product_type,product_page_url,sale_price,shipping_weight," + customLabelHeader(",") + "\n")
 
 	for _, p := range data.Products {
+		// Wholesale-only never enters a consumer shopping feed: it has no consumer
+		// price and no buy path, so an ad for it would send a shopper to a page
+		// they cannot purchase from.
+		if p.IsWholesaleOnly() {
+			continue
+		}
 		if p.Price <= 0 {
 			continue
 		}

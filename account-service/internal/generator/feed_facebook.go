@@ -23,6 +23,12 @@ func buildFacebookFeed(data StorefrontData) ([]byte, error) {
 	b.WriteString("id,title,description,availability,condition,price,link,image_link,brand,product_type,google_product_category,sale_price,shipping_weight," + customLabelHeader(",") + "\n")
 
 	for _, p := range data.Products {
+		// Wholesale-only never enters a consumer shopping feed: it has no consumer
+		// price and no buy path, so an ad for it would send a shopper to a page
+		// they cannot purchase from.
+		if p.IsWholesaleOnly() {
+			continue
+		}
 		if p.Price <= 0 {
 			continue
 		}

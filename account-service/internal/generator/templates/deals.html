@@ -132,10 +132,12 @@
                     <span class="original-price">$[[printf "%.2f" .Price]]</span>
                 </div>
 
+                [[if not .IsWholesaleOnly]]
                 <button class="cta-btn"
                     onclick="event.preventDefault(); window.D2C_CART.addItem({_id:'[[.ID]]', partnerId:'[[.PartnerID]]', name:'[[.Name]]', price:[[.Price]], discountedPrice:[[if .DealPrice]][[.DiscountedPrice]][[else]][[.Price]][[end]], image:'[[.Image]]', dealPrice:[[.DealPrice]], priceTiers:[[jsArray .PriceTiers]]})">
                     Add to Cart
                 </button>
+                [[end]]
             </a>
             [[end]]
         </section>

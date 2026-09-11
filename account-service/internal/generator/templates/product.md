@@ -2,8 +2,12 @@
 
 ## Product Specifications
 - **Name**: [[.Product.Name]]
-- **Price**: $[[printf "%.2f" .Product.Price]] USD[[if .Product.DealPrice]]
-- **Sale Price**: $[[printf "%.2f" .Product.DiscountedPrice]] USD ([[printf "%.0f" .Product.DealPrice]]% off)[[end]]
+[[if .Product.IsWholesaleOnly]]- **Price**: Wholesale only. Pricing is per trade account and is not published.
+- **How to buy**: Request a trade account at https://[[.Domain]]/contact.html#trade[[if .Product.MinOrderQty]]
+- **Minimum order**: [[.Product.MinOrderQty]] units[[end]][[if .Product.OrderIncrement]]
+- **Order increment**: multiples of [[.Product.OrderIncrement]] (case pack)[[end]][[if .Product.MaxOrderQty]]
+- **Maximum order**: [[.Product.MaxOrderQty]] units[[end]][[else]]- **Price**: $[[printf "%.2f" .Product.Price]] USD[[if .Product.DealPrice]]
+- **Sale Price**: $[[printf "%.2f" .Product.DiscountedPrice]] USD ([[printf "%.0f" .Product.DealPrice]]% off)[[end]][[end]]
 - **Category**: [[.Product.Category]]
 - **Availability**: [[if gt .Product.Stock 0]]In Stock ([[.Product.Stock]] available)[[else]]Out of Stock[[end]][[if .Product.SKU]]
 - **SKU**: [[.Product.SKU]][[end]][[if .Product.Barcode]]
@@ -13,7 +17,13 @@
 - **Description**: [[.Product.Description]]
 [[if .Product.Image]]- **Image**: [[.Product.Image]][[end]]
 
-[[if .Product.PriceTiers]]## Volume Pricing
+[[if and .Product.ShowsTradeBlock (not .Product.IsWholesaleOnly)]]## Wholesale
+Also available wholesale. Trade pricing is per account and is not published.[[if .Product.MinOrderQty]]
+- **Minimum order**: [[.Product.MinOrderQty]] units[[end]][[if .Product.OrderIncrement]]
+- **Order increment**: multiples of [[.Product.OrderIncrement]] (case pack)[[end]]
+- **Request a trade account**: https://[[.Domain]]/contact.html#trade
+
+[[end]][[if .Product.PriceTiers]]## Volume Pricing
 [[range .Product.PriceTiers]]- [[.MinQty]]+ units: $[[printf "%.2f" .Price]]
 [[end]][[end]]
 [[if .Product.Attributes]]## Attributes
@@ -35,7 +45,7 @@
 
 [[end]][[end]]
 [[if .RelatedProducts]]## Related Products
-[[range .RelatedProducts]]- [[.Name]] — $[[printf "%.2f" .Price]][[if .DealPrice]] (Sale: $[[printf "%.2f" .DiscountedPrice]])[[end]] — [View](../products/[[.Filename]].md)
+[[range .RelatedProducts]]- [[.Name]]: [[if .IsWholesaleOnly]]wholesale only, trade account required[[else]]$[[printf "%.2f" .Price]][[if .DealPrice]] (Sale: $[[printf "%.2f" .DiscountedPrice]])[[end]][[end]] — [View](../products/[[.Filename]].md)
 [[end]][[end]]
 ## Contextual Links
 - **Company**: [[.Company.Name]]

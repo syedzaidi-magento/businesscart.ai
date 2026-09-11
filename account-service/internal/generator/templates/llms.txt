@@ -12,7 +12,8 @@
 - **Phone:** [[.Config.ContactPhone]]
 - **Total Products:** [[len .Products]]
 - **Categories:** [[range $i, $cat := .Categories]][[if $i]], [[end]][[.]][[end]]
-- **Currency:** USD
+- **Currency:** USD[[if .HasWholesale]]
+- **Wholesale:** Trade accounts available. Wholesale pricing is set per account and is not published. Request one at [https://[[.Domain]]/contact.html#trade](https://[[.Domain]]/contact.html#trade)[[end]]
 
 ## How to Navigate This Store
 
@@ -32,7 +33,7 @@
 
 [[range .Products]]### [[.Name]]
 
-- **Price:** $[[printf "%.2f" .Price]][[if .DealPrice]]
+[[if .IsWholesaleOnly]]- **Price:** Wholesale only, trade account required (pricing not published)[[else]]- **Price:** $[[printf "%.2f" .Price]][[end]][[if and .DealPrice (not .IsWholesaleOnly)]]
 - **Sale:** [[printf "%.0f" .DealPrice]]% off (Discounted Price: $[[printf "%.2f" .DiscountedPrice]])[[end]]
 - **Category:** [[.Category]]
 - **Description:** [[.Description]][[if .Attributes]]

@@ -17,6 +17,37 @@ type PriceTier struct {
 	Price  float64 `bson:"price" json:"price"`
 }
 
+// Product.Audience values. Empty string is equivalent to AudienceRetail; use
+// NormalizeAudience rather than comparing to "" at each call site.
+const (
+	AudienceRetail    = "retail"
+	AudienceWholesale = "wholesale"
+	AudienceBoth      = "both"
+)
+
+// NormalizeAudience maps a stored value to one of the three canonical values,
+// treating anything unrecognised (including "") as retail. Retail is the safe
+// default: it is what every product did before the field existed.
+func NormalizeAudience(a string) string {
+	switch a {
+	case AudienceWholesale, AudienceBoth:
+		return a
+	default:
+		return AudienceRetail
+	}
+}
+
+// IsValidAudience reports whether a is a value a client is allowed to send.
+// "" is accepted and means "leave it at the default".
+func IsValidAudience(a string) bool {
+	switch a {
+	case "", AudienceRetail, AudienceWholesale, AudienceBoth:
+		return true
+	default:
+		return false
+	}
+}
+
 // Review is a single customer review. Admin-added only (no public submission).
 type Review struct {
 	Name      string    `bson:"name" json:"name"`
@@ -144,15 +175,29 @@ type Product struct {
 	// Deliberately NOT derived from Category: one site category can legitimately
 	// span several ad segments. Capped at 100 to satisfy Google, the strictest of
 	// the five channels, so one value stays valid everywhere.
-	CustomLabel0 string      `bson:"customLabel0,omitempty" json:"customLabel0,omitempty" validate:"max=100"`
-	CustomLabel1 string      `bson:"customLabel1,omitempty" json:"customLabel1,omitempty" validate:"max=100"`
-	CustomLabel2 string      `bson:"customLabel2,omitempty" json:"customLabel2,omitempty" validate:"max=100"`
-	CustomLabel3 string      `bson:"customLabel3,omitempty" json:"customLabel3,omitempty" validate:"max=100"`
-	CustomLabel4 string      `bson:"customLabel4,omitempty" json:"customLabel4,omitempty" validate:"max=100"`
-	GroupIDs     []string    `bson:"groupIDs,omitempty" json:"groupIDs,omitempty"`
-	Attributes   []Attribute `bson:"attributes,omitempty" json:"attributes,omitempty"`
-	Rating       *Rating     `bson:"rating,omitempty" json:"rating,omitempty"`
-	FAQ          *ProductFAQ `bson:"faq,omitempty" json:"faq,omitempty"`
-	CreatedAt    time.Time   `bson:"createdAt" json:"createdAt"`
-	UpdatedAt    time.Time   `bson:"updatedAt" json:"updatedAt"`
+	CustomLabel0 string   `bson:"customLabel0,omitempty" json:"customLabel0,omitempty" validate:"max=100"`
+	CustomLabel1 string   `bson:"customLabel1,omitempty" json:"customLabel1,omitempty" validate:"max=100"`
+	CustomLabel2 string   `bson:"customLabel2,omitempty" json:"customLabel2,omitempty" validate:"max=100"`
+	CustomLabel3 string   `bson:"customLabel3,omitempty" json:"customLabel3,omitempty" validate:"max=100"`
+	CustomLabel4 string   `bson:"customLabel4,omitempty" json:"customLabel4,omitempty" validate:"max=100"`
+	GroupIDs     []string `bson:"groupIDs,omitempty" json:"groupIDs,omitempty"`
+	// Who this product is marketed to on the PUBLIC D2C storefront, and whether it
+	// belongs in the consumer shopping feeds. One of AudienceRetail, AudienceWholesale
+	// or AudienceBoth; empty means AudienceRetail, so every product written before
+	// this field existed keeps exactly the behaviour it had and no migration is needed.
+	//
+	// SCOPE, and it is deliberately narrow: this drives storefront presentation and
+	// feed inclusion ONLY. It does NOT gate B2B portal visibility, which stays with
+	// GroupIDs. Defaulting to retail AND gating the portal would have hidden every
+	// existing product from every existing B2B customer overnight.
+	//
+	// It is also not a purchase guard. checkout-service has no catalog dependency by
+	// design and cart totals use the client-supplied item price, so a wholesale
+	// product simply loses its Add-to-Cart path; nothing server-side rejects it.
+	Audience   string      `bson:"audience,omitempty" json:"audience,omitempty"`
+	Attributes []Attribute `bson:"attributes,omitempty" json:"attributes,omitempty"`
+	Rating     *Rating     `bson:"rating,omitempty" json:"rating,omitempty"`
+	FAQ        *ProductFAQ `bson:"faq,omitempty" json:"faq,omitempty"`
+	CreatedAt  time.Time   `bson:"createdAt" json:"createdAt"`
+	UpdatedAt  time.Time   `bson:"updatedAt" json:"updatedAt"`
 }

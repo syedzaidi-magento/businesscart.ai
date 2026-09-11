@@ -189,10 +189,17 @@ export interface Product {
   customLabel3?: string;
   customLabel4?: string;
   groupIDs?: string[];
+  // Who the product is marketed to on the public D2C storefront, and whether it
+  // belongs in the consumer shopping feeds. Absent means 'retail', which is what
+  // every product did before the field existed. Mirrors catalog-service
+  // storage.Audience*; it does NOT gate B2B portal visibility (that is groupIDs).
+  audience?: ProductAudience;
   attributes?: Attribute[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type ProductAudience = 'retail' | 'wholesale' | 'both';
 
 export interface RefundItemAdjustment {
   productID: string;

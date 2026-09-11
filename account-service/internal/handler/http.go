@@ -2633,16 +2633,63 @@ func (h *LambdaHandler) trackVisitorEvent(request events.APIGatewayProxyRequest)
 		logErr("addContactLead", h.db.AddVisitorMilestone(req.VisitorID, storage.VisitorMilestone{
 			Event: "contact_request", Page: req.Page, Date: now, Metadata: lead,
 		}))
-		// Best-effort alert to the operator inbox. The lead is already saved, so a
-		// send failure only means "not pinged" — logErr records it to CloudWatch AND
-		// the visitor's errorLog, so un-notified leads stay findable. Zero loss.
-		subject := "New demo request"
-		if c := get("company"); c != "" {
-			subject += " — " + c
+		// Who gets told depends on where the request came from.
+		//
+		// A request carrying a sellerId came off THAT merchant's storefront, so it
+		// is their lead and not the platform's: a wholesale buyer asking Solomon's
+		// for a trade account is of no use in the BusinessCart operator inbox, and
+		// routing it there means the merchant never learns a buyer wanted an
+		// account.
+		//
+		// The recipient is the company's own d2c.contactEmail, deliberately, and
+		// NOT EMAIL_COMPANY_CONFIGS.ownerEmail which the order notifications use.
+		// contactEmail is set by the merchant in their own portal settings, is
+		// already published as their public contact address on the storefront
+		// footer, contact page and llms.txt, and is set for every storefront-
+		// enabled company today. ownerEmail lives in an SSM SecureString that
+		// needs a manual edit plus a deploy per merchant, so using it would mean
+		// a new customer silently loses wholesale enquiries until someone does
+		// ops work. A buyer contacting a business through its website should
+		// reach the address that business publishes for exactly that.
+		//
+		// The lead is already persisted above, so a send failure costs a ping and
+		// never the lead itself; logErr records it to CloudWatch and to the
+		// visitor's errorLog, so an un-notified request stays findable.
+		merchantEmail := ""
+		if req.SellerID != "" {
+			if oid, err := primitive.ObjectIDFromHex(req.SellerID); err == nil {
+				if seller, sErr := h.db.GetAccountByID(oid); sErr == nil && seller != nil &&
+					seller.CompanyData != nil && seller.CompanyData.D2C != nil {
+					merchantEmail = strings.TrimSpace(seller.CompanyData.D2C.ContactEmail)
+				}
+			}
 		}
-		body := fmt.Sprintf("New contact / demo request (businesscart.ai)\n\nName:    %s\nEmail:   %s\nCompany: %s\nPhone:   %s\nSells:   %s\nPurpose: %s\ngclid:   %s\n",
-			get("name"), get("email"), get("company"), get("phone"), get("sells"), get("purpose"), get("gclid"))
-		logErr("contactLeadNotify", mailer.SendContactLead(h.emailSender, subject, body))
+		if merchantEmail != "" {
+			logErr("tradeLeadNotify", h.emailSender.Send(context.Background(),
+				mailer.B2BAccessRequestMessage(merchantEmail, mailer.B2BAccessRequestData{
+					Name:    get("name"),
+					Company: get("company"),
+					Email:   get("email"),
+					Phone:   get("phone"),
+					Needs:   get("sells"),
+				})))
+		} else {
+			// Either a platform lead (no sellerId, businesscart.ai's own demo
+			// funnel, unchanged) or a merchant with no contactEmail set. The
+			// fallback is deliberate: a misconfigured merchant must not swallow a
+			// buyer's request, so the operator inbox catches it and the subject
+			// says why it landed there.
+			subject := "New demo request"
+			if c := get("company"); c != "" {
+				subject += ", " + c
+			}
+			if req.SellerID != "" {
+				subject = "Wholesale request but seller has no contact email, " + get("company")
+			}
+			body := fmt.Sprintf("New contact / demo request (businesscart.ai)\n\nName:    %s\nEmail:   %s\nCompany: %s\nPhone:   %s\nSells:   %s\nPurpose: %s\nSeller:  %s\ngclid:   %s\n",
+				get("name"), get("email"), get("company"), get("phone"), get("sells"), get("purpose"), req.SellerID, get("gclid"))
+			logErr("contactLeadNotify", mailer.SendContactLead(h.emailSender, subject, body))
+		}
 	case "register":
 		milestone := storage.VisitorMilestone{Event: "register", Date: now, Metadata: req.Metadata}
 		logErr("addMilestone", h.db.AddVisitorMilestone(req.VisitorID, milestone))

@@ -43,6 +43,7 @@ type StorefrontData struct {
 	BlogPosts        []BlogPostData // Editorial articles (LLM-targeted)
 	BlogCategories   []string       // Unique list of blog categories
 	HasBlog          bool           // true if any active blog posts (drives footer link)
+	HasWholesale     bool           // true if any product is wholesale/both (drives the footer trade link)
 	Year             int
 	Timestamp        string
 	// The most recent real content change, used for sitemap <lastmod> on pages
@@ -144,26 +145,38 @@ type PriceTier struct {
 }
 
 type ProductData struct {
-	ID                    string      `json:"_id,omitempty"`
-	SellerID              string      `json:"sellerID,omitempty"` // owning company; checked before publishing (never rendered)
-	PartnerID             string      `json:"partnerId,omitempty"`
-	Name                  string      `json:"name"`
-	Description           string      `json:"description"`
-	Price                 float64     `json:"price"`
-	DealPrice             float64     `json:"dealPrice,omitempty"`
-	UpdatedAt             time.Time   `json:"updatedAt,omitempty"`
-	DealStartDate         *time.Time  `json:"dealStartDate,omitempty"`
-	DealEndDate           *time.Time  `json:"dealEndDate,omitempty"`
-	DiscountedPrice       float64     `json:"discountedPrice,omitempty"`
-	PriceTiers            []PriceTier `json:"priceTiers,omitempty"`
-	Images                []string    `json:"images,omitempty"`
-	Image                 string      `json:"image"`
-	Category              string      `json:"category"`
-	GoogleProductCategory string      `json:"googleProductCategory,omitempty"`
-	Slug                  string      `json:"slug"`
-	SKU                   string      `json:"sku,omitempty"`
-	Barcode               string      `json:"barcode,omitempty"`
-	Stock                 int         `json:"stock"`
+	ID              string      `json:"_id,omitempty"`
+	SellerID        string      `json:"sellerID,omitempty"` // owning company; checked before publishing (never rendered)
+	PartnerID       string      `json:"partnerId,omitempty"`
+	Name            string      `json:"name"`
+	Description     string      `json:"description"`
+	Price           float64     `json:"price"`
+	DealPrice       float64     `json:"dealPrice,omitempty"`
+	UpdatedAt       time.Time   `json:"updatedAt,omitempty"`
+	DealStartDate   *time.Time  `json:"dealStartDate,omitempty"`
+	DealEndDate     *time.Time  `json:"dealEndDate,omitempty"`
+	DiscountedPrice float64     `json:"discountedPrice,omitempty"`
+	PriceTiers      []PriceTier `json:"priceTiers,omitempty"`
+	// Who this product is marketed to on the public storefront: "retail",
+	// "wholesale" or "both". Absent means retail, which is what every product
+	// did before the field existed, so nothing already published moves.
+	// Read it through the IsWholesaleOnly / ShowsTradeBlock helpers rather than
+	// comparing strings in a template.
+	Audience string `json:"audience,omitempty"`
+	// Per-product B2B quantity rules. Decoded here so the trade block can state a
+	// real MOQ or case pack instead of a vague "contact us"; the portal has let
+	// merchants set these for a while but they never reached the storefront.
+	MinOrderQty           int      `json:"minOrderQty,omitempty"`
+	OrderIncrement        int      `json:"orderIncrement,omitempty"`
+	MaxOrderQty           int      `json:"maxOrderQty,omitempty"`
+	Images                []string `json:"images,omitempty"`
+	Image                 string   `json:"image"`
+	Category              string   `json:"category"`
+	GoogleProductCategory string   `json:"googleProductCategory,omitempty"`
+	Slug                  string   `json:"slug"`
+	SKU                   string   `json:"sku,omitempty"`
+	Barcode               string   `json:"barcode,omitempty"`
+	Stock                 int      `json:"stock"`
 	// Package weight (lb) and dimensions (in), as shipped. Decoded straight from
 	// the catalog response; no mapping step. Rendered on the PDP and the .md
 	// companions so a shopper (or an LLM) can answer "how big is it".
@@ -185,6 +198,32 @@ type ProductData struct {
 	Rating       *Rating     `json:"rating,omitempty"`
 	FAQ          *ProductFAQ `json:"faq,omitempty"`
 	Filename     string      `json:"-"` // Pre-computed: slug-suffix (no extension)
+}
+
+// Audience values, mirroring catalog-service storage.Audience*. Duplicated
+// rather than imported because the services stay independent.
+const (
+	AudienceRetail    = "retail"
+	AudienceWholesale = "wholesale"
+	AudienceBoth      = "both"
+)
+
+// IsWholesaleOnly reports whether the product must NOT be sold to consumers on
+// this storefront: no price, no Add-to-Cart, no shopping feed, no deals.
+//
+// Only the exact string "wholesale" hides a product. Anything else, including
+// an empty value, a typo or a value written before this field existed, is
+// treated as retail. That direction is deliberate: the failure mode of a bad
+// value is "a product stays visible and sellable", never "a merchant's product
+// silently vanished from their storefront and their ad feeds".
+func (p ProductData) IsWholesaleOnly() bool { return p.Audience == AudienceWholesale }
+
+// ShowsTradeBlock reports whether to render the trade-access block, which
+// invites a business buyer to request a wholesale account in the portal.
+// Shown for wholesale-only products (it replaces the buy path) and for "both"
+// (it sits alongside the normal consumer price and cart).
+func (p ProductData) ShowsTradeBlock() bool {
+	return p.Audience == AudienceWholesale || p.Audience == AudienceBoth
 }
 
 type Generator struct {
@@ -393,9 +432,14 @@ func (g *Generator) Generate(data StorefrontData) error {
 		}
 	}
 
-	// Deal products: products with active deals (DealPrice > 0, within date range if set)
+	// Deal products: products with active deals (DealPrice > 0, within date range if set).
+	// Wholesale-only products never appear: a deal is a consumer promotion and the
+	// deals page shows a price, which is exactly what wholesale-only withholds.
 	now := time.Now()
 	for _, p := range data.Products {
+		if p.IsWholesaleOnly() {
+			continue
+		}
 		if p.DealPrice > 0 {
 			if p.DealStartDate != nil && p.DealStartDate.After(now) {
 				continue
@@ -404,6 +448,15 @@ func (g *Generator) Generate(data StorefrontData) error {
 				continue
 			}
 			data.DealProducts = append(data.DealProducts, p)
+		}
+	}
+
+	// Does this storefront have any wholesale-facing product? Drives the footer
+	// trade link, so it is computed once here rather than scanned per template.
+	for _, p := range data.Products {
+		if p.ShowsTradeBlock() {
+			data.HasWholesale = true
+			break
 		}
 	}
 
@@ -612,6 +665,7 @@ func (g *Generator) Generate(data StorefrontData) error {
 			TopCategories   []string
 			CategoryCounts  map[string]int
 			HasBlog         bool
+			HasWholesale    bool
 			BasePath        string
 			ApiBase         string
 			Domain          string
@@ -628,6 +682,7 @@ func (g *Generator) Generate(data StorefrontData) error {
 			TopCategories:   data.TopCategories,
 			CategoryCounts:  data.CategoryCounts,
 			HasBlog:         data.HasBlog,
+			HasWholesale:    data.HasWholesale,
 			BasePath:        "../",
 			ApiBase:         data.ApiBase,
 			Domain:          data.Domain,
@@ -1129,6 +1184,23 @@ func (g *Generator) renderTemplate(tmplName, outputPath string, data interface{}
 
 	return os.WriteFile(outputPath, buf.Bytes(), 0644)
 }
+
+// TradeAnchor is the id of the wholesale enquiry section on the contact page, and
+// the fragment every trade CTA points at.
+const TradeAnchor = "trade"
+
+// The trade CTA stays on the MERCHANT's own domain, deliberately. Sending the
+// buyer to businesscart.ai would contradict the white-label promise the Compare
+// page makes ("your brand, no platform branding") and would hand a merchant's
+// prospect to the platform's marketing site mid-enquiry. The platform appears
+// later, at registration, once the merchant has issued a code and the buyer is
+// knowingly creating an account.
+//
+// Templates build the href themselves: [[.BasePath]]contact.html#trade in HTML,
+// which is correct from the site root and from inside /products alike and works
+// on the preview domain and a custom domain without the generator guessing which
+// one the visitor arrived on. The .md companions use the absolute form so an LLM
+// has something citable.
 
 // lastmodString formats a content-change date for sitemap <lastmod> and for the
 // .md companions, or "" when the item carries none so the caller can omit the

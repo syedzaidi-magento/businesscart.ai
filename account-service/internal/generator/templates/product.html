@@ -6,7 +6,7 @@
     [[if .Company.LogoURL]]<link rel="icon" href="[[.Company.LogoURL]]" type="image/png">[[end]]
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>[[.Product.Name]] | [[.Company.Name]]</title>
-    <meta name="description" content="[[.Product.Name]] — $[[printf "%.2f" .Product.Price]]. [[.Product.Description]]">
+    <meta name="description" content="[[.Product.Name]][[if .Product.IsWholesaleOnly]]. Wholesale, trade account required.[[else]] — $[[printf "%.2f" .Product.Price]].[[end]] [[.Product.Description]]">
     <link rel="canonical" href="https://[[.Domain]]/products/[[.Product.Filename]].html">
     <link rel="alternate" type="text/markdown" href="[[.Product.Filename]].md">
     <meta property="og:type" content="product">
@@ -349,11 +349,23 @@
       "offers": {
         "@type": "Offer",
         "url": "https://[[.Domain]]/products/[[.Product.Filename]].html",
-        "priceCurrency": "USD",
+[[if .Product.IsWholesaleOnly]]        "priceSpecification": {
+          "@type": "PriceSpecification",
+          "priceCurrency": "USD",
+          "valueAddedTaxIncluded": false
+        },
+        "eligibleCustomerType": [
+          "http://purl.org/goodrelations/v1#Business",
+          "http://purl.org/goodrelations/v1#Reseller"
+        ],
+        "availability": "https://schema.org/[[if gt .Product.Stock 0]]InStock[[else]]OutOfStock[[end]]",
+        "itemCondition": "https://schema.org/NewCondition",
+[[else]]        "priceCurrency": "USD",
         "price": "[[if .Product.DealPrice]][[printf "%.2f" .Product.DiscountedPrice]][[else]][[printf "%.2f" .Product.Price]][[end]]",
         "availability": "https://schema.org/[[if gt .Product.Stock 0]]InStock[[else]]OutOfStock[[end]]",
         "itemCondition": "https://schema.org/NewCondition",[[if and .Product.DealPrice .Product.DealEndDate]]
         "priceValidUntil": "[[.Product.DealEndDate.Format "2006-01-02"]]",[[end]]
+[[end]]
         "hasMerchantReturnPolicy": {
           "@type": "MerchantReturnPolicy",
           "applicableCountry": "US",
@@ -508,6 +520,14 @@
                     <span style="font-size:0.9rem;color:#64748b;font-weight:600">[[printf "%.1f" .Product.Rating.Average]] · [[.Product.Rating.Count]] review[[if ne .Product.Rating.Count 1]]s[[end]]</span>
                 </a>
                 [[end]]
+                [[if .Product.IsWholesaleOnly]]
+                <div class="price" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap">
+                    <span style="font-size:1.5rem;font-weight:800;color:var(--text)">Trade pricing</span>
+                </div>
+                <div style="font-size:0.9rem;color:#64748b;margin-top:0.35rem">
+                    Priced per wholesale account. Request access to see your pricing.
+                </div>
+                [[else]]
                 <div class="price" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap">
                     [[if .Product.DealPrice]]
                     <span itemprop="offers" itemscope itemtype="https://schema.org/Offer">
@@ -535,6 +555,7 @@
                 [[else]]
                 <div style="font-size:0.9rem;font-weight:700;color:#dc2626">Out of Stock</div>
                 [[end]]
+                [[end]]
                 [[if .Product.SKU]]<div style="font-size:0.8rem;color:#64748b;margin-top:0.25rem">SKU: <span itemprop="sku">[[.Product.SKU]]</span></div>[[end]]
             </div>
 
@@ -542,13 +563,15 @@
                 [[.Product.Description]]
             </div>
 
-            [[if .Product.PriceTiers]]
+
+
+            [[if and .Product.PriceTiers (not .Product.IsWholesaleOnly)]]
             <div style="border-top: 1px solid #e2e8f0; padding-top: 1.5rem; margin-top: 1rem">
                 <h2 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 900; margin-bottom: 1rem; color: var(--text); opacity: 0.7">Volume Pricing</h2>
                 <table style="width:100%; border-collapse:collapse; font-size:0.95rem">
                     <tr style="border-bottom:1px solid #e2e8f0">
                         <td style="padding:0.5rem 0; color:#64748b">1[[if .Product.PriceTiers]]–[[subtract (index .Product.PriceTiers 0).MinQty 1]][[end]] units</td>
-                        <td style="padding:0.5rem 0; text-align:right; font-weight:700">$[[printf "%.2f" .Product.Price]]</td>
+                        <td style="padding:0.5rem 0; text-align:right; font-weight:700">$[[if .Product.DealPrice]][[printf "%.2f" .Product.DiscountedPrice]][[else]][[printf "%.2f" .Product.Price]][[end]]</td>
                     </tr>
                     [[range .Product.PriceTiers]]
                     <tr style="border-bottom:1px solid #e2e8f0">
@@ -590,7 +613,9 @@
             </div>
             [[end]]
 
-            [[if gt .Product.Stock 0]]
+            [[if .Product.IsWholesaleOnly]]
+            [[template "tradeTerms" .]]
+            [[else if gt .Product.Stock 0]]
             <div style="display:flex;align-items:center;gap:1rem">
                 <div style="display:flex;align-items:center;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden">
                     <button type="button" id="qty-minus" onclick="var q=document.getElementById('qty');q.value=Math.max(1,Number(q.value)-1);window.D2C_QTY_SYNC&&window.D2C_QTY_SYNC()" style="width:44px;height:44px;border:none;background:#f8fafc;cursor:pointer;font-size:1.2rem;font-weight:700;color:var(--text)">−</button>
@@ -614,6 +639,15 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/></svg>
                 <span>Ships in [[printf "%.0f" .Company.LeadTime]] business day[[if gt .Company.LeadTime 1.0]]s[[end]]</span>
             </div>
+            [[end]]
+
+            [[if and .Product.ShowsTradeBlock (not .Product.IsWholesaleOnly)]]
+            [[/* Below Add to Cart, never above it. On a D2C storefront a product
+                 sold both ways is primarily a consumer product, so the buy path
+                 stays unbroken and the trade terms follow it for the minority of
+                 visitors buying for a business. Same placement rule the FAQ
+                 block states below. */]]
+            [[template "tradeTerms" .]]
             [[end]]
 
             [[/* Placement is deliberate on two axes.
@@ -751,11 +785,15 @@
                 </div>
                 [[end]]
                 <div class="price-row">
+                    [[if .IsWholesaleOnly]]
+                    <span class="price" style="font-size:0.95rem">Trade only</span>
+                    [[else]]
                     [[if .DealPrice]]
                     <span class="price">$[[printf "%.2f" .DiscountedPrice]]</span>
                     <span class="original-price">$[[printf "%.2f" .Price]]</span>
                     [[else]]
                     <span class="price">$[[printf "%.2f" .Price]]</span>
+                    [[end]]
                     [[end]]
                 </div>
             </a>
@@ -764,7 +802,22 @@
     </section>
     [[end]]
 
-    [[if gt .Product.Stock 0]]
+    [[if .Product.IsWholesaleOnly]]
+    <!-- Mobile sticky trade CTA. Same CSS-only bar as the consumer one so mobile keeps
+         a thumb-reachable primary action, but it links to the portal instead of adding
+         to a cart this buyer cannot check out from. No price shown: there is no
+         consumer price for a wholesale-only product. -->
+    <div class="sticky-atc">
+        <div class="sa-price">
+            <div class="sa-now">Trade</div>
+            <div class="sa-name">[[.Product.Name]]</div>
+        </div>
+        <a class="cta-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none"
+            href="[[.BasePath]]contact.html#trade" rel="nofollow">
+            Request access
+        </a>
+    </div>
+    [[else if gt .Product.Stock 0]]
     <!-- Mobile sticky Add-to-Cart (CSS-only; hidden on desktop, reuses the main add-to-cart call) -->
     <div class="sticky-atc">
         <div class="sa-price">
@@ -783,3 +836,50 @@
 
 </html>
 [[define "atcOnclick"]]window.D2C_CART.addItem({_id:'[[.Product.ID]]', partnerId:'[[.Product.PartnerID]]', name:'[[.Product.Name]]', price:[[.Product.Price]], discountedPrice:[[if .Product.DealPrice]][[.Product.DiscountedPrice]][[else]][[.Product.Price]][[end]], image:'[[.Product.Image]]', dealPrice:[[.Product.DealPrice]], priceTiers:[[jsArray .Product.PriceTiers]], stock:[[.Product.Stock]]}, Number(document.getElementById('qty').value)||1)[[end]]
+[[define "tradeTerms"]]
+<!-- Trade terms. Written for a procurement buyer, not a shopper: the vernacular is
+     MOQ / case pack / lead time, and the layout is a terms panel off a purchase
+     order rather than a marketing card. Achromatic on purpose, because this block
+     sits inside a white-label storefront and the merchant's --primary belongs to
+     their brand, not to our furniture; it appears once, on the action.
+     Static HTML, no JS, no new requests, no web font. -->
+<section aria-labelledby="trade-heading"
+    style="border:1px solid #e2e8f0;border-radius:12px;padding:1.1rem 1.25rem 1.25rem;margin-top:1.5rem;background:#fff">
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.9rem">
+        <h2 id="trade-heading"
+            style="margin:0;font-size:0.68rem;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:#64748b">Trade</h2>
+        <span aria-hidden="true" style="flex:1;height:1px;background:#e2e8f0"></span>
+    </div>
+    <dl style="margin:0;font-size:0.95rem">
+        [[if .Product.MinOrderQty]]
+        <div style="display:flex;justify-content:space-between;gap:1rem;padding:0.55rem 0;border-bottom:1px solid #f1f5f9">
+            <dt style="color:#64748b">MOQ</dt>
+            <dd style="margin:0;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)">[[.Product.MinOrderQty]] units</dd>
+        </div>
+        [[end]]
+        [[if .Product.OrderIncrement]]
+        <div style="display:flex;justify-content:space-between;gap:1rem;padding:0.55rem 0;border-bottom:1px solid #f1f5f9">
+            <dt style="color:#64748b">Case pack</dt>
+            <dd style="margin:0;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)">[[.Product.OrderIncrement]] units</dd>
+        </div>
+        [[end]]
+        [[if .Product.MaxOrderQty]]
+        <div style="display:flex;justify-content:space-between;gap:1rem;padding:0.55rem 0;border-bottom:1px solid #f1f5f9">
+            <dt style="color:#64748b">Max order</dt>
+            <dd style="margin:0;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)">[[.Product.MaxOrderQty]] units</dd>
+        </div>
+        [[end]]
+        <div style="display:flex;justify-content:space-between;gap:1rem;padding:0.55rem 0">
+            <dt style="color:#64748b">Pricing</dt>
+            <dd style="margin:0;font-weight:700;color:var(--text);text-align:right">[[if and .Product.PriceTiers (not .Product.IsWholesaleOnly)]]Volume price breaks[[else]]Set per account[[end]]</dd>
+        </div>
+    </dl>
+    <a href="[[.BasePath]]contact.html#trade" rel="nofollow"
+        style="display:block;margin-top:1.1rem;padding:0.8rem 1rem;border-radius:8px;background:var(--primary);color:#fff;text-align:center;text-decoration:none;font-weight:800;font-size:0.95rem">
+        Request a trade account
+    </a>
+    <p style="margin:0.6rem 0 0;font-size:0.8rem;color:#64748b;text-align:center">
+        Wholesale pricing is set per account and is not shown publicly.
+    </p>
+</section>
+[[end]]

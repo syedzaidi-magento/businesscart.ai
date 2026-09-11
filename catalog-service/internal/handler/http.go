@@ -284,6 +284,10 @@ func (h *LambdaHandler) createProduct(userClaim map[string]interface{}, body str
 		return h.errorResponse(http.StatusBadRequest, err.Error()), nil
 	}
 	product.GroupIDs = sanitizeGroupIDs(product.GroupIDs)
+	product.Audience = strings.TrimSpace(product.Audience)
+	if !storage.IsValidAudience(product.Audience) {
+		return h.errorResponse(http.StatusBadRequest, "audience must be one of: retail, wholesale, both"), nil
+	}
 
 	if err := h.db.CreateProduct(&product); err != nil {
 		return h.errorResponse(http.StatusInternalServerError, "Failed to create product"), nil
@@ -641,6 +645,29 @@ func (h *LambdaHandler) updateProduct(userClaim map[string]interface{}, idStr st
 			} else {
 				updates["groupIDs"] = cleaned
 			}
+		}
+	}
+
+	// Audience: validate, and treat retail (the default) as an unset so the field
+	// never persists a value that means the same as absent. Same shape as groupIDs
+	// above: an empty result removes the key rather than storing a redundant one.
+	if rawAudience, ok := updates["audience"]; ok {
+		if rawAudience == nil {
+			delete(updates, "audience")
+			unsetFields["audience"] = ""
+		} else if s, ok := rawAudience.(string); ok {
+			s = strings.TrimSpace(s)
+			if !storage.IsValidAudience(s) {
+				return h.errorResponse(http.StatusBadRequest, "audience must be one of: retail, wholesale, both"), nil
+			}
+			if s == "" || s == storage.AudienceRetail {
+				delete(updates, "audience")
+				unsetFields["audience"] = ""
+			} else {
+				updates["audience"] = s
+			}
+		} else {
+			return h.errorResponse(http.StatusBadRequest, "audience must be a string"), nil
 		}
 	}
 
