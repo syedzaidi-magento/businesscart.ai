@@ -1899,6 +1899,70 @@ class BackendFlowTest:
             ok("Admin updated to delivered; deliveredAt set")
         self.run_test("5d-6. Admin updates any order", test_admin_update)
 
+        # 5d-7. Cancelling an order emails the customer. Until this existed a
+        # cancellation was silent on both sides: the customer found out by
+        # checking the site, or by turning up for a pickup order that no longer
+        # existed. Uses a FRESH order because the email fires only on the first
+        # transition into "cancelled", and the order above is already delivered.
+        #
+        # Only the customer copy is observable locally: the merchant copy needs
+        # an SSM EMAIL_COMPANY_CONFIGS entry that exists only in prod. Its render
+        # path is pinned by templates_test.go, same split as 5h.
+        def test_cancel_emails_customer():
+            self._clear_cart("customer", c1_id)
+            self._add_to_cart("customer", c1_id, product_a, 1)
+            q = self._create_quote("customer", c1_id, "standard")
+            assert_status(q, 200, "Quote for cancellation email test")
+
+            self.use_token("customer")
+            o = self.api.post("/checkout/orders", {
+                "quoteId": q.json().get("id"),
+                "paymentMethod": "purchase_order",
+                "deliveryMethod": "pickup",
+            })
+            assert_status(o, 200, "Place order for cancellation email test")
+            cancel_id = o.json().get("id")
+            self.tracker.track_order(cancel_id)
+            short_id = cancel_id[-6:]
+
+            self.use_token("company1")
+            resp = self.api.put(f"/checkout/orders/{cancel_id}", {"status": "cancelled"})
+            assert_status(resp, 200, "Cancel the order")
+            assert (resp.json() or {}).get("status") == "cancelled", "status did not flip to cancelled"
+
+            mailpit_url = "http://localhost:8025/api/v1/messages"
+            want_subject = f"Your order #{short_id} has been cancelled"
+            msg = None
+            for _ in range(15):
+                try:
+                    r = requests.get(mailpit_url, params={"limit": 50}, timeout=2)
+                    if r.status_code == 200:
+                        for m in (r.json().get("messages", []) or []):
+                            if m.get("Subject") == want_subject:
+                                msg = m
+                                break
+                    if msg:
+                        break
+                except Exception:
+                    pass
+                time.sleep(0.5)
+
+            assert msg, f"Cancellation email {want_subject!r} not found in Mailpit"
+
+            body = requests.get(f"http://localhost:8025/api/v1/message/{msg['ID']}", timeout=3).json()
+            text = body.get("Text") or ""
+            html = body.get("HTML") or ""
+            assert "has been cancelled" in text, f"text body:\n{text}"
+            assert "reply to this email" in text, f"no next step offered:\n{text}"
+            # A cancellation is not a receipt: nothing is being charged, so the
+            # confirmation's tax/shipping/discount breakdown must not appear.
+            for banned in ("Subtotal:", "Shipping:", "Tax:"):
+                assert banned not in text, f"cancellation email reads like a receipt, found {banned!r}"
+            assert "{{" not in html, "HTML template left an unrendered action"
+            ok(f"Cancellation email delivered to customer: {want_subject!r}")
+
+        self.run_test("5d-7. Cancelling an order emails the customer", test_cancel_emails_customer)
+
         # Park the test order as cancelled so it doesn't count toward customer's
         # unpaid balance in phase 6e credit-limit test (GetUnpaidOrdersTotal excludes cancelled).
         self.use_token("admin")
