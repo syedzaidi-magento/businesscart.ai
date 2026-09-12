@@ -400,7 +400,7 @@
               "unitCode": "DAY"
             }
           }
-        }[[if .Product.DealPrice]],
+        }[[if and .Product.DealPrice (not .Product.IsWholesaleOnly)]],
         "priceSpecification": {
           "@type": "PriceSpecification",
           "price": "[[printf "%.2f" .Product.DiscountedPrice]]",
@@ -448,7 +448,7 @@
         // Product-level signal for ViewContent (read by tracker.js on load).
         window.D2C_PRODUCT = {
             id: "[[.Product.ID]]",
-            price: [[if .Product.DealPrice]][[.Product.DiscountedPrice]][[else]][[.Product.Price]][[end]]
+            price: [[if .Product.IsWholesaleOnly]]0[[else if .Product.DealPrice]][[.Product.DiscountedPrice]][[else]][[.Product.Price]][[end]]
         };
     </script>
     <script src="../tracker.js" defer></script>

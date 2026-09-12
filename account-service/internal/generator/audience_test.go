@@ -11,6 +11,12 @@ import (
 	"business-cart/account-service/internal/storage"
 )
 
+// Every price the wholesale fixture product carries: base 264, tier 240,
+// discounted 237.60. Word boundaries keep it from firing on a longer digit run,
+// so a hex colour (#264653) or a timestamp is not mistaken for a leak, while a
+// bare JS number (237.6) and a formatted one ($237.60) both match.
+var wholesalePriceDigits = regexp.MustCompile(`\b(?:264|240|237)(?:\.[0-9]+)?\b`)
+
 // jsonLDBlocks pulls every <script type="application/ld+json"> payload out of a
 // rendered page. The JSON-LD is assembled by hand inside the template with
 // conditional branches, so a misplaced comma in one branch produces a block that
@@ -241,6 +247,7 @@ func TestWholesaleLeaksOnNoGeneratedSurface(t *testing.T) {
 			data.Products[i].Featured = true
 			data.Products[i].DealPrice = 10
 			data.Products[i].PriceTiers = []PriceTier{{MinQty: 10, Price: 240}}
+			data.Products[i].DiscountedPrice = 237.60
 		}
 	}
 	g := NewGenerator("", dir, nil, "", nil, "")
@@ -267,8 +274,17 @@ func TestWholesaleLeaksOnNoGeneratedSurface(t *testing.T) {
 		checked++
 		s := string(body)
 		rel, _ := filepath.Rel(root, path)
-		if strings.Contains(s, "264.00") || strings.Contains(s, "price: 264") {
-			t.Errorf("%s renders the wholesale product's consumer price", rel)
+		// Every price the wholesale product carries, not just its base. Greping
+		// only the base price is how the tier price ($240) and the discounted
+		// price leaked into product.md and index.md: both rendered a real figure
+		// the PDP withholds, and this test passed anyway.
+		//
+		// Matched as digit sequences, not formatted literals, because the same
+		// number is written differently per surface: templates emit "237.60"
+		// but a JS object literal emits 237.6, so a check for the formatted
+		// string silently misses a leak into a <script> block.
+		if m := wholesalePriceDigits.FindString(s); m != "" {
+			t.Errorf("%s renders a wholesale price (%s)", rel, m)
 		}
 		if strings.Contains(s, "addItem({_id:'"+wholesaleID+"'") {
 			t.Errorf("%s wires the wholesale product into the cart", rel)

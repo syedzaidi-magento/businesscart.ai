@@ -23,7 +23,7 @@ Also available wholesale. Trade pricing is per account and is not published.[[if
 - **Order increment**: multiples of [[.Product.OrderIncrement]] (case pack)[[end]]
 - **Request a trade account**: https://[[.Domain]]/contact.html#trade
 
-[[end]][[if .Product.PriceTiers]]## Volume Pricing
+[[end]][[if and .Product.PriceTiers (not .Product.IsWholesaleOnly)]]## Volume Pricing
 [[range .Product.PriceTiers]]- [[.MinQty]]+ units: $[[printf "%.2f" .Price]]
 [[end]][[end]]
 [[if .Product.Attributes]]## Attributes
