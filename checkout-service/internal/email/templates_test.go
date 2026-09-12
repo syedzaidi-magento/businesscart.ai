@@ -191,3 +191,96 @@ func TestMonthlyStatementRefundRows(t *testing.T) {
 		}
 	}
 }
+
+// A cancellation is not a receipt. The confirmation itemises subtotal, shipping,
+// tax and discount because the customer is being charged and needs the maths;
+// a cancelled order charges nothing, so repeating that breakdown would read as a
+// bill for money nobody is taking. This pins the difference, because the obvious
+// way to write these templates is to copy the confirmation.
+func TestOrderCancelledIsNotAReceipt(t *testing.T) {
+	body := orderCancelledText(OrderCancelledData{
+		OrderID:    "abc123def456",
+		GrandTotal: 47.39,
+		Items: []OrderItemView{
+			{Name: "Sourdough Loaf", Quantity: 2, Price: 15.04},
+		},
+		BrandName:  "Solomon's Bakery",
+		BrandEmail: "info@solomonsbakery.com",
+	})
+
+	mustContain(t, body, "has been cancelled")
+	mustContain(t, body, "def456") // order identified by its last six
+	mustContain(t, body, "Sourdough Loaf x2")
+	mustContain(t, body, "Order value: $47.39")
+	mustContain(t, body, "Solomon's Bakery")
+
+	for _, banned := range []string{"Subtotal:", "Shipping:", "Tax:", "Discount"} {
+		mustNotContain(t, body, banned)
+	}
+	// Refunds belong to the "refunded" status, which has its own email to both
+	// parties. A cancellation guessing at refund state would either duplicate
+	// that or contradict it.
+	mustNotContain(t, body, "refund")
+}
+
+// The merchant's copy answers a different question than the customer's: which
+// order, whose, and is the stock free again.
+func TestOrderCancelledToCompanyText(t *testing.T) {
+	body := orderCancelledToCompanyText(OrderCancelledToCompanyData{
+		OrderID:       "abc123def456",
+		CustomerEmail: "dana@corner-cafe.test",
+		GrandTotal:    47.39,
+		Items: []OrderItemView{
+			{Name: "Sourdough Loaf", Quantity: 2, Price: 15.04},
+		},
+	})
+
+	mustContain(t, body, "was cancelled")
+	mustContain(t, body, "def456")
+	mustContain(t, body, "dana@corner-cafe.test") // merchant can identify the buyer
+	mustContain(t, body, "Cancelled items")
+	mustContain(t, body, "Sourdough Loaf x2")
+	mustContain(t, body, "Order value: $47.39")
+	mustContain(t, body, "businesscart.ai/orders")
+}
+
+// Both HTML bodies are rendered because a template error is a RUNTIME failure
+// that compiles fine: a bad field name yields an empty or half-written email
+// that nothing catches until a customer gets it. Same reason the statement
+// templates are rendered in this file.
+func TestOrderCancelledHTMLRenders(t *testing.T) {
+	cust := OrderCancelledMessage("buyer@test.com", OrderCancelledData{
+		OrderID:    "abc123def456",
+		GrandTotal: 47.39,
+		Items:      []OrderItemView{{Name: "Sourdough Loaf", Quantity: 2}},
+		BrandName:  "Solomon's Bakery",
+	})
+	if cust.Subject != "Your order #def456 has been cancelled" {
+		t.Errorf("customer subject = %q", cust.Subject)
+	}
+	mustContain(t, cust.HTMLBody, "Your order has been cancelled")
+	mustContain(t, cust.HTMLBody, "Sourdough Loaf")
+	mustContain(t, cust.HTMLBody, "47.39")
+	mustNotContain(t, cust.HTMLBody, "{{") // unrendered action = broken template
+
+	owner := OrderCancelledToCompanyMessage("owner@test.com", OrderCancelledToCompanyData{
+		OrderID:       "abc123def456",
+		CustomerEmail: "buyer@test.com",
+		GrandTotal:    47.39,
+		Items:         []OrderItemView{{Name: "Sourdough Loaf", Quantity: 2}},
+	})
+	if owner.Subject != "Order cancelled on your store #def456 ($47.39)" {
+		t.Errorf("owner subject = %q", owner.Subject)
+	}
+	mustContain(t, owner.HTMLBody, "Order cancelled")
+	mustContain(t, owner.HTMLBody, "buyer@test.com")
+	mustNotContain(t, owner.HTMLBody, "{{")
+}
+
+// An order with no items must still produce a usable email rather than an empty
+// shell. Cancellations happen on odd records, including legacy ones.
+func TestOrderCancelledWithNoItems(t *testing.T) {
+	body := orderCancelledText(OrderCancelledData{OrderID: "abc123def456", GrandTotal: 0})
+	mustContain(t, body, "has been cancelled")
+	mustContain(t, body, "reply to this email")
+}

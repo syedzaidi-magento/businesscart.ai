@@ -45,6 +45,13 @@ func buildGoogleReviewsFeed(data StorefrontData) ([]byte, error) {
 	var reviews []reviewItem
 
 	for _, p := range data.Products {
+		// Wholesale-only products are absent from the shopping feeds, so reviews
+		// submitted for them would reference a product Merchant Center does not
+		// have. Same exclusion as the five product feeds, for the same reason: a
+		// consumer ad surface must not carry an item with no consumer buy path.
+		if p.IsWholesaleOnly() {
+			continue
+		}
 		if p.Rating == nil || len(p.Rating.Reviews) == 0 {
 			continue
 		}

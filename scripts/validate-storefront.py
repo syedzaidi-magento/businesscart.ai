@@ -266,6 +266,7 @@ def step_schema():
     parse_failures = 0
     missing_field_failures = 0
     rating_mismatch_failures = 0
+    audience_failures = 0
 
     for pdp in pdps:
         with open(pdp, encoding="utf-8") as fp:
@@ -335,6 +336,63 @@ def step_schema():
         # [[if]] guard breaks while product.md still emits the section, the PDP a
         # human actually looks at loses its answers and only the AI-facing file
         # keeps them. A one-directional check would pass that silently.
+        # --- Audience invariants (Roadmap #36) ---
+        #
+        # A wholesale-only product stays crawlable on purpose: that visibility IS
+        # the acquisition front door. What it must never do is publish a consumer
+        # price, because there is no consumer buy path behind it. A priced offer
+        # with no cart earns a shopping rich result that lands a shopper on a page
+        # they cannot purchase from, and for a paid feed it spends real money doing
+        # it. The signal is the offer's eligibleCustomerType, which only the
+        # wholesale branch of product.html emits.
+        for i, block in enumerate(blocks):
+            try:
+                d = json.loads(block)
+            except json.JSONDecodeError:
+                continue  # already reported above
+            if d.get("@type") != "Product":
+                continue
+            offers = d.get("offers") or {}
+            is_wholesale = "goodrelations" in str(offers.get("eligibleCustomerType", "")).lower()
+            base = os.path.basename(pdp)
+
+            if is_wholesale:
+                if "price" in offers:
+                    fail(f"{base}: wholesale-only product published a consumer price ({offers['price']})")
+                    audience_failures += 1
+                if "priceCurrency" in offers:
+                    fail(f"{base}: wholesale-only product published priceCurrency on the offer")
+                    audience_failures += 1
+                # The page must still give a business buyer somewhere to go, or it
+                # is a dead end: no price, no cart, no route to an account.
+                # The CTA must stay on the merchant's own domain (white-label), so
+                # it is a relative link to the contact page anchor, never a link
+                # into the platform portal.
+                if "contact.html#trade" not in html:
+                    fail(f"{base}: wholesale-only product has no trade-access link")
+                    audience_failures += 1
+                if "request-b2b-code" in html or "businesscart.ai/request" in html:
+                    fail(f"{base}: trade CTA points into the platform portal, breaking white-label")
+                    audience_failures += 1
+                if "Add to Cart" in html:
+                    fail(f"{base}: wholesale-only product still renders Add to Cart")
+                    audience_failures += 1
+                # The .md companion is what AI crawlers read. If it still carries a
+                # price the two surfaces disagree, which is the /faq split again.
+                comp = os.path.splitext(pdp)[0] + ".md"
+                if os.path.exists(comp):
+                    with open(comp, encoding="utf-8") as fp:
+                        md = fp.read()
+                    if "Wholesale only" not in md:
+                        fail(f"{os.path.basename(comp)}: wholesale product's companion does not declare it wholesale only")
+                        audience_failures += 1
+            else:
+                # A retail product losing its price is the opposite regression, and
+                # just as silent: the page still renders and still looks fine.
+                if not offers.get("price"):
+                    fail(f"{base}: retail product has no price in its offer")
+                    audience_failures += 1
+
         companion = os.path.splitext(pdp)[0] + ".md"
         html_has_faq = "FAQPage" in html
         md_has_faq = False
@@ -353,8 +411,8 @@ def step_schema():
             fail(f"{os.path.basename(pdp)}: companion has a Q&A section but the PDP emits no FAQ schema")
             missing_field_failures += 1
 
-    if parse_failures == 0 and missing_field_failures == 0 and rating_mismatch_failures == 0:
-        ok(f"all {len(pdps)} PDPs: JSON-LD parses + schema fields present + rating/review consistency + FAQ schema/companion parity")
+    if parse_failures == 0 and missing_field_failures == 0 and rating_mismatch_failures == 0 and audience_failures == 0:
+        ok(f"all {len(pdps)} PDPs: JSON-LD parses + schema fields present + rating/review consistency + FAQ schema/companion parity + audience price/buy-path invariants")
 
     # --- Blog posts: optional editorial content ---
     # Glob only top-level /blog/*.html, excluding category/ subdir.
@@ -458,7 +516,15 @@ def step_schema():
         feed_count = len(reviews_in_feed)
 
         # Count reviews referenced in catalog (sum aggregateRating.reviewCount across PDPs).
+        #
+        # Wholesale-only products are skipped, and the skip is the point: their
+        # PDPs still carry real reviews, but the product is absent from the
+        # shopping feeds, so submitting its reviews would reference an item
+        # Merchant Center does not have. The invariant this check protects is
+        # "every product that BELONGS in the feed has all its reviews there",
+        # not "the feed mirrors every page on the site".
         catalog_count = 0
+        skipped_wholesale = 0
         for pdp in pdps:
             with open(pdp, encoding="utf-8") as fp:
                 html = fp.read()
@@ -468,6 +534,14 @@ def step_schema():
                 except json.JSONDecodeError:
                     continue
                 if d.get("@type") == "Product":
+                    offers = d.get("offers") or {}
+                    if "goodrelations" in str(offers.get("eligibleCustomerType", "")).lower():
+                        agg = d.get("aggregateRating") or {}
+                        try:
+                            skipped_wholesale += int(agg.get("reviewCount") or 0)
+                        except (ValueError, TypeError):
+                            pass
+                        continue
                     agg = d.get("aggregateRating") or {}
                     try:
                         catalog_count += int(agg.get("reviewCount") or 0)
@@ -475,8 +549,9 @@ def step_schema():
                         pass
 
         if feed_count != catalog_count:
-            fail(f"google_reviews feed: review count mismatch — feed has {feed_count}, "
-                 f"PDPs aggregate to {catalog_count}")
+            fail(f"google_reviews feed: review count mismatch, feed has {feed_count}, "
+                 f"consumer-facing PDPs aggregate to {catalog_count} "
+                 f"({skipped_wholesale} review(s) correctly excluded with wholesale-only products)")
             return
 
         # Per-review schema invariants (spot check first 5 reviews to catch structural issues).
@@ -496,6 +571,108 @@ def step_schema():
                 return
 
         ok(f"google_reviews feed: schema v2.4 valid, {feed_count} reviews, matches catalog count, required fields present")
+
+
+# ─── Step 3.4: Wholesale surfaces (Roadmap #36) ──────────────────────────────
+def step_wholesale():
+    """Storefront-wide wholesale checks.
+
+    step_schema covers per-product invariants. These are the surfaces no single
+    PDP can see: the contact page that receives the enquiry, the llms.txt an AI
+    crawler reads first, and the shopping feeds a wholesale product must stay out
+    of. Each is a place where the audience split can half-ship: a product can
+    correctly hide its price while the feed still advertises it, or the CTA can
+    point at a contact page that never grew a form.
+    """
+    step("Step 3.4/4: Wholesale surfaces (contact form, llms.txt, feed exclusion)")
+
+    # Two different sets, and conflating them is the trap.
+    #
+    #   wholesale-only  → carries the GoodRelations eligibleCustomerType in its
+    #                     JSON-LD. These must be absent from consumer feeds.
+    #   trade-capable   → wholesale-only PLUS "both". A "both" product keeps its
+    #                     ordinary consumer offer and emits no GoodRelations
+    #                     marker, but it DOES carry a trade CTA, so it justifies
+    #                     the contact-page section on its own.
+    #
+    # Detecting only the first set and concluding "no wholesale here" would fail
+    # a storefront whose products are all "both", which is the likeliest real
+    # configuration for a bakery selling retail and to restaurants.
+    pdps = sorted(glob.glob(f"{STOREFRONT_DIR}/products/*.html"))
+    wholesale_slugs = []
+    trade_capable = 0
+    for pdp in pdps:
+        with open(pdp, encoding="utf-8") as fp:
+            html = fp.read()
+        if "contact.html#trade" in html:
+            trade_capable += 1
+        if "goodrelations" in html.lower():
+            # Match on the filename stem, which is slug + the product id suffix and
+            # is what every feed emits as its item id. Matching on the DISPLAY NAME
+            # would be brittle: a retail "Adult Welding Gloves XL" legitimately in a
+            # feed contains the wholesale "Adult Welding Gloves" as a substring, and
+            # would fail this check for no reason.
+            wholesale_slugs.append(os.path.splitext(os.path.basename(pdp))[0])
+
+    # A storefront with nothing trade-capable must not sprout a trade section.
+    # Silence here is the correct result, not a skipped check.
+    contact_path = f"{STOREFRONT_DIR}/contact.html"
+    contact = ""
+    if os.path.exists(contact_path):
+        with open(contact_path, encoding="utf-8") as fp:
+            contact = fp.read()
+
+    if trade_capable == 0:
+        if 'id="trade"' in contact:
+            fail("contact.html renders a trade section but no product is marked wholesale or both")
+        else:
+            ok("no trade-capable products; contact page correctly has no trade section")
+        return
+
+    failures = 0
+
+    # The CTA on every wholesale PDP points at this anchor. If the section is not
+    # here the link is a dead scroll and the enquiry path is broken end to end.
+    if 'id="trade"' not in contact:
+        fail("trade-capable products exist but contact.html has no #trade section for their CTA to reach")
+        failures += 1
+    if "D2C_TRADE_SUBMIT" not in contact:
+        fail("contact.html trade section has no submit handler")
+        failures += 1
+    # The honeypot is the only spam defence on a public form.
+    if 'name="website"' not in contact:
+        fail("contact.html trade form has no honeypot field")
+        failures += 1
+
+    # llms.txt is what an AI crawler reads to answer "does this company sell
+    # wholesale". The per-product .md files say it too, but the index is what
+    # gets read first.
+    llms_path = f"{STOREFRONT_DIR}/llms.txt"
+    if os.path.exists(llms_path):
+        with open(llms_path, encoding="utf-8") as fp:
+            llms = fp.read()
+        if "Wholesale:" not in llms:
+            fail("llms.txt does not declare wholesale availability")
+            failures += 1
+        if "contact.html#trade" not in llms:
+            fail("llms.txt does not tell an AI crawler where to request a trade account")
+            failures += 1
+
+    # Shopping feeds are consumer ad surfaces. A wholesale product in one buys
+    # clicks to a page with no price and no cart: real money, guaranteed bounce.
+    feeds = sorted(glob.glob(f"{STOREFRONT_DIR}/feeds/*"))
+    for feed in feeds:
+        with open(feed, encoding="utf-8") as fp:
+            body = fp.read()
+        for slug in wholesale_slugs:
+            if slug and slug in body:
+                fail(f"{os.path.basename(feed)} advertises wholesale-only product {slug!r}")
+                failures += 1
+
+    if failures == 0:
+        ok(f"{trade_capable} trade-capable product(s) ({len(wholesale_slugs)} wholesale-only): "
+           f"contact form present, llms.txt declares it, "
+           f"wholesale-only absent from all {len(feeds)} feed(s)")
 
 
 # ─── Step 3.5: Tracking wiring (ad-conversion funnel signals) ────────────────
@@ -705,6 +882,7 @@ if __name__ == "__main__":
     if failed == 0:
         step_tenant_isolation()
         step_schema()
+        step_wholesale()
         step_tracking()
         step_lighthouse()
     elapsed = time.time() - start

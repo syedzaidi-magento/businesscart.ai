@@ -14,7 +14,7 @@
 This storefront contains [[len .Products]] products.
 
 ### Product List
-[[range .Products]]- **[[.Name]]**: $[[printf "%.2f" .Price]][[if .DealPrice]] (Sale: $[[printf "%.2f" .DiscountedPrice]] — [[printf "%.0f" .DealPrice]]% off)[[end]] — [[.Category]]
+[[range .Products]]- **[[.Name]]**: [[if .IsWholesaleOnly]]wholesale only (trade account required)[[else]]$[[printf "%.2f" .Price]][[end]][[if .DealPrice]] (Sale: $[[printf "%.2f" .DiscountedPrice]] — [[printf "%.0f" .DealPrice]]% off)[[end]] — [[.Category]]
   - [Product Details](products/[[.Filename]].md)
 [[end]]
 

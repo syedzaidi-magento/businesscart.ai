@@ -51,6 +51,48 @@
             [[if .Config.WhatsappNumber]]<p style="margin-top: 0.75rem;"><a href="https://wa.me/[[.Config.WhatsappNumber]]" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">Chat with us on WhatsApp</a></p>[[end]]
         </div>
 
+        [[if .HasWholesale]]
+        <!-- Wholesale enquiry. Rendered only for merchants who actually sell wholesale,
+             so a pure-D2C storefront is untouched.
+
+             No new script: tracker.js is already on this page and already attaches
+             sellerId to every event, so the submit reuses window.D2C_TRACKER and the
+             existing /visitors/event endpoint. Nothing extra for Lighthouse to fetch.
+
+             The buyer never leaves the merchant's domain. The platform appears later,
+             at registration, once the merchant has issued a code. -->
+        <h2 id="trade">Wholesale &amp; Trade Accounts</h2>
+        <div class="contact-card">
+            <p style="margin-top:0">
+                Buying for a restaurant, cafe, shop or office? Trade pricing is set per account.
+                Tell us about your business and [[.Company.Name]] will follow up with your account details.
+            </p>
+            <form id="trade-form" onsubmit="return window.D2C_TRADE_SUBMIT(event)" style="margin-top:1rem">
+                <div style="display:grid;gap:0.75rem;max-width:34rem">
+                    <input name="name" required placeholder="Your name"
+                        style="padding:0.7rem;border:1px solid #cbd5e1;border-radius:8px;font:inherit">
+                    <input name="company" required placeholder="Business name"
+                        style="padding:0.7rem;border:1px solid #cbd5e1;border-radius:8px;font:inherit">
+                    <input name="email" type="email" required placeholder="Work email"
+                        style="padding:0.7rem;border:1px solid #cbd5e1;border-radius:8px;font:inherit">
+                    <input name="phone" placeholder="Phone (optional)"
+                        style="padding:0.7rem;border:1px solid #cbd5e1;border-radius:8px;font:inherit">
+                    <textarea name="sells" rows="3" placeholder="What do you need, and roughly how much? (optional)"
+                        style="padding:0.7rem;border:1px solid #cbd5e1;border-radius:8px;font:inherit"></textarea>
+                    <!-- Honeypot: hidden from people, filled by bots. The server drops
+                         any submission carrying it. Same field name the portal form uses. -->
+                    <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true"
+                        style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+                    <button type="submit" id="trade-submit"
+                        style="padding:0.8rem 1.25rem;border:none;border-radius:8px;background:var(--primary);color:#fff;font:inherit;font-weight:700;cursor:pointer">
+                        Request trade access
+                    </button>
+                    <p id="trade-status" role="status" aria-live="polite" style="margin:0;font-size:0.9rem"></p>
+                </div>
+            </form>
+        </div>
+        [[end]]
+
         [[if .Company.DeliveryMethods]]
         <h2>How We Deliver</h2>
         <div class="contact-card">
@@ -60,6 +102,48 @@
             [[if eq (printf "%s" .) "shipping_out"]]<p>Shipping — We ship orders to your address.</p>[[end]]
             [[end]]
         </div>
+        [[end]]
+        [[if .HasWholesale]]
+        <script>
+            // Submit handler for the trade enquiry. Deliberately inline and tiny:
+            // adding a script file would cost a request on a page that currently
+            // loads four, and there is nothing here worth caching separately.
+            //
+            // Routing is the important part. tracker.js already stamps sellerId on
+            // every event it sends, so posting "contact_request" through it reaches
+            // the backend already attributed to THIS merchant, which is what lets the
+            // notification go to the merchant instead of the platform operator.
+            window.D2C_TRADE_SUBMIT = function (e) {
+                e.preventDefault();
+                var f = e.target,
+                    btn = document.getElementById('trade-submit'),
+                    out = document.getElementById('trade-status'),
+                    get = function (n) { return (f.elements[n] && f.elements[n].value || '').trim(); };
+                // Bots fill the honeypot. Show them success and send nothing, so a
+                // scripted submitter gets no signal that it was filtered.
+                if (get('website')) { f.reset(); out.textContent = 'Thanks. We will be in touch.'; return false; }
+                btn.disabled = true;
+                out.style.color = '#64748b';
+                out.textContent = 'Sending...';
+                try {
+                    window.D2C_TRACKER.trackStep('contact_request', {
+                        name: get('name'), company: get('company'), email: get('email'),
+                        phone: get('phone'), sells: get('sells'), purpose: 'wholesale', website: ''
+                    });
+                    f.reset();
+                    out.style.color = '#15803d';
+                    out.textContent = 'Thanks. Your request has been sent and we will follow up by email.';
+                } catch (err) {
+                    // trackStep is fire-and-forget and swallows its own errors, so this
+                    // only fires if the tracker never loaded at all. Give the buyer a
+                    // route that does not depend on JS rather than a dead end.
+                    btn.disabled = false;
+                    out.style.color = '#b91c1c';
+                    out.textContent = 'Something went wrong. Please email us instead.';
+                }
+                return false;
+            };
+        </script>
         [[end]]
     </main>
     [[template "footer" .]]

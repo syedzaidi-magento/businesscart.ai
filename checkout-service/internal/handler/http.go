@@ -1857,6 +1857,47 @@ func (h *LambdaHandler) handleUpdateOrderRequest(orderIDStr string, request even
 		}
 	}
 
+	// Notify on first transition to "cancelled". Same architecture as the
+	// new-order block in placeOrder: customer through the merchant's own sender,
+	// owner through the platform sender, failures logged and never blocking.
+	if req.Status == "cancelled" && existing.Status != "cancelled" &&
+		h.emailSender != nil && updated.CustomerEmail != "" {
+		items := make([]mailer.OrderItemView, 0, len(updated.Items))
+		for _, it := range updated.Items {
+			items = append(items, mailer.OrderItemView{
+				Name:     it.Name,
+				Quantity: it.Quantity,
+				Price:    effectiveLineSubtotal(it),
+				Image:    it.Image,
+			})
+		}
+		brandName, brandEmail := mailer.CompanyBrand(updated.SellerID)
+		msg := mailer.OrderCancelledMessage(updated.CustomerEmail, mailer.OrderCancelledData{
+			OrderID:    updated.ID.Hex(),
+			GrandTotal: updated.GrandTotal,
+			Items:      items,
+			BrandName:  brandName,
+			BrandEmail: brandEmail,
+		})
+		sender, _ := mailer.SenderForCompany(context.Background(), updated.SellerID, h.emailSender)
+		if err := sender.Send(context.Background(), msg); err != nil {
+			log.Printf("WARN: order cancelled email failed for %s: %v", updated.CustomerEmail, err)
+		}
+
+		// Notify the company owner about the cancellation, platform sender (BC SES).
+		if ownerEmail := mailer.CompanyOwnerEmail(updated.SellerID); ownerEmail != "" {
+			ownerMsg := mailer.OrderCancelledToCompanyMessage(ownerEmail, mailer.OrderCancelledToCompanyData{
+				OrderID:       updated.ID.Hex(),
+				CustomerEmail: updated.CustomerEmail,
+				GrandTotal:    updated.GrandTotal,
+				Items:         items,
+			})
+			if err := h.emailSender.Send(context.Background(), ownerMsg); err != nil {
+				log.Printf("WARN: order cancelled notification to owner %s failed: %v", ownerEmail, err)
+			}
+		}
+	}
+
 	return h.successResponse(updated), nil
 }
 

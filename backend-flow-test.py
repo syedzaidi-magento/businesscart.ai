@@ -14,6 +14,7 @@ import argparse
 import base64
 import datetime
 import json
+import os
 import sys
 import time
 
@@ -1319,6 +1320,100 @@ class BackendFlowTest:
 
         self.run_test("Create product with price tiers", test_create_tiered_product)
 
+        # ── Product audience: retail / wholesale / both (Roadmap #36) ──
+        #
+        # The default is the load-bearing case. Every product that existed before
+        # this field must keep behaving exactly as it did, which is only true if
+        # an absent audience round-trips as absent rather than being defaulted to
+        # a stored value.
+
+        def test_audience_round_trips():
+            self.use_token("company1")
+            created = {}
+            for label, payload_audience in (("Wholesale", "wholesale"), ("Both", "both"), ("Default", None)):
+                body = {
+                    "name": f"{PREFIX} Audience {label}",
+                    "slug": f"test-audience-{label.lower()}",
+                    "price": 30.00,
+                    "description": f"Audience {label}",
+                }
+                if payload_audience is not None:
+                    body["audience"] = payload_audience
+                resp = self.api.post("/products", body)
+                assert_status_in(resp, [200, 201], f"Create {label} product")
+                created[label] = payload_audience
+
+            resp = self.api.get("/products")
+            assert_status(resp, 200, "Fetch products")
+            by_name = {p.get("name"): p for p in resp.json()}
+
+            for label, want in created.items():
+                prod = by_name.get(f"{PREFIX} Audience {label}")
+                if not prod:
+                    raise AssertionError(f"{label} product not found after creation")
+                self.tracker.track_product("company1", prod["_id"])
+                got = prod.get("audience")
+                if want is None:
+                    # Absent, not "retail". A stored default would mean every
+                    # pre-existing product needed a migration to stay correct.
+                    assert not got, f"omitted audience came back as {got!r}; it must stay absent"
+                else:
+                    assert got == want, f"{label}: audience = {got!r}, want {want!r}"
+            ok("audience round-trips: wholesale, both, and omitted stays absent (= retail)")
+
+        self.run_test("Product audience round-trips", test_audience_round_trips)
+
+        def test_audience_rejects_invalid():
+            """A bad audience must 400 rather than be stored. A silently accepted
+            typo like 'b2b' would read back as retail, so a merchant who meant to
+            hide a product from consumers would keep selling it at retail price."""
+            self.use_token("company1")
+            for bad in ("b2b", "Wholesale", "trade", "retail,wholesale"):
+                resp = self.api.post("/products", {
+                    "name": f"{PREFIX} Bad Audience",
+                    "slug": "test-bad-audience",
+                    "price": 10.00,
+                    "description": "Should fail",
+                    "audience": bad,
+                })
+                assert_status(resp, 400, f"Reject audience {bad!r}")
+            ok("invalid audience values rejected (400): b2b, Wholesale, trade, comma-list")
+
+        self.run_test("Product audience validation", test_audience_rejects_invalid)
+
+        def test_audience_update_unsets_retail():
+            """retail is the absence of a value, never a stored one. Writing it
+            must remove the key so the collection only ever records a deliberate
+            wholesale/both choice."""
+            self.use_token("company1")
+            resp = self.api.get("/products")
+            assert_status(resp, 200, "Fetch products")
+            target = next((p for p in resp.json() if p.get("name") == f"{PREFIX} Audience Wholesale"), None)
+            if not target:
+                raise AssertionError("wholesale product missing; earlier audience test did not run")
+            pid = target["_id"]
+
+            for send, want in (("both", "both"), ("retail", None), ("wholesale", "wholesale")):
+                resp = self.api.put(f"/products/{pid}", {"audience": send})
+                assert_status(resp, 200, f"PUT audience={send}")
+                check = self.api.get("/products")
+                cur = next(p for p in check.json() if p["_id"] == pid)
+                got = cur.get("audience")
+                if want is None:
+                    assert not got, f"PUT audience=retail left {got!r} stored; retail must unset"
+                else:
+                    assert got == want, f"after PUT {send}: audience = {got!r}, want {want!r}"
+
+            # A rejected update must not half-apply.
+            resp = self.api.put(f"/products/{pid}", {"audience": "nonsense"})
+            assert_status(resp, 400, "PUT invalid audience")
+            check = self.api.get("/products")
+            cur = next(p for p in check.json() if p["_id"] == pid)
+            assert cur.get("audience") == "wholesale", "rejected update changed the stored audience"
+            ok("audience updates: both stored, retail unsets, invalid rejected without side effects")
+
+        self.run_test("Product audience update semantics", test_audience_update_unsets_retail)
+
         # Validate tier validation rejects bad input
         def test_tier_validation():
             self.use_token("company1")
@@ -1803,6 +1898,70 @@ class BackendFlowTest:
                 raise AssertionError("deliveredAt should be set when status flips to delivered")
             ok("Admin updated to delivered; deliveredAt set")
         self.run_test("5d-6. Admin updates any order", test_admin_update)
+
+        # 5d-7. Cancelling an order emails the customer. Until this existed a
+        # cancellation was silent on both sides: the customer found out by
+        # checking the site, or by turning up for a pickup order that no longer
+        # existed. Uses a FRESH order because the email fires only on the first
+        # transition into "cancelled", and the order above is already delivered.
+        #
+        # Only the customer copy is observable locally: the merchant copy needs
+        # an SSM EMAIL_COMPANY_CONFIGS entry that exists only in prod. Its render
+        # path is pinned by templates_test.go, same split as 5h.
+        def test_cancel_emails_customer():
+            self._clear_cart("customer", c1_id)
+            self._add_to_cart("customer", c1_id, product_a, 1)
+            q = self._create_quote("customer", c1_id, "standard")
+            assert_status(q, 200, "Quote for cancellation email test")
+
+            self.use_token("customer")
+            o = self.api.post("/checkout/orders", {
+                "quoteId": q.json().get("id"),
+                "paymentMethod": "purchase_order",
+                "deliveryMethod": "pickup",
+            })
+            assert_status(o, 200, "Place order for cancellation email test")
+            cancel_id = o.json().get("id")
+            self.tracker.track_order(cancel_id)
+            short_id = cancel_id[-6:]
+
+            self.use_token("company1")
+            resp = self.api.put(f"/checkout/orders/{cancel_id}", {"status": "cancelled"})
+            assert_status(resp, 200, "Cancel the order")
+            assert (resp.json() or {}).get("status") == "cancelled", "status did not flip to cancelled"
+
+            mailpit_url = "http://localhost:8025/api/v1/messages"
+            want_subject = f"Your order #{short_id} has been cancelled"
+            msg = None
+            for _ in range(15):
+                try:
+                    r = requests.get(mailpit_url, params={"limit": 50}, timeout=2)
+                    if r.status_code == 200:
+                        for m in (r.json().get("messages", []) or []):
+                            if m.get("Subject") == want_subject:
+                                msg = m
+                                break
+                    if msg:
+                        break
+                except Exception:
+                    pass
+                time.sleep(0.5)
+
+            assert msg, f"Cancellation email {want_subject!r} not found in Mailpit"
+
+            body = requests.get(f"http://localhost:8025/api/v1/message/{msg['ID']}", timeout=3).json()
+            text = body.get("Text") or ""
+            html = body.get("HTML") or ""
+            assert "has been cancelled" in text, f"text body:\n{text}"
+            assert "reply to this email" in text, f"no next step offered:\n{text}"
+            # A cancellation is not a receipt: nothing is being charged, so the
+            # confirmation's tax/shipping/discount breakdown must not appear.
+            for banned in ("Subtotal:", "Shipping:", "Tax:"):
+                assert banned not in text, f"cancellation email reads like a receipt, found {banned!r}"
+            assert "{{" not in html, "HTML template left an unrendered action"
+            ok(f"Cancellation email delivered to customer: {want_subject!r}")
+
+        self.run_test("5d-7. Cancelling an order emails the customer", test_cancel_emails_customer)
 
         # Park the test order as cancelled so it doesn't count toward customer's
         # unpaid balance in phase 6e credit-limit test (GetUnpaidOrdersTotal excludes cancelled).
@@ -4535,6 +4694,104 @@ class BackendFlowTest:
             ok("contact_request lead persisted with fields + gclid")
 
         self.run_test("Contact request lead captured", test_contact_request_lead)
+
+        # Test 7b: a contact_request carrying a sellerId is a MERCHANT's lead, not
+        # the platform's. It comes off that merchant's own storefront contact page
+        # (Roadmap #36 wholesale enquiry) and must be routed to them.
+        #
+        # Mail IS observable locally: manage_services.sh runs Mailpit on :1025 and
+        # local.env.json points EMAIL_SMTP_HOST at it, so the platform sender
+        # really delivers and the merchant branch really fires. The recipient is
+        # the company's own d2c.contactEmail, which the merchant sets in their own
+        # portal settings, so no SSM entry or deploy is involved.
+        def test_contact_request_with_seller_is_scoped():
+            seller_id = self.ids["company1"]
+            svid = "v___test__trade_" + str(int(time.time()))
+            self.tracker.track_visitor(svid)
+            resp = self.api.post("/visitors/event", {
+                "visitorId": svid,
+                "event": "contact_request",
+                "page": "/contact.html",
+                "sellerId": seller_id,
+                "metadata": {
+                    "name": "Dana Kim",
+                    "email": "dana@corner-cafe.test",
+                    "company": "Corner Cafe",
+                    "phone": "555-0142",
+                    "sells": "Need ~200 rolls a week",
+                    "purpose": "wholesale",
+                },
+            }, headers={"User-Agent": real_ua})
+            assert_status(resp, 200, "seller-scoped contact_request accepted")
+
+            self.use_token("admin")
+            visitors = self.api.get(f"/visitors?visitorId={svid}").json().get("visitors", [])
+            assert len(visitors) == 1, f"expected 1 visitor, got {len(visitors)}"
+            v = visitors[0]
+            # The sellerId is what routes the notification to the merchant. If it
+            # is dropped the request silently becomes a platform lead again and the
+            # merchant never hears about a buyer who asked for an account.
+            assert v.get("sellerId") == seller_id, f"visitor sellerId = {v.get('sellerId')!r}, want {seller_id!r}"
+            leads = [m for m in (v.get("milestones") or []) if m.get("event") == "contact_request"]
+            assert len(leads) == 1, f"expected 1 lead, got {len(leads)}"
+            md = leads[0].get("metadata", {})
+            assert md.get("purpose") == "wholesale", f"purpose: {md.get('purpose')}"
+            assert md.get("company") == "Corner Cafe", f"company: {md.get('company')}"
+            ok("seller-scoped wholesale request accepted, attributed to the merchant")
+
+        self.run_test("Wholesale request routed to merchant", test_contact_request_with_seller_is_scoped)
+
+        def test_wholesale_request_emails_the_merchant():
+            """The notification must reach the MERCHANT, not the platform operator.
+
+            Routing to help@businesscart.ai would mean the merchant never learns a
+            buyer asked for an account, which makes the whole feature a dead end.
+            Asserted against Mailpit, because a 200 from the event endpoint says
+            nothing about who the mail went to."""
+            mailpit = os.getenv("MAILPIT_API", "http://localhost:8025")
+            try:
+                requests.get(f"{mailpit}/api/v1/messages?limit=1", timeout=5).raise_for_status()
+            except Exception:
+                warn("Mailpit not reachable; skipping merchant-delivery assertion")
+                return
+
+            seller_id = self.ids["company1"]
+            trade_inbox = "trade-desk@testco.test"
+
+            # The recipient is the company's own storefront contact email.
+            self.use_token("company1")
+            r = self.api.patch(f"/accounts/{seller_id}", {"company": {"d2c": {"contactEmail": trade_inbox}}})
+            assert_status(r, 200, "set d2c.contactEmail")
+
+            wvid = "v___test__trademail_" + str(int(time.time()))
+            self.tracker.track_visitor(wvid)
+            resp = self.api.post("/visitors/event", {
+                "visitorId": wvid,
+                "event": "contact_request",
+                "page": "/contact.html",
+                "sellerId": seller_id,
+                "metadata": {"name": "Dana Kim", "company": "Corner Cafe",
+                             "email": "dana@corner-cafe.test", "purpose": "wholesale"},
+            }, headers={"User-Agent": real_ua})
+            assert_status(resp, 200, "wholesale request accepted")
+
+            # Send is fire-and-forget, so poll rather than assume it has landed.
+            found, deadline = None, time.time() + 10
+            while time.time() < deadline and not found:
+                time.sleep(1)
+                msgs = requests.get(f"{mailpit}/api/v1/messages?limit=15", timeout=5).json().get("messages", [])
+                for m in msgs:
+                    if trade_inbox in [t.get("Address", "").lower() for t in m.get("To", [])]:
+                        found = m
+                        break
+
+            assert found, ("no wholesale notification reached the merchant's contact email; "
+                           "it most likely fell back to the platform operator inbox")
+            subject = (found.get("Subject") or "").lower()
+            assert "wholesale" in subject, f"subject does not identify a wholesale request: {found.get('Subject')!r}"
+            ok(f"merchant notified at their own contact email: {found.get('Subject')!r}")
+
+        self.run_test("Wholesale request emails the merchant", test_wholesale_request_emails_the_merchant)
 
         # Test 8: honeypot ("website" filled) drops the lead silently — 200 back,
         # no contact_request milestone stored.

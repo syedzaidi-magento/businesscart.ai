@@ -172,15 +172,19 @@
                 [[end]]
 
                 <div class="price-row">
+                    [[if .IsWholesaleOnly]]
+                    <span class="price" style="font-size:0.95rem">Trade only</span>
+                    [[else]]
                     [[if and .DealPrice (gt .DealPrice 0.0)]]
                     <span class="price">$[[printf "%.2f" .DiscountedPrice]]</span>
                     <span class="original-price">$[[printf "%.2f" .Price]]</span>
                     [[else]]
                     <span class="price">$[[printf "%.2f" .Price]]</span>
                     [[end]]
+                    [[end]]
                 </div>
 
-                [[if gt .Stock 0]]
+                [[if and (gt .Stock 0) (not .IsWholesaleOnly)]]
                 <button class="cta-btn"
                     onclick="event.preventDefault(); window.D2C_CART.addItem({_id:'[[.ID]]', partnerId:'[[.PartnerID]]', name:'[[.Name]]', price:[[.Price]], discountedPrice:[[if .DealPrice]][[.DiscountedPrice]][[else]][[.Price]][[end]], image:'[[.Image]]', dealPrice:[[.DealPrice]], priceTiers:[[jsArray .PriceTiers]], stock:[[.Stock]]})">
                     Add to Cart

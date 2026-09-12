@@ -906,3 +906,146 @@ const orderRefundedHTMLTmpl = `<!DOCTYPE html>
   <p style="color:#64748b;font-size:12px">{{.BrandName}}{{if .BrandEmail}} · <a href="mailto:{{.BrandEmail}}" style="color:#64748b;text-decoration:none">{{.BrandEmail}}</a>{{end}}</p>
 </body>
 </html>`
+
+// ─────────────────────── Order Cancelled ───────────────────────
+
+// OrderCancelledData is a cancelled order as the customer needs to see it.
+//
+// Deliberately leaner than OrderConfirmationData: no tax, shipping or discount
+// breakdown. Nothing is being charged, so itemising the maths would make a
+// cancellation read like an invoice. What matters is which order, what was in
+// it, and what happens next.
+type OrderCancelledData struct {
+	OrderID    string
+	GrandTotal float64
+	Items      []OrderItemView
+	BrandName  string
+	BrandEmail string
+}
+
+// OrderCancelledMessage tells the CUSTOMER their order was cancelled. Sent
+// through the merchant's own sender, like the confirmation and shipped notices.
+func OrderCancelledMessage(to string, data OrderCancelledData) Message {
+	return Message{
+		To:       to,
+		Subject:  fmt.Sprintf("Your order #%s has been cancelled", lastSix(data.OrderID)),
+		HTMLBody: renderHTML(orderCancelledHTMLTmpl, data),
+		TextBody: orderCancelledText(data),
+	}
+}
+
+func orderCancelledText(d OrderCancelledData) string {
+	var b bytes.Buffer
+	fmt.Fprintf(&b, "Your order #%s has been cancelled.\n\n", lastSix(d.OrderID))
+	if len(d.Items) > 0 {
+		fmt.Fprintf(&b, "Cancelled items:\n")
+		for _, it := range d.Items {
+			fmt.Fprintf(&b, "  - %s x%d\n", it.Name, it.Quantity)
+		}
+		fmt.Fprintf(&b, "\nOrder value: $%.2f\n\n", d.GrandTotal)
+	}
+	fmt.Fprintf(&b, "If this was not expected, reply to this email and we will look into it.\n\n%s\n",
+		brandFooterText(d.BrandName, d.BrandEmail))
+	return b.String()
+}
+
+const orderCancelledHTMLTmpl = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Your order has been cancelled</title></head>
+<body style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1e293b">
+  <h1 style="color:#0d9488;margin-bottom:8px">Your order has been cancelled</h1>
+  <p style="font-size:14px;color:#64748b;margin-top:0">Order #{{.OrderID}}</p>
+
+  {{if .Items}}
+  <h2 style="font-size:15px;color:#1e293b;margin-top:24px;margin-bottom:8px">Cancelled items</h2>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+    <tbody>
+      {{range .Items}}
+      <tr>
+        <td style="padding:8px 8px 8px 0;border-bottom:1px solid #f1f5f9;width:64px;vertical-align:top">
+          {{if .Image}}<img src="{{.Image}}" alt="{{.Name}}" width="56" height="56" style="width:56px;height:56px;border-radius:6px;object-fit:cover">{{end}}
+        </td>
+        <td style="padding:8px;border-bottom:1px solid #f1f5f9;vertical-align:top">
+          <div style="font-weight:600">{{.Name}}</div>
+          <div style="color:#64748b;font-size:13px">Qty {{.Quantity}}</div>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  <p style="font-size:15px;color:#64748b">Order value: ${{printf "%.2f" .GrandTotal}}</p>
+  {{end}}
+
+  <p style="font-size:15px;line-height:1.5">If this was not expected, reply to this email and we will look into it.</p>
+  <hr style="border:none;border-top:1px solid #e2e8f0;margin:32px 0">
+  <p style="color:#64748b;font-size:12px">{{if .BrandName}}{{.BrandName}}{{else}}BusinessCart{{end}}{{if .BrandEmail}} &middot; {{.BrandEmail}}{{end}}</p>
+</body>
+</html>`
+
+// OrderCancelledToCompanyData is the merchant's copy: enough to identify the
+// order and know the stock is free again.
+type OrderCancelledToCompanyData struct {
+	OrderID       string
+	CustomerEmail string
+	GrandTotal    float64
+	Items         []OrderItemView
+}
+
+// OrderCancelledToCompanyMessage tells the COMPANY OWNER an order was cancelled.
+// Always sent via the platform sender (BusinessCart SES), like
+// NewOrderToCompanyMessage.
+func OrderCancelledToCompanyMessage(to string, data OrderCancelledToCompanyData) Message {
+	return Message{
+		To:       to,
+		Subject:  fmt.Sprintf("Order cancelled on your store #%s ($%.2f)", lastSix(data.OrderID), data.GrandTotal),
+		HTMLBody: renderHTML(orderCancelledToCompanyHTMLTmpl, data),
+		TextBody: orderCancelledToCompanyText(data),
+	}
+}
+
+func orderCancelledToCompanyText(d OrderCancelledToCompanyData) string {
+	var b bytes.Buffer
+	fmt.Fprintf(&b, "An order on your storefront was cancelled.\n\n")
+	fmt.Fprintf(&b, "Order #%s\n", lastSix(d.OrderID))
+	if d.CustomerEmail != "" {
+		fmt.Fprintf(&b, "Customer: %s\n", d.CustomerEmail)
+	}
+	if len(d.Items) > 0 {
+		fmt.Fprintf(&b, "\nCancelled items:\n")
+		for _, it := range d.Items {
+			fmt.Fprintf(&b, "  - %s x%d\n", it.Name, it.Quantity)
+		}
+	}
+	fmt.Fprintf(&b, "\nOrder value: $%.2f\n", d.GrandTotal)
+	fmt.Fprintf(&b, "\nhttps://businesscart.ai/orders\n\n- BusinessCart\n")
+	return b.String()
+}
+
+const orderCancelledToCompanyHTMLTmpl = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Order cancelled on your store</title></head>
+<body style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1e293b">
+  <h1 style="color:#0d9488;margin-bottom:8px">Order cancelled</h1>
+  <p style="font-size:14px;color:#64748b;margin-top:0">Order #{{.OrderID}}{{if .CustomerEmail}} &middot; {{.CustomerEmail}}{{end}}</p>
+
+  {{if .Items}}
+  <h2 style="font-size:15px;color:#1e293b;margin-top:24px;margin-bottom:8px">Cancelled items</h2>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+    <tbody>
+      {{range .Items}}
+      <tr>
+        <td style="padding:8px 8px 8px 0;border-bottom:1px solid #f1f5f9">{{.Name}}</td>
+        <td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;text-align:right">Qty {{.Quantity}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{end}}
+  <p style="font-size:15px;color:#64748b">Order value: ${{printf "%.2f" .GrandTotal}}</p>
+  <p style="margin:24px 0">
+    <a href="https://businesscart.ai/orders" style="background:#0d9488;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:16px">View Orders</a>
+  </p>
+  <hr style="border:none;border-top:1px solid #e2e8f0;margin:32px 0">
+  <p style="color:#64748b;font-size:12px">- BusinessCart (notification from your platform)</p>
+</body>
+</html>`

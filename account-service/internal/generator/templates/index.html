@@ -451,18 +451,24 @@
                 <h3 class="product-name" itemprop="name">[[.Name]]</h3>
 
                 <div class="price-row">
+                    [[if .IsWholesaleOnly]]
+                    <span class="price" style="font-size:0.95rem">Trade only</span>
+                    [[else]]
                     [[if .DealPrice]]
                     <span class="price">$[[printf "%.2f" .DiscountedPrice]]</span>
                     <span class="original-price">$[[printf "%.2f" .Price]]</span>
                     [[else]]
                     <span class="price">$[[printf "%.2f" .Price]]</span>
                     [[end]]
+                    [[end]]
                 </div>
 
+                [[if not .IsWholesaleOnly]]
                 <button class="cta-btn"
                     onclick="event.preventDefault(); window.D2C_CART.addItem({_id:'[[.ID]]', partnerId:'[[.PartnerID]]', name:'[[.Name]]', price:[[.Price]], discountedPrice:[[if .DealPrice]][[.DiscountedPrice]][[else]][[.Price]][[end]], image:'[[.Image]]', dealPrice:[[.DealPrice]], priceTiers:[[jsArray .PriceTiers]]})">
                     Add to Cart
                 </button>
+                [[end]]
             </a>
             [[end]]
         </section>
