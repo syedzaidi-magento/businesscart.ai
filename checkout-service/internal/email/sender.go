@@ -151,16 +151,29 @@ func sendImplicitTLS(addr, host string, auth smtp.Auth, from string, to []string
 	return c.Quit()
 }
 
+// sanitizeHeader strips CR and LF from a header value.
+//
+// SECURITY: buildMIME writes header values straight into the message, so any
+// newline in one lets a caller append arbitrary headers. Duplicated from
+// account-service deliberately, like the rest of this file: the services stay
+// independent, and a header-injection guard must not depend on the other
+// service being patched. Stripped rather than rejected, and applied here rather
+// than at each call site, so no future caller has to remember: a header value
+// is one line, always.
+func sanitizeHeader(v string) string {
+	return strings.NewReplacer("\r", "", "\n", "").Replace(v)
+}
+
 func buildMIME(from string, msg Message) []byte {
 	var b strings.Builder
 	boundary := "BC-MIME-BOUNDARY-2026"
 
-	b.WriteString("From: " + from + "\r\n")
-	b.WriteString("To: " + msg.To + "\r\n")
+	b.WriteString("From: " + sanitizeHeader(from) + "\r\n")
+	b.WriteString("To: " + sanitizeHeader(msg.To) + "\r\n")
 	if msg.ReplyTo != "" {
-		b.WriteString("Reply-To: " + msg.ReplyTo + "\r\n")
+		b.WriteString("Reply-To: " + sanitizeHeader(msg.ReplyTo) + "\r\n")
 	}
-	b.WriteString("Subject: " + msg.Subject + "\r\n")
+	b.WriteString("Subject: " + sanitizeHeader(msg.Subject) + "\r\n")
 	b.WriteString("MIME-Version: 1.0\r\n")
 	b.WriteString("Auto-Submitted: auto-generated\r\n")
 

